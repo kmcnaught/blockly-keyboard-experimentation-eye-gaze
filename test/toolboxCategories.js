@@ -11,30 +11,32 @@ export default {
   contents: [
     {
       kind: 'category',
+      name: 'Events',
+      categorystyle: 'procedure_category',
+      cssConfig: {
+        icon: 'icon-events',
+      },
+      contents: [
+        {
+          type: 'p5_draw_once',
+          kind: 'block',
+        },
+        {
+          type: 'p5_animate',
+          kind: 'block',
+        },
+      ],
+    },
+    {
+      kind: 'category',
       name: 'Logic',
       categorystyle: 'logic_category',
+      cssConfig: {
+        icon: 'icon-logic',
+      },
       contents: [
         {
           type: 'controls_if',
-          kind: 'block',
-          id: 'if_block',
-        },
-        {
-          type: 'logic_compare',
-          kind: 'block',
-          fields: {
-            OP: 'EQ',
-          },
-        },
-        {
-          type: 'logic_operation',
-          kind: 'block',
-          fields: {
-            OP: 'AND',
-          },
-        },
-        {
-          type: 'logic_negate',
           kind: 'block',
         },
         {
@@ -45,21 +47,16 @@ export default {
           },
         },
         {
-          type: 'logic_null',
+          type: 'logic_negate',
           kind: 'block',
-          enabled: false,
         },
         {
-          type: 'logic_ternary',
+          type: 'logic_operation',
           kind: 'block',
+          fields: {
+            OP: 'AND',
+          },
         },
-      ],
-    },
-    {
-      kind: 'category',
-      name: 'Loops',
-      categorystyle: 'loop_category',
-      contents: [
         {
           type: 'controls_repeat_ext',
           kind: 'block',
@@ -68,91 +65,27 @@ export default {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 10,
+                  NUM: 5,
                 },
               },
             },
-          },
-        },
-        {
-          type: 'controls_repeat',
-          kind: 'block',
-          enabled: false,
-          fields: {
-            TIMES: 10,
-          },
-        },
-        {
-          type: 'controls_whileUntil',
-          kind: 'block',
-          fields: {
-            MODE: 'WHILE',
-          },
-        },
-        {
-          type: 'controls_for',
-          kind: 'block',
-          fields: {
-            VAR: {
-              name: 'i',
-            },
-          },
-          inputs: {
-            FROM: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 1,
-                },
-              },
-            },
-            TO: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 10,
-                },
-              },
-            },
-            BY: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 1,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'controls_forEach',
-          kind: 'block',
-          fields: {
-            VAR: {
-              name: 'j',
-            },
-          },
-        },
-        {
-          type: 'controls_flow_statements',
-          kind: 'block',
-          enabled: false,
-          fields: {
-            FLOW: 'BREAK',
           },
         },
       ],
     },
     {
       kind: 'category',
-      name: 'Math',
+      name: 'Maths',
       categorystyle: 'math_category',
+      cssConfig: {
+        icon: 'icon-maths',
+      },
       contents: [
         {
           type: 'math_number',
           kind: 'block',
           fields: {
-            NUM: 123,
+            NUM: 100,
           },
         },
         {
@@ -166,7 +99,7 @@ export default {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 1,
+                  NUM: 10,
                 },
               },
             },
@@ -174,141 +107,7 @@ export default {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 1,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_single',
-          kind: 'block',
-          fields: {
-            OP: 'ROOT',
-          },
-          inputs: {
-            NUM: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 9,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_trig',
-          kind: 'block',
-          fields: {
-            OP: 'SIN',
-          },
-          inputs: {
-            NUM: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 45,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_constant',
-          kind: 'block',
-          fields: {
-            CONSTANT: 'PI',
-          },
-        },
-        {
-          type: 'math_number_property',
-          kind: 'block',
-          fields: {
-            PROPERTY: 'EVEN',
-          },
-          inputs: {
-            NUMBER_TO_CHECK: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 0,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_round',
-          kind: 'block',
-          fields: {
-            OP: 'ROUND',
-          },
-          inputs: {
-            NUM: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 3.1,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_on_list',
-          kind: 'block',
-          fields: {
-            OP: 'SUM',
-          },
-        },
-        {
-          type: 'math_modulo',
-          kind: 'block',
-          inputs: {
-            DIVIDEND: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 64,
-                },
-              },
-            },
-            DIVISOR: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 10,
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'math_constrain',
-          kind: 'block',
-          inputs: {
-            VALUE: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 50,
-                },
-              },
-            },
-            LOW: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 1,
-                },
-              },
-            },
-            HIGH: {
-              shadow: {
-                type: 'math_number',
-                fields: {
-                  NUM: 100,
+                  NUM: 5,
                 },
               },
             },
@@ -330,25 +129,115 @@ export default {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 100,
+                  NUM: 400,
                 },
               },
             },
           },
         },
         {
-          type: 'math_random_float',
+          type: 'math_constrain',
+          kind: 'block',
+          inputs: {
+            VALUE: {
+              shadow: {
+                type: 'mouse_x',
+              },
+            },
+            LOW: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 0,
+                },
+              },
+            },
+            HIGH: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 400,
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'distance_between',
+          kind: 'block',
+          inputs: {
+            X1: {
+              shadow: {
+                type: 'mouse_x',
+              },
+            },
+            Y1: {
+              shadow: {
+                type: 'mouse_y',
+              },
+            },
+            X2: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 200,
+                },
+              },
+            },
+            Y2: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 200,
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+    {
+      kind: 'category',
+      name: 'Conditions',
+      categorystyle: 'logic_category',
+      cssConfig: {
+        icon: 'icon-conditions',
+      },
+      contents: [
+        {
+          type: 'logic_compare',
+          kind: 'block',
+          fields: {
+            OP: 'GT',
+          },
+        },
+        {
+          type: 'mouse_moved',
           kind: 'block',
         },
         {
-          type: 'math_atan2',
+          type: 'mouse_moved_distance',
+          kind: 'block',
+          inputs: {
+            DISTANCE: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 20,
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'mouse_in_zone',
           kind: 'block',
           inputs: {
             X: {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 1,
+                  NUM: 0,
                 },
               },
             },
@@ -356,481 +245,370 @@ export default {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 1,
+                  NUM: 0,
                 },
               },
             },
-          },
-        },
-      ],
-    },
-    {
-      kind: 'category',
-      name: 'Text',
-      categorystyle: 'text_category',
-      contents: [
-        {
-          type: 'text',
-          kind: 'block',
-          fields: {
-            TEXT: '',
-          },
-          id: 'text_block',
-        },
-        {
-          type: 'text_join',
-          kind: 'block',
-        },
-        {
-          type: 'text_append',
-          kind: 'block',
-          id: 'append_text_block',
-          fields: {
-            name: 'item',
-          },
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_length',
-          kind: 'block',
-          inputs: {
-            VALUE: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_isEmpty',
-          kind: 'block',
-          inputs: {
-            VALUE: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_indexOf',
-          kind: 'block',
-          fields: {
-            END: 'FIRST',
-          },
-          inputs: {
-            VALUE: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'text',
-                  },
-                },
-              },
-            },
-            FIND: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_charAt',
-          kind: 'block',
-          fields: {
-            WHERE: 'FROM_START',
-          },
-          inputs: {
-            VALUE: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'text',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_getSubstring',
-          kind: 'block',
-          fields: {
-            WHERE1: 'FROM_START',
-            WHERE2: 'FROM_START',
-          },
-          inputs: {
-            STRING: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'text',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_changeCase',
-          kind: 'block',
-          fields: {
-            CASE: 'UPPERCASE',
-          },
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_trim',
-          kind: 'block',
-          fields: {
-            MODE: 'BOTH',
-          },
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_count',
-          kind: 'block',
-          inputs: {
-            SUB: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_replace',
-          kind: 'block',
-          inputs: {
-            FROM: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-            TO: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_reverse',
-          kind: 'block',
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: '',
-                },
-              },
-            },
-          },
-        },
-
-        {
-          type: 'text_print',
-          kind: 'block',
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'text_prompt_ext',
-          kind: 'block',
-          fields: {
-            TYPE: 'TEXT',
-          },
-          inputs: {
-            TEXT: {
-              shadow: {
-                type: 'text',
-                fields: {
-                  TEXT: 'abc',
-                },
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: 'category',
-      name: 'Lists',
-      categorystyle: 'list_category',
-      contents: [
-        {
-          type: 'lists_create_with',
-          kind: 'block',
-        },
-        {
-          type: 'lists_create_with',
-          kind: 'block',
-        },
-        {
-          type: 'lists_repeat',
-          kind: 'block',
-          inputs: {
-            NUM: {
+            WIDTH: {
               shadow: {
                 type: 'math_number',
                 fields: {
-                  NUM: 5,
+                  NUM: 200,
                 },
               },
             },
-          },
-        },
-        {
-          type: 'lists_length',
-          kind: 'block',
-        },
-        {
-          type: 'lists_isEmpty',
-          kind: 'block',
-        },
-        {
-          type: 'lists_indexOf',
-          kind: 'block',
-
-          fields: {
-            END: 'FIRST',
-          },
-          inputs: {
-            VALUE: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'list',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'lists_getIndex',
-          kind: 'block',
-          fields: {
-            MODE: 'GET',
-            WHERE: 'FROM_START',
-          },
-          inputs: {
-            VALUE: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'list',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'lists_setIndex',
-          kind: 'block',
-          fields: {
-            MODE: 'SET',
-            WHERE: 'FROM_START',
-          },
-          inputs: {
-            LIST: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'list',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'lists_getSublist',
-          kind: 'block',
-          fields: {
-            WHERE1: 'FROM_START',
-            WHERE2: 'FROM_START',
-          },
-          inputs: {
-            LIST: {
-              block: {
-                type: 'variables_get',
-                fields: {
-                  VAR: {
-                    name: 'list',
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          type: 'lists_split',
-          kind: 'block',
-
-          fields: {
-            MODE: 'SPLIT',
-          },
-          inputs: {
-            DELIM: {
+            HEIGHT: {
               shadow: {
-                type: 'text',
+                type: 'math_number',
                 fields: {
-                  TEXT: ',',
+                  NUM: 200,
                 },
               },
             },
           },
         },
         {
-          type: 'lists_sort',
-          kind: 'block',
-
-          fields: {
-            TYPE: 'NUMERIC',
-            DIRECTION: '1',
-          },
-        },
-        {
-          type: 'lists_reverse',
+          type: 'mouse_inside_canvas',
           kind: 'block',
         },
       ],
-    },
-    {
-      kind: 'sep',
     },
     {
       kind: 'category',
       name: 'Variables',
-      custom: 'VARIABLE',
       categorystyle: 'variable_category',
+      custom: 'VARIABLE',
+      cssConfig: {
+        icon: 'icon-variables',
+      },
     },
     {
       kind: 'category',
-      name: 'Functions',
-      custom: 'PROCEDURE',
-      categorystyle: 'procedure_category',
-    },
-    // Add in the blocks for the p5 demo.
-    {
-      kind: 'category',
-      name: 'p5 blocks',
-      contents: p5CategoryContents,
-      categorystyle: 'logic_category',
-    },
-    {
-      'kind': 'category',
-      'name': 'Misc',
-      'contents': [
+      name: 'Input Values',
+      categorystyle: 'math_category',
+      cssConfig: {
+        icon: 'icon-input',
+      },
+      contents: [
         {
           kind: 'label',
-          text: 'This is a label',
+          text: 'Mouse/Gaze Position',
         },
         {
-          'kind': 'category',
-          'name': 'A subcategory',
-          'contents': [
-            {
-              kind: 'label',
-              text: 'This is another label',
-            },
-            {
-              kind: 'block',
-              type: 'colour_random',
-            },
-          ],
-        },
-        {
-          'kind': 'button',
-          'text': 'This is a button',
-          'callbackKey': 'unimplemented',
-        },
-        {
+          type: 'mouse_x',
           kind: 'block',
+        },
+        {
+          type: 'mouse_y',
+          kind: 'block',
+        },
+        {
+          type: 'mouse_speed',
+          kind: 'block',
+        },
+        {
+          kind: 'label',
+          text: 'Random Values',
+        },
+        {
           type: 'colour_random',
+          kind: 'block',
+        },
+      ],
+    },
+    {
+      kind: 'category',
+      name: 'Draw faces',
+      colour: '20',
+      cssConfig: {
+        icon: 'icon-faces',
+      },
+      contents: [
+        {
+          type: 'draw_face_shape',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#CD853F',
+                },
+              },
+            },
+          },
         },
         {
+          type: 'draw_eyes',
           kind: 'block',
-          type: 'buttons_block',
+        },
+        {
+          type: 'draw_nose',
+          kind: 'block',
+        },
+        {
+          type: 'draw_mouth',
+          kind: 'block',
+        },
+        {
+          type: 'draw_hair',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#654321',
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'draw_accessories',
+          kind: 'block',
+        },
+      ],
+    },
+    {
+      kind: 'category',
+      name: 'Draw landscape',
+      colour: '140',
+      cssConfig: {
+        icon: 'icon-landscape',
+      },
+      contents: [
+        {
+          type: 'draw_sky',
+          kind: 'block',
+        },
+        {
+          type: 'draw_weather',
+          kind: 'block',
+        },
+        {
+          type: 'draw_terrain',
+          kind: 'block',
+        },
+        {
+          type: 'draw_foreground',
+          kind: 'block',
+        },
+      ],
+    },
+    {
+      kind: 'category',
+      name: 'Draw effects',
+      categorystyle: 'procedure_category',
+      cssConfig: {
+        icon: 'icon-effects',
+      },
+      contents: [
+        {
+          kind: 'label',
+          text: 'Canvas Setup',
+        },
+        {
+          type: 'p5_background_color',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#000033',
+                },
+              },
+            },
+          },
+        },
+        {
+          kind: 'label',
+          text: 'Basic Shapes',
+        },
+        {
+          type: 'configurable_circle',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#ff6600',
+                },
+              },
+            },
+            X: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 200,
+                },
+              },
+            },
+            Y: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 200,
+                },
+              },
+            },
+            DIAMETER: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 80,
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'draw_rectangle',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#00ff88',
+                },
+              },
+            },
+            X: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 150,
+                },
+              },
+            },
+            Y: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 150,
+                },
+              },
+            },
+            WIDTH: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 100,
+                },
+              },
+            },
+            HEIGHT: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 60,
+                },
+              },
+            },
+          },
+        },
+        {
+          kind: 'label',
+          text: 'Interactive Effects',
+        },
+        {
+          type: 'draw_sparkle',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#ffff00',
+                },
+              },
+            },
+            X: {
+              shadow: {
+                type: 'mouse_x',
+              },
+            },
+            Y: {
+              shadow: {
+                type: 'mouse_y',
+              },
+            },
+            SIZE: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 15,
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'draw_trail_circle',
+          kind: 'block',
+          inputs: {
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#ff00ff',
+                },
+              },
+            },
+            X: {
+              shadow: {
+                type: 'mouse_x',
+              },
+            },
+            Y: {
+              shadow: {
+                type: 'mouse_y',
+              },
+            },
+            SIZE: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 25,
+                },
+              },
+            },
+          },
+        },
+        {
+          type: 'draw_particle_burst',
+          kind: 'block',
+          inputs: {
+            COUNT: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 8,
+                },
+              },
+            },
+            COLOR: {
+              shadow: {
+                type: 'colour_picker',
+                fields: {
+                  COLOUR: '#00ffff',
+                },
+              },
+            },
+            X: {
+              shadow: {
+                type: 'mouse_x',
+              },
+            },
+            Y: {
+              shadow: {
+                type: 'mouse_y',
+              },
+            },
+          },
         },
       ],
     },

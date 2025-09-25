@@ -83,7 +83,7 @@ const sunnyDay = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': '3iI4f%2#Gmk}=OjI7(8h',
         'x': 0,
         'y': 332,
@@ -166,7 +166,7 @@ const blankCanvas = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': '3iI4f%2#Gmk}=OjI7(8h',
         'x': 0,
         'y': 332,
@@ -219,7 +219,7 @@ const simpleCircle = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw_1',
         'x': 0,
         'y': 332,
@@ -237,6 +237,60 @@ const simpleCircle = {
                     'id': 'draw_circle_1_color',
                     'fields': {
                       'COLOUR': '#ffff00',
+                    },
+                  },
+                },
+              },
+              'next': {
+                'block': {
+                  'type': 'simple_circle',
+                  'id': 'draw_circle_2',
+                  'inline': true,
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'draw_circle_2_color',
+                        'fields': {
+                          'COLOUR': '#ff0000',
+                        },
+                      },
+                    },
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'simple_circle',
+                      'id': 'draw_circle_3',
+                      'inline': true,
+                      'inputs': {
+                        'COLOR': {
+                          'shadow': {
+                            'type': 'colour_picker',
+                            'id': 'draw_circle_3_color',
+                            'fields': {
+                              'COLOUR': '#00ff00',
+                            },
+                          },
+                        },
+                      },
+                      'next': {
+                        'block': {
+                          'type': 'simple_circle',
+                          'id': 'draw_circle_4',
+                          'inline': true,
+                          'inputs': {
+                            'COLOR': {
+                              'shadow': {
+                                'type': 'colour_picker',
+                                'id': 'draw_circle_4_color',
+                                'fields': {
+                                  'COLOUR': '#0000ff',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -292,7 +346,7 @@ const moreBlocks = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': '3iI4f%2#Gmk}=OjI7(8h',
         'x': 0,
         'y': 332,
@@ -440,7 +494,7 @@ const navigationTestBlocks = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw_1',
         'x': 0,
         'y': 332,
@@ -604,7 +658,7 @@ const moveStartTestBlocks = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw_1',
         'x': 0,
         'y': 332,
@@ -947,7 +1001,7 @@ const moveStatementTestBlocks = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw',
         'x': 75,
         'y': 950,
@@ -989,7 +1043,7 @@ const moveValueTestBlocks = {
         'y': 200,
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw',
         'x': 75,
         'y': 300,
@@ -1144,7 +1198,7 @@ const comments = {
         },
       },
       {
-        'type': 'p5_draw',
+        'type': 'p5_draw_once',
         'id': 'p5_draw_1',
         'x': 0,
         'y': 332,
@@ -1212,6 +1266,282 @@ const emptyWorkspace = {
   },
 };
 
+const gazeArtDemo = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': 'setup_gaze_art',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'canvas_gaze_art',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+              'next': {
+                'block': {
+                  'type': 'p5_background_color',
+                  'id': 'background_gaze_art',
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'background_color_gaze_art',
+                        'fields': {
+                          'COLOUR': '#000033',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw_once',
+        'id': 'draw_once_gaze_art',
+        'x': 0,
+        'y': 300,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'configurable_circle',
+              'id': 'static_circle_1',
+              'inputs': {
+                'COLOR': {
+                  'shadow': {
+                    'type': 'colour_picker',
+                    'id': 'static_circle_1_color',
+                    'fields': {
+                      'COLOUR': '#ff6600',
+                    },
+                  },
+                },
+                'X': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'static_circle_1_x',
+                    'fields': {
+                      'NUM': 100,
+                    },
+                  },
+                },
+                'Y': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'static_circle_1_y',
+                    'fields': {
+                      'NUM': 100,
+                    },
+                  },
+                },
+                'DIAMETER': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'static_circle_1_diameter',
+                    'fields': {
+                      'NUM': 60,
+                    },
+                  },
+                },
+              },
+              'next': {
+                'block': {
+                  'type': 'configurable_circle',
+                  'id': 'static_circle_2',
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'static_circle_2_color',
+                        'fields': {
+                          'COLOUR': '#00ff88',
+                        },
+                      },
+                    },
+                    'X': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'static_circle_2_x',
+                        'fields': {
+                          'NUM': 300,
+                        },
+                      },
+                    },
+                    'Y': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'static_circle_2_y',
+                        'fields': {
+                          'NUM': 300,
+                        },
+                      },
+                    },
+                    'DIAMETER': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'static_circle_2_diameter',
+                        'fields': {
+                          'NUM': 80,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_animate',
+        'id': 'animate_gaze_art',
+        'x': 0,
+        'y': 600,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'controls_if',
+              'id': 'if_mouse_moved',
+              'inputs': {
+                'IF0': {
+                  'block': {
+                    'type': 'mouse_moved',
+                    'id': 'mouse_moved_condition',
+                  },
+                },
+                'DO0': {
+                  'block': {
+                    'type': 'draw_sparkle',
+                    'id': 'sparkle_on_move',
+                    'inputs': {
+                      'COLOR': {
+                        'shadow': {
+                          'type': 'colour_picker',
+                          'id': 'sparkle_color',
+                          'fields': {
+                            'COLOUR': '#ffff00',
+                          },
+                        },
+                      },
+                      'X': {
+                        'shadow': {
+                          'type': 'mouse_x',
+                          'id': 'sparkle_x',
+                        },
+                      },
+                      'Y': {
+                        'shadow': {
+                          'type': 'mouse_y',
+                          'id': 'sparkle_y',
+                        },
+                      },
+                      'SIZE': {
+                        'shadow': {
+                          'type': 'math_number',
+                          'id': 'sparkle_size',
+                          'fields': {
+                            'NUM': 12,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              'next': {
+                'block': {
+                  'type': 'controls_if',
+                  'id': 'if_fast_movement',
+                  'inputs': {
+                    'IF0': {
+                      'block': {
+                        'type': 'logic_compare',
+                        'id': 'speed_comparison',
+                        'fields': {
+                          'OP': 'GT',
+                        },
+                        'inputs': {
+                          'A': {
+                            'block': {
+                              'type': 'mouse_speed',
+                              'id': 'current_mouse_speed',
+                            },
+                          },
+                          'B': {
+                            'shadow': {
+                              'type': 'math_number',
+                              'id': 'speed_threshold',
+                              'fields': {
+                                'NUM': 50,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                    'DO0': {
+                      'block': {
+                        'type': 'draw_particle_burst',
+                        'id': 'burst_on_fast_move',
+                        'inputs': {
+                          'COUNT': {
+                            'shadow': {
+                              'type': 'math_number',
+                              'id': 'burst_count',
+                              'fields': {
+                                'NUM': 6,
+                              },
+                            },
+                          },
+                          'COLOR': {
+                            'shadow': {
+                              'type': 'colour_picker',
+                              'id': 'burst_color',
+                              'fields': {
+                                'COLOUR': '#00ffff',
+                              },
+                            },
+                          },
+                          'X': {
+                            'shadow': {
+                              'type': 'mouse_x',
+                              'id': 'burst_x',
+                            },
+                          },
+                          'Y': {
+                            'shadow': {
+                              'type': 'mouse_y',
+                              'id': 'burst_y',
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+};
+
 /**
  * Loads saved state from local storage into the given workspace.
  * @param {Blockly.Workspace} workspace Blockly workspace to load into.
@@ -1229,6 +1559,7 @@ export const load = function (workspace, scenarioString) {
     simpleCircle,
     'sun': sunnyDay,
     emptyWorkspace,
+    gazeArtDemo,
   };
   // Don't emit events during loading.
   Blockly.Events.disable();

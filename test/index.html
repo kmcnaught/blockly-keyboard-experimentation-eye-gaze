@@ -11,6 +11,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
+      /* Cache buster: v1.1 */
       body {
         font-family: Roboto, sans-serif;
         font-size: 15px;
@@ -85,6 +86,132 @@
       thead {
         font-weight: bold;
       }
+
+      /* Simple rectangle styling for toolbox categories */
+      .blocklyToolboxDiv .blocklyTreeRow,
+      div[class*="blocklyTreeRow"],
+      .blocklyToolboxDiv div[role="treeitem"] {
+        padding: 10px 15px !important;
+        margin: 4px 6px !important;
+        border: 2px solid #9f9f9f !important;
+        background: transparent !important;
+        cursor: pointer !important;
+        min-height: 40px !important;
+        height: auto !important;
+        line-height: 1.4 !important;
+        position: relative !important;
+        z-index: 10 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        box-sizing: border-box !important;
+      }
+
+      .blocklyToolboxDiv .blocklyTreeRow:hover,
+      div[class*="blocklyTreeRow"]:hover,
+      .blocklyToolboxDiv div[role="treeitem"]:hover {
+        background: #f0f0f0 !important;
+        border: 1px solid #bbb !important;
+        z-index: 15 !important;
+      }
+
+      /* Additional fallback selectors */
+      .blocklyTreeRoot > div,
+      .blocklyToolboxDiv > div > div {
+        padding: 10px 15px !important;
+        margin: 4px 6px !important;
+        border: 1px solid #ddd !important;
+        background: #f9f9f9 !important;
+        cursor: pointer !important;
+        min-height: 40px !important;
+        height: auto !important;
+        line-height: 1.4 !important;
+        position: relative !important;
+        z-index: 10 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        box-sizing: border-box !important;
+      }
+
+
+      /* Keep the tree root at auto height to fit content */
+      .blocklyTreeRoot {
+        height: auto !important;
+        min-height: auto !important;
+      }
+
+      /* Ensure text labels have proper spacing */
+      .blocklyTreeLabel,
+      .blocklyTreeRow span,
+      .blocklyToolboxDiv span {
+        display: inline-block !important;
+        line-height: 1.4 !important;
+        vertical-align: middle !important;
+      }
+
+      /* Ensure container elements don't constrain height */
+      .blocklyToolboxDiv,
+      .blocklyToolboxContents,
+      .blocklyToolboxCategory {
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      /* Style the category icons */
+      .blocklyToolboxCategoryIcon {
+        font-size: 20px !important;
+        width: 24px !important;
+        height: 24px !important;
+        margin-right: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      /* Ensure icons and labels are aligned */
+      .blocklyTreeRowContentContainer {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      /* Define emoji content for each icon class */
+      .icon-events::before {
+        content: "⚡";
+      }
+
+      .icon-logic::before {
+        content: "🧠";
+      }
+
+      .icon-maths::before {
+        content: "🔢";
+      }
+
+      .icon-conditions::before {
+        content: "❓";
+      }
+
+      .icon-variables::before {
+        content: "📦";
+      }
+
+      .icon-input::before {
+        content: "🎯";
+      }
+
+      .icon-faces::before {
+        content: "😊";
+      }
+
+      .icon-landscape::before {
+        content: "🏔️";
+      }
+
+      .icon-effects::before {
+        content: "✨";
+      } 
     </style>
   </head>
 

@@ -31,6 +31,51 @@ const p5Setup = {
   },
 };
 
+const p5DrawOnceJson = {
+  'type': 'p5_draw_once',
+  'message0': 'draw once %1',
+  'args0': [
+    {
+      'type': 'input_statement',
+      'name': 'STATEMENTS',
+    },
+  ],
+  'colour': 300,
+  'tooltip': 'Draw static elements on the canvas. This code runs once after setup.',
+  'helpUrl': '',
+};
+
+const p5DrawOnce = {
+  init: function () {
+    this.jsonInit(p5DrawOnceJson);
+    // The draw once block can't be removed.
+    this.setDeletable(false);
+  },
+};
+
+const p5AnimateJson = {
+  'type': 'p5_animate',
+  'message0': 'animate %1',
+  'args0': [
+    {
+      'type': 'input_statement',
+      'name': 'STATEMENTS',
+    },
+  ],
+  'colour': 320,
+  'tooltip': 'Animate interactive effects. This code runs continuously (~60fps) for gaze-responsive elements.',
+  'helpUrl': '',
+};
+
+const p5Animate = {
+  init: function () {
+    this.jsonInit(p5AnimateJson);
+    // The animate block can't be removed.
+    this.setDeletable(false);
+  },
+};
+
+// Legacy p5_draw block for backwards compatibility
 const p5DrawJson = {
   'type': 'p5_draw',
   'message0': 'draw %1',
@@ -40,8 +85,8 @@ const p5DrawJson = {
       'name': 'STATEMENTS',
     },
   ],
-  'colour': 300,
-  'tooltip': 'Draw on the canvas. This code is run continuously.',
+  'colour': 320,
+  'tooltip': 'Legacy draw block - use animate block instead for new projects.',
   'helpUrl': '',
 };
 
@@ -335,6 +380,786 @@ const textBlock = {
   'colour': 225,
 };
 
+// New drawing blocks with configurable positions
+
+const configurableCircle = {
+  'type': 'configurable_circle',
+  'tooltip': 'Draw a circle at specific coordinates with custom size and color',
+  'helpUrl': 'https://p5js.org/reference/#/p5/circle',
+  'message0': 'draw %1 circle at x %2 y %3 diameter %4 %5',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'DIAMETER',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+  'inputsInline': true,
+};
+
+const drawLine = {
+  'type': 'draw_line',
+  'tooltip': 'Draw a line from point 1 to point 2 with specified color',
+  'helpUrl': 'https://p5js.org/reference/#/p5/line',
+  'message0': 'draw %1 line from x1 %2 y1 %3 to x2 %4 y2 %5 %6',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X1',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y1',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X2',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y2',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+  'inputsInline': true,
+};
+
+const drawRectangle = {
+  'type': 'draw_rectangle',
+  'tooltip': 'Draw a rectangle at specific coordinates with custom size and color',
+  'helpUrl': 'https://p5js.org/reference/#/p5/rect',
+  'message0': 'draw %1 rectangle at x %2 y %3 width %4 height %5 %6',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'WIDTH',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'HEIGHT',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 230,
+  'inputsInline': true,
+};
+
+// Mouse/Gaze Input Blocks
+
+const mouseX = {
+  'type': 'mouse_x',
+  'tooltip': 'Current mouse/gaze x position on the canvas',
+  'helpUrl': 'https://p5js.org/reference/#/p5/mouseX',
+  'message0': 'mouse x',
+  'output': 'Number',
+  'colour': 120,
+};
+
+const mouseY = {
+  'type': 'mouse_y',
+  'tooltip': 'Current mouse/gaze y position on the canvas',
+  'helpUrl': 'https://p5js.org/reference/#/p5/mouseY',
+  'message0': 'mouse y',
+  'output': 'Number',
+  'colour': 120,
+};
+
+const previousMouseX = {
+  'type': 'previous_mouse_x',
+  'tooltip': 'Previous mouse/gaze x position (from last frame)',
+  'helpUrl': 'https://p5js.org/reference/#/p5/pmouseX',
+  'message0': 'previous mouse x',
+  'output': 'Number',
+  'colour': 120,
+};
+
+const previousMouseY = {
+  'type': 'previous_mouse_y',
+  'tooltip': 'Previous mouse/gaze y position (from last frame)',
+  'helpUrl': 'https://p5js.org/reference/#/p5/pmouseY',
+  'message0': 'previous mouse y',
+  'output': 'Number',
+  'colour': 120,
+};
+
+const mouseSpeed = {
+  'type': 'mouse_speed',
+  'tooltip': 'Speed of mouse/gaze movement (distance moved between frames)',
+  'helpUrl': '',
+  'message0': 'mouse speed',
+  'output': 'Number',
+  'colour': 120,
+};
+
+// Sparkle and Effect Blocks
+
+const drawSparkle = {
+  'type': 'draw_sparkle',
+  'tooltip': 'Draw a star-shaped sparkle at the specified position with color and size',
+  'helpUrl': '',
+  'message0': 'draw %1 sparkle at x %2 y %3 size %4 %5',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'SIZE',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 260,
+  'inputsInline': true,
+};
+
+const drawTrailCircle = {
+  'type': 'draw_trail_circle',
+  'tooltip': 'Draw a fading circle that creates a trail effect behind gaze movement',
+  'helpUrl': '',
+  'message0': 'draw fading %1 circle at x %2 y %3 size %4 %5',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'SIZE',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 260,
+  'inputsInline': true,
+};
+
+const drawParticleBurst = {
+  'type': 'draw_particle_burst',
+  'tooltip': 'Create an explosion of small particles at the specified location',
+  'helpUrl': '',
+  'message0': 'burst %1 %2 particles at x %3 y %4 %5',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COUNT',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 260,
+  'inputsInline': true,
+};
+
+const addGlowEffect = {
+  'type': 'add_glow_effect',
+  'tooltip': 'Add a glowing outline around shapes near the gaze position',
+  'helpUrl': '',
+  'message0': 'add %1 glow around shapes near x %2 y %3 radius %4 %5',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'RADIUS',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 260,
+  'inputsInline': true,
+};
+
+// Helper Condition Blocks
+
+const distanceBetween = {
+  'type': 'distance_between',
+  'tooltip': 'Calculate the distance between two points (useful for proximity effects)',
+  'helpUrl': '',
+  'message0': 'distance from x1 %1 y1 %2 to x2 %3 y2 %4',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'X1',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y1',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'X2',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y2',
+      'check': 'Number',
+    },
+  ],
+  'output': 'Number',
+  'colour': 160,
+  'inputsInline': true,
+};
+
+const mouseInZone = {
+  'type': 'mouse_in_zone',
+  'tooltip': 'Check if mouse/gaze is within a rectangular area',
+  'helpUrl': '',
+  'message0': 'mouse in area x %1 y %2 width %3 height %4',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'X',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'Y',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'WIDTH',
+      'check': 'Number',
+    },
+    {
+      'type': 'input_value',
+      'name': 'HEIGHT',
+      'check': 'Number',
+    },
+  ],
+  'output': 'Boolean',
+  'colour': 160,
+  'inputsInline': true,
+};
+
+const mouseMoved = {
+  'type': 'mouse_moved',
+  'tooltip': 'Check if mouse/gaze has moved since the last frame',
+  'helpUrl': '',
+  'message0': 'mouse moved',
+  'output': 'Boolean',
+  'colour': 160,
+};
+
+const mouseMovedDistance = {
+  'type': 'mouse_moved_distance',
+  'tooltip': 'Check if mouse/gaze has moved more than a specific distance',
+  'helpUrl': '',
+  'message0': 'mouse moved more than %1 pixels',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'DISTANCE',
+      'check': 'Number',
+    },
+  ],
+  'output': 'Boolean',
+  'colour': 160,
+  'inputsInline': true,
+};
+
+const mouseInsideCanvas = {
+  'type': 'mouse_inside_canvas',
+  'tooltip': 'Check if mouse/gaze is within the canvas boundaries',
+  'helpUrl': '',
+  'message0': 'mouse inside canvas',
+  'output': 'Boolean',
+  'colour': 160,
+};
+
+// Face Drawing Blocks
+
+const drawFaceShape = {
+  'type': 'draw_face_shape',
+  'tooltip': 'Draw a face shape without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 face shape with %2 skin color %3',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'SHAPE',
+      'options': [
+        ['round', 'round'],
+        ['oval', 'oval'],
+        ['square', 'square'],
+      ],
+    },
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+  'inputsInline': true,
+};
+
+const drawEyes = {
+  'type': 'draw_eyes',
+  'tooltip': 'Draw eyes without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 eyes',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['normal', 'normal'],
+        ['sleepy', 'sleepy'],
+        ['wide', 'wide'],
+        ['winking', 'winking'],
+        ['hearts', 'hearts'],
+        ['stars', 'stars'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+};
+
+const drawNose = {
+  'type': 'draw_nose',
+  'tooltip': 'Draw a nose without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 nose',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['button', 'button'],
+        ['long', 'long'],
+        ['large', 'large'],
+        ['pig', 'pig'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+};
+
+const drawMouth = {
+  'type': 'draw_mouth',
+  'tooltip': 'Draw a mouth without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 mouth',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['smile', 'smile'],
+        ['sad', 'sad'],
+        ['surprised', 'surprised'],
+        ['tongue out', 'tongue_out'],
+        ['straight', 'straight'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+};
+
+const drawHair = {
+  'type': 'draw_hair',
+  'tooltip': 'Draw hair without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 hair with %2 color %3',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['short', 'short'],
+        ['long', 'long'],
+        ['curly', 'curly'],
+        ['spiky', 'spiky'],
+      ],
+    },
+    {
+      'type': 'input_value',
+      'name': 'COLOR',
+    },
+    {
+      'type': 'input_dummy',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+  'inputsInline': true,
+};
+
+const drawAccessories = {
+  'type': 'draw_accessories',
+  'tooltip': 'Draw face accessories without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['glasses', 'glasses'],
+        ['sunglasses', 'sunglasses'],
+        ['bow tie', 'bow_tie'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+};
+
+// Landscape Drawing Blocks
+
+const drawSky = {
+  'type': 'draw_sky',
+  'tooltip': 'Draw a sky without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 sky',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['clear blue', 'clear_blue'],
+        ['starry night', 'starry_night'],
+        ['sunny', 'sunny'],
+        ['cloudy', 'cloudy'],
+        ['stormy', 'stormy'],
+        ['sunset', 'sunset'],
+        ['sunrise', 'sunrise'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 140,
+};
+
+const drawWeather = {
+  'type': 'draw_weather',
+  'tooltip': 'Draw weather elements without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['sun', 'sun'],
+        ['moon', 'moon'],
+        ['stars', 'stars'],
+        ['clouds', 'clouds'],
+        ['rain', 'rain'],
+        ['snow', 'snow'],
+        ['rainbow', 'rainbow'],
+        ['lightning', 'lightning'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 140,
+};
+
+const drawTerrain = {
+  'type': 'draw_terrain',
+  'tooltip': 'Draw terrain without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 terrain',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['hills', 'hills'],
+        ['mountains', 'mountains'],
+        ['seaside', 'seaside'],
+        ['fields', 'fields'],
+        ['desert', 'desert'],
+        ['forest', 'forest'],
+        ['city', 'city'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 140,
+};
+
+const drawForeground = {
+  'type': 'draw_foreground',
+  'tooltip': 'Draw foreground elements without needing coordinates',
+  'helpUrl': '',
+  'message0': 'draw %1 foreground',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'STYLE',
+      'options': [
+        ['grass', 'grass'],
+        ['flowers', 'flowers'],
+        ['trees', 'trees'],
+        ['rocks', 'rocks'],
+        ['beach', 'beach'],
+        ['road', 'road'],
+        ['none', 'none'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 140,
+};
+
+// Complete Scene Blocks
+
+const drawCompleteFace = {
+  'type': 'draw_complete_face',
+  'tooltip': 'Draw a complete face with all features',
+  'helpUrl': '',
+  'message0': 'draw complete face: %1 shape, %2 eyes, %3 nose, %4 mouth, %5 hair',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'FACE_SHAPE',
+      'options': [
+        ['round', 'round'],
+        ['oval', 'oval'],
+        ['square', 'square'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'EYES',
+      'options': [
+        ['normal', 'normal'],
+        ['sleepy', 'sleepy'],
+        ['wide', 'wide'],
+        ['winking', 'winking'],
+        ['hearts', 'hearts'],
+        ['stars', 'stars'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'NOSE',
+      'options': [
+        ['button', 'button'],
+        ['long', 'long'],
+        ['large', 'large'],
+        ['pig', 'pig'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'MOUTH',
+      'options': [
+        ['smile', 'smile'],
+        ['sad', 'sad'],
+        ['surprised', 'surprised'],
+        ['tongue out', 'tongue_out'],
+        ['straight', 'straight'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'HAIR',
+      'options': [
+        ['short', 'short'],
+        ['long', 'long'],
+        ['curly', 'curly'],
+        ['spiky', 'spiky'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 20,
+};
+
+const drawCompleteLandscape = {
+  'type': 'draw_complete_landscape',
+  'tooltip': 'Draw a complete landscape scene',
+  'helpUrl': '',
+  'message0': 'draw complete landscape: %1 sky, %2 terrain, %3 weather',
+  'args0': [
+    {
+      'type': 'field_dropdown',
+      'name': 'SKY',
+      'options': [
+        ['clear blue', 'clear_blue'],
+        ['starry night', 'starry_night'],
+        ['sunny', 'sunny'],
+        ['cloudy', 'cloudy'],
+        ['stormy', 'stormy'],
+        ['sunset', 'sunset'],
+        ['sunrise', 'sunrise'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'TERRAIN',
+      'options': [
+        ['hills', 'hills'],
+        ['mountains', 'mountains'],
+        ['seaside', 'seaside'],
+        ['fields', 'fields'],
+        ['desert', 'desert'],
+        ['forest', 'forest'],
+        ['city', 'city'],
+      ],
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'WEATHER',
+      'options': [
+        ['none', 'none'],
+        ['sun', 'sun'],
+        ['moon', 'moon'],
+        ['stars', 'stars'],
+        ['clouds', 'clouds'],
+        ['rain', 'rain'],
+        ['snow', 'snow'],
+        ['rainbow', 'rainbow'],
+        ['lightning', 'lightning'],
+      ],
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 140,
+};
+
 // Create the block definitions for all the JSON-only blocks.
 // This does not register their definitions with Blockly.
 const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
@@ -347,10 +1172,41 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   writeTextWithoutShadow,
   writeTextWithShadow,
   textBlock,
+  configurableCircle,
+  drawLine,
+  drawRectangle,
+  mouseX,
+  mouseY,
+  previousMouseX,
+  previousMouseY,
+  mouseSpeed,
+  drawSparkle,
+  drawTrailCircle,
+  drawParticleBurst,
+  addGlowEffect,
+  distanceBetween,
+  mouseInZone,
+  mouseMoved,
+  mouseMovedDistance,
+  mouseInsideCanvas,
+  drawFaceShape,
+  drawEyes,
+  drawNose,
+  drawMouth,
+  drawHair,
+  drawAccessories,
+  drawSky,
+  drawWeather,
+  drawTerrain,
+  drawForeground,
+  drawCompleteFace,
+  drawCompleteLandscape,
 ]);
 
 export const blocks = {
   'p5_setup': p5Setup,
+  'p5_draw_once': p5DrawOnce,
+  'p5_animate': p5Animate,
   'p5_draw': p5Draw,
   'p5_canvas': p5Canvas,
   'buttons_block': buttonsBlock,
