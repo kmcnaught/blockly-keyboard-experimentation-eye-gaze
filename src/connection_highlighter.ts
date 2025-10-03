@@ -12,6 +12,12 @@ import {
   ConnectionType,
 } from 'blockly';
 
+/** Maximum number of connections to highlight for performance. */
+const MAX_HIGHLIGHTED_CONNECTIONS = 50;
+
+/** Delay in milliseconds before retrying DOM insertion for highlights. */
+const HIGHLIGHT_RETRY_DELAY_MS = 10;
+
 /**
  * Represents a valid connection pair between a moving block and a target.
  */
@@ -161,7 +167,7 @@ export class ConnectionHighlighter {
 
     // Sort by distance and limit for performance
     validConnections.sort((a, b) => a.distance - b.distance);
-    return validConnections.slice(0, 50);
+    return validConnections.slice(0, MAX_HIGHLIGHTED_CONNECTIONS);
   }
 
   /**
@@ -255,7 +261,7 @@ export class ConnectionHighlighter {
         if (!addHighlightToDOM()) {
           setTimeout(() => {
             addHighlightToDOM();
-          }, 10);
+          }, HIGHLIGHT_RETRY_DELAY_MS);
         }
       }
     }

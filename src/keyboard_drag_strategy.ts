@@ -17,6 +17,12 @@ import {MoveIcon} from './move_icon';
 import {MoveType} from './actions/mover';
 import {ConnectionHighlighter} from './connection_highlighter';
 
+/** X offset for positioning block preview near connections. */
+const BLOCK_PREVIEW_OFFSET_X = 10;
+
+/** Y offset for positioning block preview near connections. */
+const BLOCK_PREVIEW_OFFSET_Y = 10;
+
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
   /** A connection on the dragging stack that is compatible with neighbour. */
@@ -145,7 +151,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.searchNode = neighbour;
       if (this.isConstrainedMovement()) {
         this.block.moveDuringDrag(
-          new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+          new utils.Coordinate(neighbour.x + BLOCK_PREVIEW_OFFSET_X, neighbour.y + BLOCK_PREVIEW_OFFSET_Y),
         );
       }
     } else {
@@ -366,7 +372,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       previewer.previewConnection(local, neighbour);
     }
     block.moveDuringDrag(
-      new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+      new utils.Coordinate(neighbour.x + BLOCK_PREVIEW_OFFSET_X, neighbour.y + BLOCK_PREVIEW_OFFSET_Y),
     );
   }
 
@@ -513,7 +519,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       const targetY = targetConnection.y;
 
       this.block.moveDuringDrag(
-        new utils.Coordinate(targetX + 10, targetY + 10),
+        new utils.Coordinate(targetX + BLOCK_PREVIEW_OFFSET_X, targetY + BLOCK_PREVIEW_OFFSET_Y),
       );
 
       this.forceShowPreview();
