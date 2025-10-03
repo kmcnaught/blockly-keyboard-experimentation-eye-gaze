@@ -51,7 +51,7 @@ export class ConnectionHighlighter {
   /** Scroll event listener for updating highlight positions. */
   private scrollListener?: () => void;
 
-  /** Feature flag: use core-based rendering for value connection highlights. Set to false to revert to custom rounded rect. */
+  /** Whether to use core-based rendering for value connection highlights. */
   private useCoreValueHighlights: boolean = true;
 
 
@@ -62,12 +62,11 @@ export class ConnectionHighlighter {
     this.workspace = workspace;
     this.onConnectionClick = onConnectionClick;
 
-    // Set up scroll listener to update highlight positions
     this.scrollListener = () => {
       this.updateHighlights();
     };
 
-    // Set up global cleanup function as emergency backup
+    // Global cleanup function for debugging/recovery if highlights get stuck
     if (!(window as any).clearAllConnectionHighlights) {
       (window as any).clearAllConnectionHighlights = () => {
         const allCircles = document.querySelectorAll(
@@ -90,8 +89,6 @@ export class ConnectionHighlighter {
     allConnections: RenderedConnection[],
     localConnections: RenderedConnection[],
   ): ValidConnection[] {
-    // Always clear existing highlights first to prevent accumulation
-    console.log(`Clearing ${this.highlightedElements.size} existing highlights before creating new ones`);
     this.clearHighlights();
 
     const validConnections = this.findAllValidConnections(
@@ -100,33 +97,13 @@ export class ConnectionHighlighter {
       localConnections,
     );
 
-    console.log(`Highlighting ${validConnections.length} valid connections:`);
-
     // Apply visual highlighting to each valid connection
     const highlightedBlocks = new Set<string>();
     for (const validConnection of validConnections) {
-      const block = validConnection.neighbour.getSourceBlock();
-      if (block) {
-        highlightedBlocks.add(`${block.type}(${validConnection.neighbour.type})`);
-      }
       this.highlightConnection(validConnection.neighbour);
     }
 
-    console.log('  Blocks being highlighted:', Array.from(highlightedBlocks).join(', '));
-    console.log(`  Total highlight elements in tracker: ${this.highlightedElements.size}`);
-
-    // Check if elements are actually in the DOM (capture size now, not later)
-    const sizeWhenCreated = this.highlightedElements.size;
-    const elementsCreated = Array.from(this.highlightedElements);
-    setTimeout(() => {
-      let inDom = 0;
-      for (const elem of elementsCreated) {
-        if (elem.isConnected) inDom++;
-      }
-      console.log(`  After 10ms: ${inDom}/${sizeWhenCreated} highlights still in DOM (tracker now has ${this.highlightedElements.size})`);
-    }, 10);
-
-    // Set up scroll listener to update highlights when workspace scrolls
+    // Update highlight positions when workspace scrolls
     if (this.scrollListener) {
       const svgGroup = this.workspace.getSvgGroup();
       if (svgGroup) {
@@ -153,27 +130,19 @@ export class ConnectionHighlighter {
     const validConnections: ValidConnection[] = [];
     const connectionChecker = movingBlock.workspace.connectionChecker;
 
-    let filteredCount = 0;
-    const filteredReasons = new Map<string, number>();
-
     for (const localConn of localConnections) {
       for (const potentialNeighbour of allConnections) {
-        // Skip connections on the moving block itself
         const filterReason = this.getFilterReason(potentialNeighbour, movingBlock);
         if (filterReason) {
-          filteredCount++;
-          filteredReasons.set(filterReason, (filteredReasons.get(filterReason) || 0) + 1);
           continue;
         }
 
-        // Check if the connections are compatible
-        // Don't check if already connected - we want to show all potential targets
-        // even if they're currently occupied (e.g., by insertion markers or real blocks)
+        // Check compatibility without requiring disconnect (show all potential targets)
         if (
           connectionChecker.canConnect(
             localConn,
             potentialNeighbour,
-            false, // Don't check if already connected
+            false,
             Infinity,
           )
         ) {
@@ -190,32 +159,26 @@ export class ConnectionHighlighter {
       }
     }
 
-    console.log(`Filtered ${filteredCount} connections (moving block/markers), found ${validConnections.length} valid`);
-    console.log('Filter reasons:', Array.from(filteredReasons.entries()).map(([k, v]) => `${k}: ${v}`).join(', '));
-
-    // Sort by distance and limit to reasonable number for performance
+    // Sort by distance and limit for performance
     validConnections.sort((a, b) => a.distance - b.distance);
-    return validConnections.slice(0, 50); // Limit to top 50 connections
+    return validConnections.slice(0, 50);
   }
 
   /**
-   * Applies visual highlighting to a single connection by creating
-   * a connection-type-appropriate highlight visualization.
+   * Applies visual highlighting to a single connection.
    *
    * @param connection The connection to highlight.
    */
   private highlightConnection(connection: RenderedConnection) {
     try {
-      // Create a visual highlight based on the connection type
       this.createConnectionVisualization(connection);
     } catch (error) {
-      const block = connection.getSourceBlock();
-      console.warn(`Failed to highlight connection on ${block?.type}:`, error);
+      // Silently fail - visual feedback is non-critical
     }
   }
 
   /**
-   * Creates a connection-type-appropriate visual highlight.
+   * Creates connection-type-appropriate visual highlight.
    *
    * @param connection The connection to create a highlight for.
    */
@@ -223,12 +186,10 @@ export class ConnectionHighlighter {
     const sourceBlock = connection.getSourceBlock();
     if (!(sourceBlock instanceof BlockSvg)) return;
 
-    // Get the workspace SVG group to add the highlight to
     const workspace = sourceBlock.workspace;
     const svgGroup = workspace.getSvgGroup();
     if (!svgGroup) return;
 
-    // Create different visualizations based on connection type
     let highlight: SVGElement;
 
     switch (connection.type) {
@@ -243,15 +204,11 @@ export class ConnectionHighlighter {
         break;
 
       default:
-        // Unknown connection type - skip highlighting
         return;
     }
 
     if (highlight) {
-      // Don't apply CSS class - it has !important rules that override our inline styles
-      // We use inline styles for full control over colors
-
-      // Store connection info for click handling
+      // Store metadata for click handling
       highlight.setAttribute('data-connection-x', connection.x.toString());
       highlight.setAttribute('data-connection-y', connection.y.toString());
       highlight.setAttribute(
@@ -259,16 +216,13 @@ export class ConnectionHighlighter {
         connection.type.toString(),
       );
 
-      // Store connection reference for click handling
       this.elementToConnection.set(highlight, connection);
-
-      // Store connection and type for position updates
       this.elementToOriginalCoords.set(highlight, {
         connection: connection,
         type: highlight.tagName.toLowerCase(),
       });
 
-      // Add click event listener if callback is provided
+      // Enable connection selection via click
       if (this.onConnectionClick) {
         const clickHandler = (event: Event) => {
           event.stopPropagation();
@@ -278,14 +232,12 @@ export class ConnectionHighlighter {
         highlight.addEventListener('pointerdown', clickHandler);
       }
 
-      // Check if the highlight was already attached to its block's SVG
       const attachedToBlock = highlight.getAttribute('data-attached-to-block') === 'true';
 
       if (attachedToBlock) {
-        // Already attached by createStatementNotch or createCoreBasedValueHighlight
         this.highlightedElements.add(highlight);
       } else {
-        // Not attached yet (e.g., rect-based value highlights) - add to workspace SVG
+        // Add rect-based highlights to workspace SVG with retry for timing issues
         const addHighlightToDOM = () => {
           try {
             const workspaceSvg = this.workspace.getParentSvg();
@@ -295,14 +247,12 @@ export class ConnectionHighlighter {
               return true;
             }
           } catch (error) {
-            // Silently fail - highlight won't be visible but won't break functionality
+            // Silently fail
           }
           return false;
         };
 
-        // Try immediate addition first
         if (!addHighlightToDOM()) {
-          // If immediate addition fails, retry after DOM settles
           setTimeout(() => {
             addHighlightToDOM();
           }, 10);
@@ -312,9 +262,8 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Creates a notch-style highlight for statement connections as an independent SVG element.
-   * This avoids using core's pathObject system which gets destroyed during block re-rendering.
-   * The highlight is attached to the block's SVG so it moves with the block automatically.
+   * Creates a notch-style highlight for statement connections.
+   * Attached to block's SVG to follow block movement during stack rearrangement.
    *
    * @param connection The statement connection to highlight.
    * @param workspace The workspace for coordinate transformation.
@@ -329,7 +278,6 @@ export class ConnectionHighlighter {
       throw new Error('Source block is not a BlockSvg');
     }
 
-    // Get the connection shape from the renderer
     const renderer = sourceBlock.workspace.getRenderer();
     const constants = renderer.getConstants();
     const connectionShape = constants.shapeFor(connection);
@@ -338,7 +286,6 @@ export class ConnectionHighlighter {
       throw new Error('No connection shape available');
     }
 
-    // Create a highlight path using the connection shape
     const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
     const highlightPath = (
       `M ${-xLen} 0 ` +
@@ -347,11 +294,9 @@ export class ConnectionHighlighter {
       `h ${xLen}`
     );
 
-    // Create our own independent SVG path element
     const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-    // Position relative to block (not absolute workspace coordinates)
-    // This way it moves with the block when the stack shifts
+    // Use block-relative coordinates so highlight moves with block
     const offset = connection.getOffsetInBlock();
     const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
 
@@ -364,11 +309,9 @@ export class ConnectionHighlighter {
     highlightSvg.style.pointerEvents = 'auto';
     highlightSvg.style.cursor = 'pointer';
 
-    // Attach to block's SVG so it moves with the block
     const blockSvg = sourceBlock.getSvgRoot();
     if (blockSvg) {
       blockSvg.appendChild(highlightSvg);
-      // Mark that we already added it to DOM
       highlightSvg.setAttribute('data-attached-to-block', 'true');
     }
 
@@ -376,8 +319,8 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Creates a notch highlight using Blockly's core highlighting infrastructure.
-   * This uses the same system that highlights connections during drag operations.
+   * Creates a notch highlight using Blockly's core highlighting (unused in current implementation).
+   * Kept for reference - falls back to createStatementNotch for reliability.
    *
    * @param connection The statement connection to highlight.
    * @param sourceBlock The block containing the connection.
@@ -389,9 +332,8 @@ export class ConnectionHighlighter {
   ): SVGElement | null {
     try {
       const renderer = sourceBlock.workspace.getRenderer();
-
-      // Try approach 1: Use drawer with renderInfo (if available)
       const renderInfo = (sourceBlock as any).renderInfo_;
+
       if (renderInfo) {
         const DrawerClass = (renderer as any).constructor.Drawer ||
                            (renderer as any).drawer?.constructor;
@@ -412,7 +354,6 @@ export class ConnectionHighlighter {
               );
 
               if (highlightSvg) {
-                // Use yellow to match active focus color, with subtle fill
                 highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
                 highlightSvg.setAttribute('stroke', '#fff200');
                 highlightSvg.setAttribute('stroke-width', '3');
@@ -425,13 +366,10 @@ export class ConnectionHighlighter {
         }
       }
 
-      // Approach 2: Use connection shape directly from renderer
-      // This works even when renderInfo is not available
       const constants = renderer.getConstants();
       const connectionShape = constants.shapeFor(connection);
 
       if (connectionShape && (connectionShape as any).pathLeft) {
-        // Create a highlight path using the connection shape
         const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
         const highlightPath = (
           `M ${-xLen} 0 ` +
@@ -440,7 +378,6 @@ export class ConnectionHighlighter {
           `h ${xLen}`
         );
 
-        // Use core's addConnectionHighlight method
         const highlightSvg = sourceBlock.pathObject.addConnectionHighlight?.(
           connection,
           highlightPath,
@@ -449,15 +386,12 @@ export class ConnectionHighlighter {
         );
 
         if (highlightSvg) {
-          // Style it for visibility
-          // IMPORTANT: Use !important to prevent core Blockly's updateConnectionHighlights from hiding it
-          // Use yellow to match active focus color, with subtle fill
+          // Use !important to prevent core from hiding highlights
           highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
           highlightSvg.setAttribute('stroke', '#fff200');
           highlightSvg.setAttribute('stroke-width', '3');
           highlightSvg.setAttribute('style', 'display: block !important; pointer-events: auto !important; cursor: pointer !important;');
 
-          // Add click event listener if callback is provided
           if (this.onConnectionClick) {
             const clickHandler = (event: Event) => {
               event.stopPropagation();
@@ -467,11 +401,7 @@ export class ConnectionHighlighter {
             highlightSvg.addEventListener('pointerdown', clickHandler);
           }
 
-          // Mark this as a core-managed highlight so createConnectionVisualization
-          // doesn't try to append it (it's already in the DOM via pathObject)
           highlightSvg.setAttribute('data-core-managed', 'true');
-
-          // Track this element for cleanup
           this.highlightedElements.add(highlightSvg);
           this.elementToConnection.set(highlightSvg, connection);
 
@@ -488,12 +418,11 @@ export class ConnectionHighlighter {
 
   /**
    * Creates a value connection highlight using the renderer's puzzle tab shape.
-   * This gets the shape from core but manages the SVG element ourselves to avoid
-   * interference from core's rendering lifecycle.
+   * Manages SVG independently to avoid core rendering lifecycle interference.
    *
    * @param connection The value connection to highlight.
    * @param sourceBlock The block containing the connection.
-   * @returns The SVG element we created, or null if unsuccessful.
+   * @returns The SVG element created, or null if unsuccessful.
    */
   private createCoreBasedValueHighlight(
     connection: RenderedConnection,
@@ -503,19 +432,15 @@ export class ConnectionHighlighter {
       const renderer = sourceBlock.workspace.getRenderer();
       const constants = renderer.getConstants();
 
-      // Get the connection shape (puzzle tab) from the renderer
       const connectionShape = constants.shapeFor(connection);
       if (!connectionShape) {
         return null;
       }
 
-      // Extract the pathDown from the shape
       let connPath = '';
       if ((connectionShape as any).isDynamic) {
-        // Dynamic shape - need to find the actual height from the measurable
-        let measurableHeight = constants.TAB_HEIGHT; // Default fallback
+        let measurableHeight = constants.TAB_HEIGHT;
 
-        // Try to get height from renderInfo measurable
         const renderInfo = (sourceBlock as any).renderInfo_;
         if (renderInfo) {
           const connectionMeasurable = this.findConnectionMeasurable(connection, renderInfo);
@@ -526,13 +451,11 @@ export class ConnectionHighlighter {
 
         connPath = (connectionShape as any).pathDown(measurableHeight);
       } else if ((connectionShape as any).pathDown) {
-        // Static puzzle tab shape
         connPath = (connectionShape as any).pathDown;
       } else {
         return null;
       }
 
-      // Build the highlight path for static shapes (Geras/Thrasos)
       const yLen = constants.TAB_OFFSET_FROM_TOP;
       const highlightPath = (
         `M 0 ${-yLen} ` +
@@ -541,13 +464,8 @@ export class ConnectionHighlighter {
         `v ${yLen}`
       );
 
-      // Create our own SVG path element (NOT managed by pathObject)
       const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-      // Get the connection's position in the block
       const offset = connection.getOffsetInBlock();
-
-      // Calculate transformation
       const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
 
       highlightSvg.setAttribute('d', highlightPath);
@@ -559,25 +477,18 @@ export class ConnectionHighlighter {
       highlightSvg.style.pointerEvents = 'auto';
       highlightSvg.style.cursor = 'pointer';
 
-      // Add to the block's SVG group (not via pathObject)
       const blockSvg = sourceBlock.getSvgRoot();
       if (blockSvg) {
         blockSvg.appendChild(highlightSvg);
-
-        // Mark that we already added it to block SVG
         highlightSvg.setAttribute('data-attached-to-block', 'true');
 
-        // Track this element for cleanup
         this.highlightedElements.add(highlightSvg);
         this.elementToConnection.set(highlightSvg, connection);
-
-        // Store connection and type for position updates
         this.elementToOriginalCoords.set(highlightSvg, {
           connection: connection,
           type: 'path',
         });
 
-        // Add click event listener if callback is provided
         if (this.onConnectionClick) {
           const clickHandler = (event: Event) => {
             event.stopPropagation();
@@ -624,7 +535,8 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Creates an outline highlight for value connections that adapts to current content.
+   * Creates an outline highlight for value connections.
+   * Uses renderer-based shapes for Geras/Thrasos, falls back to rounded rect for Zelos.
    *
    * @param connection The value connection to highlight.
    * @param workspace The workspace for coordinate transformation.
@@ -634,21 +546,17 @@ export class ConnectionHighlighter {
     connection: RenderedConnection,
     workspace: WorkspaceSvg,
   ): SVGElement {
-    // Try renderer-based shape first if enabled
     if (this.useCoreValueHighlights) {
       const sourceBlock = connection.getSourceBlock();
       if (sourceBlock instanceof BlockSvg) {
-        // Check the renderer - only use core shapes for non-Zelos renderers
         const renderer = sourceBlock.workspace.getRenderer();
         const rendererName = renderer.constructor.name;
         const isZelos = rendererName.toLowerCase().includes('zelos');
 
-        // Only use core-based rendering for Geras/Thrasos (static puzzle tabs work well)
-        // Zelos dynamic shapes require renderInfo which isn't available for target blocks
+        // Use core shapes for Geras/Thrasos (Zelos requires unavailable renderInfo)
         if (!isZelos) {
           const shapeHighlight = this.createCoreBasedValueHighlight(connection, sourceBlock);
           if (shapeHighlight) {
-            // Mark it so createConnectionVisualization knows it's already added to DOM
             shapeHighlight.setAttribute('data-already-in-dom', 'true');
             return shapeHighlight;
           }
@@ -656,13 +564,10 @@ export class ConnectionHighlighter {
       }
     }
 
-    // Fallback to custom rounded rect implementation (used for Zelos and fallback)
+    // Fallback rounded rect for Zelos or if core shapes unavailable
     const socketBounds = this.getActualSocketBounds(connection, workspace);
-
-    // Create a rectangular socket outline that matches the current content
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
 
-    // Transform coordinates to SVG space
     const coords = this.transformCoordinates(
       socketBounds.x,
       socketBounds.y,
@@ -672,15 +577,13 @@ export class ConnectionHighlighter {
     const scale = workspace.scale;
     const scaledWidth = socketBounds.width * scale;
     const scaledHeight = socketBounds.height * scale;
-
-    // Much rounder corners to match value blocks
-    const cornerRadius = Math.min(scaledHeight / 2, 25 * scale); // Very round, pill-like
+    const cornerRadius = Math.min(scaledHeight / 2, 25 * scale);
 
     rect.setAttribute('x', coords.x.toString());
     rect.setAttribute('y', coords.y.toString());
     rect.setAttribute('width', scaledWidth.toString());
     rect.setAttribute('height', scaledHeight.toString());
-    rect.setAttribute('rx', cornerRadius.toString()); // Very round corners
+    rect.setAttribute('rx', cornerRadius.toString());
     rect.setAttribute('ry', cornerRadius.toString());
     rect.setAttribute('fill', 'rgba(53, 168, 255, 0.1)');
     rect.setAttribute('stroke', '#35a8ff');
@@ -695,7 +598,7 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Gets the actual bounds of what's currently in the socket or reasonable defaults.
+   * Gets bounds for socket contents or reasonable defaults.
    *
    * @param connection The value connection to analyze.
    * @param workspace The workspace for coordinate reference.
@@ -706,10 +609,8 @@ export class ConnectionHighlighter {
     workspace: WorkspaceSvg,
   ): {x: number; y: number; width: number; height: number} {
     try {
-      // Check if there's a block currently connected
       const targetBlock = connection.targetBlock();
       if (targetBlock && targetBlock instanceof BlockSvg) {
-        // Get the actual bounds of the connected block
         const blockBounds = targetBlock.getBoundingRectangle();
         return {
           x: blockBounds.left,
@@ -719,7 +620,6 @@ export class ConnectionHighlighter {
         };
       }
 
-      // Check if there's a shadow block (like color picker)
       const shadowBlock = connection.getShadowDom();
       if (shadowBlock && connection.targetConnection) {
         const shadowTargetBlock = connection.targetConnection.getSourceBlock();
@@ -734,12 +634,10 @@ export class ConnectionHighlighter {
         }
       }
 
-      // If no connected block, look at the input field to estimate size
       const sourceBlock = connection.getSourceBlock();
       if (sourceBlock && sourceBlock instanceof BlockSvg) {
         const input = this.findInputForConnection(sourceBlock, connection);
         if (input) {
-          // Try to get field bounds or estimate based on field content
           const estimatedBounds = this.estimateInputBounds(input, connection);
           if (estimatedBounds) {
             return estimatedBounds;
@@ -747,12 +645,11 @@ export class ConnectionHighlighter {
         }
       }
 
-      // Fallback to default size
       return {
         x: connection.x,
-        y: connection.y - 15, // Center vertically
-        width: 80, // Default reasonable width
-        height: 30, // Default height
+        y: connection.y - 15,
+        width: 80,
+        height: 30,
       };
     } catch (error) {
       return {
@@ -785,7 +682,7 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Estimates bounds for an input based on its content and type.
+   * Estimates bounds for an input based on field content.
    *
    * @param input The input to estimate bounds for.
    * @param connection The connection for positioning reference.
@@ -796,19 +693,17 @@ export class ConnectionHighlighter {
     connection: RenderedConnection,
   ): {x: number; y: number; width: number; height: number} | null {
     try {
-      // Check if input has fields that we can measure
       if (input.fieldRow && input.fieldRow.length > 0) {
         let totalWidth = 0;
-        const maxHeight = 30; // Default height
+        const maxHeight = 30;
 
         for (const field of input.fieldRow) {
           if (field.getText) {
             const text = field.getText();
-            // Rough estimate: 8 pixels per character + padding
             const fieldWidth = Math.max(text.length * 8 + 20, 40);
             totalWidth += fieldWidth;
           } else {
-            totalWidth += 40; // Default field width
+            totalWidth += 40;
           }
         }
 
@@ -849,7 +744,7 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Gets the reason why a connection should be filtered, or null if it shouldn't be filtered.
+   * Returns why a connection should be filtered, or null if valid.
    *
    * @param connection The connection to check.
    * @param movingBlock The block being moved.
@@ -862,13 +757,10 @@ export class ConnectionHighlighter {
     const sourceBlock = connection.getSourceBlock();
     if (!sourceBlock) return 'no-source-block';
 
-    // Filter out connections on insertion markers (preview blocks)
     if (sourceBlock.isInsertionMarker()) return 'insertion-marker';
 
-    // Check if it's the moving block itself
     if (sourceBlock === movingBlock) return 'moving-block';
 
-    // Check if it's a descendant of the moving block
     const movingDescendants = movingBlock.getDescendants(false);
     if (movingDescendants.includes(sourceBlock as BlockSvg)) {
       return 'moving-block-descendant';
@@ -878,8 +770,7 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Checks if a connection belongs to the moving block or its children,
-   * or if it belongs to an insertion marker (preview block).
+   * Checks if connection should be filtered (on moving block or preview).
    *
    * @param connection The connection to check.
    * @param movingBlock The block being moved.
@@ -913,41 +804,27 @@ export class ConnectionHighlighter {
    * Removes all connection highlighting.
    */
   clearHighlights(): void {
-    const initialSize = this.highlightedElements.size;
-    console.log(`clearHighlights called with ${initialSize} elements to remove`);
-
-    // Remove scroll listener
     if (this.scrollListener) {
       this.workspace.removeChangeListener(this.scrollListener);
     }
 
-    let removedCount = 0;
-    let errorCount = 0;
-
-    // All highlights are now independently managed SVG elements - just remove them
     for (const element of this.highlightedElements) {
       try {
         if (element instanceof SVGElement) {
           element.remove();
-          removedCount++;
         } else if (element.parentNode) {
           element.parentNode.removeChild(element);
-          removedCount++;
         }
       } catch (error) {
-        errorCount++;
-        console.warn('Error removing highlight element:', error);
+        // Silently continue
       }
     }
 
     this.highlightedElements.clear();
-    console.log(`clearHighlights complete: removed ${removedCount}/${initialSize} (${errorCount} errors)`);
   }
 
   /**
-   * Updates highlights, typically called during drag operations.
-   * Recalculates and updates the positions of all highlights based on
-   * current workspace scroll and zoom state.
+   * Updates highlight positions based on workspace scroll and zoom.
    */
   updateHighlights(): void {
     for (const element of this.highlightedElements) {
@@ -957,7 +834,6 @@ export class ConnectionHighlighter {
       const {connection, type} = coordsInfo;
 
       try {
-        // Update position based on element type
         switch (type) {
           case 'circle':
             this.updateCirclePosition(element as SVGCircleElement, connection);
@@ -970,7 +846,7 @@ export class ConnectionHighlighter {
             break;
         }
       } catch (error) {
-        // Silently continue - don't let one element prevent updates of others
+        // Silently continue
       }
     }
   }
@@ -996,8 +872,7 @@ export class ConnectionHighlighter {
 
   /**
    * Updates the position of a path highlight element.
-   * Since all paths are now attached to block SVG, they move automatically with blocks.
-   * We only need to update the transform if the connection offset within the block changed.
+   * Paths are attached to block SVG and move automatically, only transform needs updating.
    *
    * @param path The path element to update.
    * @param connection The connection this path represents.
@@ -1009,14 +884,13 @@ export class ConnectionHighlighter {
     const sourceBlock = connection.getSourceBlock();
     if (!(sourceBlock instanceof BlockSvg)) return;
 
-    // All highlights are now block-relative, so just update the offset transform
     const offset = connection.getOffsetInBlock();
     const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
     path.setAttribute('transform', transformation);
   }
 
   /**
-   * Updates the position of a rect highlight element (for value connections).
+   * Updates the position of a rect highlight (value connections).
    *
    * @param rect The rect element to update.
    * @param connection The connection this rect represents.
@@ -1025,10 +899,7 @@ export class ConnectionHighlighter {
     rect: SVGRectElement,
     connection: RenderedConnection,
   ): void {
-    // Get the current socket bounds
     const socketBounds = this.getActualSocketBounds(connection, this.workspace);
-
-    // Transform coordinates to SVG space
     const coords = this.transformCoordinates(
       socketBounds.x,
       socketBounds.y,

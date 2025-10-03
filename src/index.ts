@@ -31,10 +31,7 @@ export class KeyboardNavigation {
    */
   private workspaceSelectionRing: Element | null = null;
 
-  /**
-   * The block currently in sticky mode (following the cursor).
-   * When non-null, indicates we're in "click and stick" mode.
-   */
+  /** The block currently in sticky mode, or null if not in sticky mode. */
   private stickyBlock: Blockly.BlockSvg | null = null;
 
   /**
@@ -80,10 +77,7 @@ export class KeyboardNavigation {
     this.navigationController = new NavigationController({
       allowCrossWorkspacePaste: options.allowCrossWorkspacePaste ?? false,
       highlightConnections: options.highlightConnections ?? true,
-      // Disable automatic scroll-to-view during sticky mode to prevent jarring jumps
-      // as the block moves near viewport edges. Manual scrolling (mouse wheel, etc.)
-      // is still available on desktop. On touch devices, touch-based scrolling is
-      // prevented during drags (see handleTouchMove) to avoid conflicts with block movement.
+      // Disable auto-scroll during sticky mode to prevent jarring jumps at viewport edges
       shouldDisableAutoScroll: () => !!this.stickyBlock,
     });
     this.navigationController.init();
@@ -95,10 +89,8 @@ export class KeyboardNavigation {
     // Add the event listener to enable disabled blocks on drag.
     workspace.addChangeListener(enableBlocksOnDrag);
 
-    // Set up click and stick functionality
     this.setupClickAndStick();
 
-    // Make this instance available globally for testing
     (window as any).keyboardNavigation = this;
 
     // Move the flyout for logical tab order.
@@ -160,15 +152,12 @@ export class KeyboardNavigation {
 
   /**
    * Common cleanup for exiting sticky mode.
-   * Clears click-and-stick mode, ends the move, and resets sticky state.
    */
   private cleanupStickyMode(action: 'finish' | 'abort') {
     if (!this.stickyBlock) return;
 
-    // Clear click-and-stick mode before ending the move
     this.setClickAndStickMode(false);
 
-    // End the move via mover
     if (this.mover && this.mover.isMoving(this.workspace)) {
       if (action === 'finish') {
         this.mover.finishMove(this.workspace);
@@ -177,7 +166,6 @@ export class KeyboardNavigation {
       }
     }
 
-    // Reset sticky UI state
     this.resetStickyState();
   }
 
@@ -599,38 +587,31 @@ export class KeyboardNavigation {
   }
 
   /**
-   * Sets up click and stick functionality for blocks.
-   * Uses native dblclick event for simplicity.
+   * Sets up click and stick functionality.
    */
   private setupClickAndStick() {
     const workspaceElement = this.workspace.getParentSvg();
     if (!workspaceElement) return;
 
-    // Add dblclick listener (native browser event).
     workspaceElement.addEventListener('dblclick', (event) => {
       this.handleDoubleClick(event);
     }, false);
 
-    // Add pointermove listener for cursor-following during sticky mode.
-    // This makes blocks follow the mouse/touch during click-and-stick mode.
+    // Make blocks follow the pointer during sticky mode
     document.addEventListener('pointermove', (event) => {
       this.handlePointerMove(event);
     }, false);
 
-    // Add click listener to handle sticky mode drops on mouse clicks.
-    // Touch/pen taps are also handled here via the PointerEvent's click event.
+    // Handle clicks during sticky mode for drop/connect/delete
     document.addEventListener('click', (event) => {
       this.handleClick(event);
     }, true);
 
-    // Escape and Enter keys exit sticky mode (handled by Mover shortcuts).
-    // Note: The Mover's keyboard shortcuts already handle Enter/Escape,
-    // but we keep this as a fallback for consistency.
+    // Escape and Enter keys are handled by Mover shortcuts
     document.addEventListener('keydown', (event) => {
       if (this.stickyBlock) {
         if (event.key === 'Escape' || event.key === 'Enter') {
-          // Let the Mover handle this via its shortcuts
-          // This is just a safety net
+          // Handled by Mover shortcuts
         }
       }
     });
@@ -642,13 +623,7 @@ export class KeyboardNavigation {
   private handleDoubleClick(event: MouseEvent) {
     if (event.defaultPrevented) return;
 
-    console.log('=== DOUBLE-CLICK EVENT ===');
-    console.log('Currently in sticky mode:', !!this.stickyBlock);
-    console.log('Target:', event.target);
-
-    // If already in sticky mode, ignore double-clicks (prevents workspace background double-clicks from interfering)
     if (this.stickyBlock) {
-      console.log('Ignoring double-click during sticky mode');
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -657,17 +632,14 @@ export class KeyboardNavigation {
     const target = event.target as Element;
     const clickedBlock = this.getBlockFromEvent(event);
 
-    // Prime audio for sound effects
     if (clickedBlock) {
       this.workspace.getAudioManager().preload();
     }
 
-    // Don't handle double-click on fields - let them handle their own interactions
     if (target && this.isDoubleClickOnField(target)) {
       return;
     }
 
-    // Get the non-shadow parent block
     const block = getNonShadowBlock(clickedBlock);
     if (block && block.isMovable()) {
       if (this.enterStickyMode(block, event.clientX, event.clientY)) {
@@ -679,47 +651,32 @@ export class KeyboardNavigation {
 
   /**
    * Handles click events during sticky mode.
-   * Supports mouse, touch, and pen interactions via PointerEvents.
    */
   private handleClick(event: MouseEvent) {
-    // Only process clicks during sticky mode
     if (!this.stickyBlock) return;
-
-    // Delegate to sticky mode click handler
     this.handleStickyModeClick(event);
   }
 
   /**
    * Handles pointer movement during sticky mode to make blocks follow the cursor.
-   * Uses PointerEvents following Blockly core pattern for unified mouse/touch/pen handling.
    */
   private handlePointerMove(event: PointerEvent) {
-    // Only process during sticky mode
     if (!this.stickyBlock) return;
 
-    // Get the mover and moveInfo
     const moveInfo = this.mover?.moves?.get(this.workspace);
+    if (!moveInfo) return;
 
-    if (!moveInfo) {
-      console.warn('No moveInfo found during pointer move');
-      return;
-    }
-
-    // Convert screen coordinates to workspace coordinates
     const targetWorkspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
       this.workspace,
       new Blockly.utils.Coordinate(event.clientX, event.clientY)
     );
 
-    // Calculate the delta from the start position
     const deltaX = targetWorkspaceCoords.x - moveInfo.startLocation.x;
     const deltaY = targetWorkspaceCoords.y - moveInfo.startLocation.y;
 
-    // Update the total delta
     moveInfo.totalDelta.x = deltaX;
     moveInfo.totalDelta.y = deltaY;
 
-    // Call onDrag to update the block position and connection previews
     if (moveInfo.dragger) {
       moveInfo.dragger.onDrag(
         new Blockly.utils.Coordinate(event.clientX, event.clientY),
@@ -730,7 +687,6 @@ export class KeyboardNavigation {
 
   /**
    * Handles clicks during sticky mode for drop/connect/delete actions.
-   * Supports both mouse and touch/pen interactions.
    */
   private handleStickyModeClick(event: MouseEvent | PointerEvent) {
     if (!this.stickyBlock) return;
@@ -741,48 +697,41 @@ export class KeyboardNavigation {
     const clientX = event.clientX;
     const clientY = event.clientY;
 
-    // Check if clicking on the bin - highest priority
     if (this.isClickOnBin(clientX, clientY)) {
       this.deleteBlockOnBin();
       return;
     }
 
-    // Check if clicking on a connection highlight
     const connectionInfo = this.findConnectionAtPoint(clientX, clientY);
     if (connectionInfo) {
       this.connectToClickedConnection(connectionInfo, clientX, clientY);
       return;
     }
 
-    // Check if there's a connection preview that has changed from the original
+    // Accept preview if it has changed from original (allows immediate drops)
     const dragStrategy = this.getDragStrategy(this.stickyBlock);
     if (dragStrategy && dragStrategy.connectionCandidate) {
       const initialNeighbour = dragStrategy.getInitialConnectionNeighbour();
       const currentNeighbour = dragStrategy.connectionCandidate.neighbour;
 
-      // Only accept the preview if it has changed from the original connection
-      // This allows immediate workspace drops without moving the mouse first
       if (currentNeighbour !== initialNeighbour) {
         this.acceptConnectionCandidate();
         return;
       }
     }
 
-    // Otherwise, drop the block at the clicked position
     this.exitStickyModeAndDrop(clientX, clientY);
   }
 
   /**
-   * Gets a block from a mouse/touch event target.
+   * Gets a block from an event target.
    */
   private getBlockFromEvent(event: { target: EventTarget | null }): Blockly.BlockSvg | null {
     const target = event.target as Element;
     if (!target) return null;
 
-    // Get all blocks in the workspace
     const blocks = this.workspace.getAllBlocks();
 
-    // Find all block elements that contain the click target
     const allBlockElements: Element[] = [];
     let currentElement: Element | null = target;
 
@@ -793,16 +742,11 @@ export class KeyboardNavigation {
       currentElement = currentElement.parentElement;
     }
 
-    // If we found block elements, find the innermost (most specific) one
     if (allBlockElements.length > 0) {
-      // The first element in our array is the innermost block
       const innermostBlockElement = allBlockElements[0];
-
-      // Find the BlockSvg instance for this element
       const block = blocks.find(b => b.getSvgRoot() === innermostBlockElement);
 
       if (block && block instanceof Blockly.BlockSvg) {
-        console.log('Found innermost block:', block.type, 'from', allBlockElements.length, 'nested blocks');
         return block;
       }
     }
@@ -811,48 +755,37 @@ export class KeyboardNavigation {
   }
 
   /**
-   * Checks if a double-click event is on a field element that should handle its own double-click.
-   * Uses Blockly's existing gesture system field detection logic.
+   * Checks if a double-click event is on a field element.
+   * Uses Blockly's gesture system for reliable field detection.
    */
   private isDoubleClickOnField(target: Element): boolean {
-    // Use Blockly's existing gesture field detection - this is the most reliable method
-    // By the time our double-click handler runs, Blockly has already processed the mousedown
-    // event and created a gesture with proper field detection
     const workspace = this.workspace;
     const currentGesture = (workspace as any).currentGesture_;
 
     if (currentGesture && (currentGesture as any).startField) {
-      console.log('Current gesture started on a field:', (currentGesture as any).startField.constructor.name);
       return true;
     }
 
-    // If no gesture detected a field, this is likely a block double-click
-    console.log('No field detected by gesture system, treating as block double-click');
     return false;
   }
 
   /**
    * Enters sticky mode where a block follows the cursor.
-   * Integrates with the existing move infrastructure.
    */
   private enterStickyMode(block: Blockly.BlockSvg, clientX: number, clientY: number): boolean {
-    // Abort any move already in progress
     if (this.mover.isMoving(this.workspace)) {
       this.mover.abortMove(this.workspace);
     }
 
-    // Exit if already in sticky mode
     if (this.stickyBlock) {
       this.exitStickyModeAndDrop();
     }
 
-    // Validate block
     if (!block || block.isDisposed()) {
       return false;
     }
 
     try {
-      // Pass callback to reset sticky state when move finishes
       const onMoveFinished = () => {
         this.resetStickyState();
       };
@@ -861,13 +794,8 @@ export class KeyboardNavigation {
 
       if (success) {
         this.stickyBlock = block;
-
-        // Add visual indication
         block.getSvgRoot().classList.add('blockly-sticky-mode');
-
-        // Enable click-and-stick mode in drag strategy
         this.setClickAndStickMode(true);
-
         return true;
       }
       return false;
@@ -879,16 +807,9 @@ export class KeyboardNavigation {
 
   /**
    * Accepts the current connection candidate from the drag strategy.
-   * PHASE 3: Simplified - Mover handles render and cleanup.
    */
   private acceptConnectionCandidate() {
     if (!this.stickyBlock) return;
-
-    console.log('Accepting connection and exiting sticky mode');
-
-    // The drag strategy already has a connection candidate set up
-    // Just finish the move normally - this will use the existing connection candidate
-    // Mover.postDragEndCleanup handles render in requestAnimationFrame
     this.cleanupStickyMode('finish');
   }
 
@@ -917,60 +838,37 @@ export class KeyboardNavigation {
   }
 
   /**
-   * Deletes the sticky block when it's dropped on the bin.
-   * PHASE 3: Simplified to use Mover properly.
+   * Deletes the sticky block when dropped on the bin.
    */
   private deleteBlockOnBin() {
     if (!this.stickyBlock) return;
 
-    console.log('=== DELETING BLOCK ON BIN ===');
-    console.log('Deleting block:', this.stickyBlock.type, this.stickyBlock.id);
-
-    // Store the block for deletion
     const blockToDelete = this.stickyBlock;
-
-    // PHASE 3: Abort the move properly through Mover
     this.cleanupStickyMode('abort');
 
-    // Unplug the block with healStack=true to reconnect children to parent
-    // This ensures only the single block is deleted, not its entire subtree
+    // Unplug with healStack to preserve children
     blockToDelete.unplug(true);
-    console.log('Block unplugged with healStack - children reconnected to parent');
-
-    // Delete only the single block
     blockToDelete.dispose();
-    console.log('Block deleted successfully');
   }
 
   /**
    * Finds a connection point at the given screen coordinates.
-   * Uses the ConnectionHighlighter to get accurate bounding boxes for highlighted connections.
    */
   private findConnectionAtPoint(clientX: number, clientY: number): any {
-    console.log('KM --- findConnectionAtPoint ---');
-    console.log('KM Screen coords:', clientX, clientY);
-
-    // First, check if we have highlighted connections from the drag strategy
     const dragStrategy = (this.stickyBlock as any)?.dragStrategy;
     if (dragStrategy && dragStrategy.connectionHighlighter) {
-      // Use the ConnectionHighlighter to find connections at the point
       const highlightedConnection = dragStrategy.connectionHighlighter.findConnectionAtPoint(clientX, clientY);
 
       if (highlightedConnection) {
-        console.log('Found highlighted connection at point:', highlightedConnection);
-
-        // Verify compatibility with the sticky block
         const stickyConnections = this.stickyBlock?.getConnections_(true);
         if (stickyConnections) {
           for (const stickyConnection of stickyConnections) {
-            // Use the workspace's connection checker to verify compatibility
             const connectionChecker = this.workspace.connectionChecker;
             if (connectionChecker.canConnect(stickyConnection, highlightedConnection, true, Infinity)) {
-              console.log('Highlighted connection is compatible!');
               return {
                 connection: highlightedConnection,
                 stickyConnection: stickyConnection,
-                distance: 0, // Direct hit on highlighted connection
+                distance: 0,
                 isHighlighted: true
               };
             }
@@ -979,156 +877,99 @@ export class KeyboardNavigation {
       }
     }
 
-    console.log('No connection found at point');
     return null;
   }
 
   /**
    * Connects the sticky block to a specific connection point.
-   * PHASE 3: Simplified - just set connection candidate and let Mover handle it.
    */
   private connectToClickedConnection(connectionInfo: any, clientX: number, clientY: number) {
     if (!this.stickyBlock) return;
 
     const { connection, stickyConnection } = connectionInfo;
 
-    console.log('Connecting to clicked connection');
-
-    // Get the drag strategy and set up the connection candidate
     const dragStrategy = this.getDragStrategy(this.stickyBlock);
     if (dragStrategy) {
-      // Set up the connection candidate - Mover will handle positioning and connecting
       dragStrategy.connectionCandidate = {
         local: stickyConnection,
         neighbour: connection,
         distance: 0
       };
-
-      console.log('Set connection candidate:', dragStrategy.connectionCandidate);
     }
 
-    // Now finish the move - Mover will handle positioning and connection
-    // Mover.postDragEndCleanup handles render and all cleanup
     this.cleanupStickyMode('finish');
   }
 
   /**
    * Resets the sticky mode UI state.
-   * PHASE 4: Simplified - Mover handles strategy/highlight cleanup.
-   * This should be called AFTER mover.finishMove() or mover.abortMove().
+   * Called after mover.finishMove() or mover.abortMove().
    */
   private resetStickyState() {
-    // Clear sticky mode UI state
     if (this.stickyBlock) {
       this.stickyBlock.getSvgRoot().classList.remove('blockly-sticky-mode');
       this.stickyBlock = null;
     }
 
-    // Clear the selection to allow new clicks to work
     const selection = Blockly.common.getSelected();
     if (selection) {
       selection.unselect();
     }
 
-    // Clear Blockly's touch identifier
-    // After sticky mode, the touch identifier from the drop gesture is stuck,
-    // causing Blockly to ignore new touch events with different pointer IDs
+    // Clear touch identifier to prevent stuck gestures
     try {
-      // Clear immediately
       Blockly.Touch.clearTouchIdentifier();
-      // And also clear after event loop to be extra safe
       setTimeout(() => {
         Blockly.Touch.clearTouchIdentifier();
       }, 0);
     } catch (e) {
-      console.warn('Failed to clear touch identifier:', e);
-    }
-
-    // Defensive safety check: we shouldn't get here with mover still moving
-    if (this.mover && this.mover.isMoving(this.workspace)) {
-      console.warn('Mover still in moving state after cleanup - this indicates a bug in exit path');
+      // Silently fail
     }
   }
 
   /**
-   * Exits sticky mode by dropping the block at the current position or specified coordinates.
-   * Preserves critical coordinate positioning logic for workspace drops.
+   * Exits sticky mode by dropping the block at the specified or current position.
    * @param clientX Optional screen X coordinate where to drop the block
    * @param clientY Optional screen Y coordinate where to drop the block
    */
   private exitStickyModeAndDrop(clientX?: number, clientY?: number) {
     if (!this.stickyBlock) return;
 
-    console.log('=== EXITING STICKY MODE AND DROPPING ===');
-    console.log('  Client coords provided:', clientX, clientY);
-    console.log('  Sticky block:', this.stickyBlock.type, this.stickyBlock.id);
-
-    // Clear any existing connection candidate - Blockly will recalculate based on final position
-    // and auto-reconnect if the block is close enough to a valid connection
+    // Clear connection candidate - Blockly will recalculate from final position
     const dragStrategy = this.getDragStrategy(this.stickyBlock);
     if (dragStrategy) {
-      const hadCandidate = !!dragStrategy.connectionCandidate;
       dragStrategy.connectionCandidate = null;
-      if (hadCandidate) {
-        console.log('  Cleared connection candidate - Blockly will recalculate based on drop position');
-      }
     }
-
-    // Check if mover is still in moving state
-    const isMoving = this.mover?.isMoving(this.workspace);
-    console.log('  Mover isMoving:', isMoving);
 
     const moveInfo = this.mover?.moves?.get(this.workspace);
-    console.log('  MoveInfo exists:', !!moveInfo);
 
-    if (moveInfo) {
-      console.log('  MoveInfo state:');
-      console.log('    startLocation:', moveInfo.startLocation);
-      console.log('    currentDelta:', moveInfo.totalDelta);
-    }
-
-    // If coordinates were provided, update the moveInfo total delta to that position
+    // Update position if coordinates provided
     if (clientX !== undefined && clientY !== undefined && this.stickyBlock && !this.stickyBlock.isDisposed()) {
       const targetWorkspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
         this.workspace,
         new Blockly.utils.Coordinate(clientX, clientY)
       );
-      console.log('  Target workspace coords:', targetWorkspaceCoords);
 
       if (moveInfo) {
-        // Calculate block's CURRENT position (start + accumulated delta)
         const currentX = moveInfo.startLocation.x + moveInfo.totalDelta.x;
         const currentY = moveInfo.startLocation.y + moveInfo.totalDelta.y;
-        console.log('  Current block position:', { x: currentX, y: currentY });
 
-        // Calculate additional delta needed to reach target from current position
         const additionalDeltaX = targetWorkspaceCoords.x - currentX;
         const additionalDeltaY = targetWorkspaceCoords.y - currentY;
-        console.log('  Additional delta needed:', { x: additionalDeltaX, y: additionalDeltaY });
 
-        // Add the additional delta to move from current position to target
         moveInfo.totalDelta.x += additionalDeltaX;
         moveInfo.totalDelta.y += additionalDeltaY;
-        console.log('  Updated moveInfo.totalDelta:', moveInfo.totalDelta);
 
-        // CRITICAL: Actually move the block to the new position NOW
-        // Don't wait for Blockly's drag end - it might not apply the delta correctly
+        // Move block directly to ensure positioning is correct
         this.stickyBlock.moveBy(additionalDeltaX, additionalDeltaY);
-        console.log('  Moved block directly by additional delta');
-      } else {
-        console.log('  ⚠️ Cannot update position - moveInfo is null!');
       }
     }
 
-    // Clear click-and-stick mode so highlights are cleared on endDrag
     this.setClickAndStickMode(false);
 
-    // Finish the move operation - Mover handles positioning, render, and all cleanup
     if (this.mover && this.mover.isMoving(this.workspace)) {
       this.mover.finishMove(this.workspace);
     }
 
-    // Reset sticky UI state
     this.resetStickyState();
   }
 
