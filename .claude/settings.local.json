@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm start)",
+      "Bash(npm run format:check:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run wdio:build:*)",
+      "Bash(npm run wdio:build:app:*)",
+      "Read(//home/kirst/linux-code/blockly-all/blockly/**)",
+      "Read(//home/kirst/linux-code/blockly-all/**)",
+      "Bash(npm run wdio:build:tests:*)",
+      "Bash(npx mocha:*)",
+      "Bash(npm run wdio:run:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run test:mocha:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
