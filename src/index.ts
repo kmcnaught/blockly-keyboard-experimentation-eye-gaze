@@ -973,56 +973,6 @@ export class KeyboardNavigation {
     this.resetStickyState();
   }
 
-  /**
-   * Diagnostic method to check why gestures might not be working.
-   * Call from browser console: window.kbNav.diagnoseGestureIssue()
-   */
-  diagnoseGestureIssue() {
-    console.log('=== GESTURE DIAGNOSTIC ===');
-
-    const ws = this.workspace as any;
-
-    // Check all workspace flags that might block gestures
-    console.log('Workspace gesture state:');
-    console.log('  currentGesture_:', ws.currentGesture_);
-    console.log('  gestureStack_:', ws.gestureStack_);
-    console.log('  isDragging():', ws.isDragging());
-    console.log('  isMovable():', ws.isMovable());
-    console.log('  eventsEnabled_:', ws.eventsEnabled_);
-    console.log('  rendered:', ws.rendered);
-    console.log('  isVisible():', ws.isVisible());
-    console.log('  options.readOnly:', ws.options.readOnly);
-    console.log('  resizesEnabled_:', ws.resizesEnabled_);
-
-    // Check if there's a stuck keyboard move
-    if (this.mover) {
-      console.log('Keyboard move state:');
-      console.log('  isMoving:', this.mover.isMoving(this.workspace));
-      console.log('  moves.size:', this.mover.moves?.size);
-    }
-
-    // Check sticky mode state
-    console.log('Sticky mode state:');
-    console.log('  stickyBlock:', this.stickyBlock);
-
-    // Try to detect what's blocking
-    console.log('Potential blockers:');
-    if (ws.currentGesture_) console.log('  ⚠️ Stuck gesture detected');
-    if (ws.isDragging()) console.log('  ⚠️ Workspace thinks it\'s dragging');
-    if (ws.eventsEnabled_ === false) console.log('  ⚠️ Events explicitly disabled');
-    if (!ws.rendered) console.log('  ⚠️ Workspace not rendered');
-    if (ws.options.readOnly) console.log('  ⚠️ Workspace is read-only');
-    if (this.mover?.isMoving(this.workspace)) console.log('  ⚠️ Keyboard move still active');
-    if (this.stickyBlock) console.log('  ⚠️ Still in sticky mode');
-
-    if (!ws.currentGesture_ && !ws.isDragging() && ws.rendered && !ws.options.readOnly &&
-        !this.mover?.isMoving(this.workspace) && !this.stickyBlock) {
-      console.log('  ✓ No obvious blockers found - gesture system should be working');
-      console.log('  → If gestures still don\'t work, this may be a Blockly core issue');
-    }
-
-    console.log('=== END DIAGNOSTIC ===');
-  }
 }
 
 // Export build info components for use by plugin consumers
