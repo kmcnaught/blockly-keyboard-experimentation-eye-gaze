@@ -125,9 +125,21 @@ function addP5() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize build info styles
+  registerBuildInfoStyles();
+
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
+
+  // Add build info component to the page
+  const buildInfoElement = createBuildInfoComponent();
+  document.body.appendChild(buildInfoElement);
+
+  // Start auto-refresh for development (only in development environment)
+  if (process.env.NODE_ENV !== 'production') {
+    startBuildInfoAutoRefresh(buildInfoElement, 3000); // Check every 3 seconds
+  }
   // Add Blockly to the global scope so that test code can access it to
   // verify state after keypresses.
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
