@@ -121,28 +121,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     this.forceShowPreview();
     this.block.addIcon(new MoveIcon(this.block));
 
-    // Highlight all valid connections if enabled
-    console.log(
-      'KeyboardDragStrategy startDrag - highlighting enabled:',
-      this.highlightingEnabled,
-    );
-    console.log('All connections found:', this.allConnections.length);
-    if (this.highlightingEnabled) {
-      // @ts-expect-error getLocalConnections is private.
-      const localConnections = this.getLocalConnections(this.block);
-      console.log(
-        'Local connections on moving block:',
-        localConnections.length,
-      );
-
-      const validConnections =
-        this.connectionHighlighter.highlightValidConnections(
-          this.block,
-          this.allConnections,
-          localConnections,
-        );
-      console.log('Valid connections to highlight:', validConnections.length);
-    }
+    // Note: Connection highlighting is deferred to setClickAndStickMode()
+    // This ensures highlights only appear in sticky mode, not normal move mode
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
@@ -227,6 +207,27 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   setClickAndStickMode(enabled: boolean): void {
     this.isClickAndStick = enabled;
     console.log('Click and stick mode set to:', enabled);
+
+    if (enabled && this.highlightingEnabled) {
+      // Entering sticky mode - show connection highlights
+      console.log('Entering sticky mode - showing connection highlights');
+      // @ts-expect-error getLocalConnections is private.
+      const localConnections = this.getLocalConnections(this.block);
+      console.log('Local connections on moving block:', localConnections.length);
+      console.log('All connections found:', this.allConnections.length);
+
+      const validConnections =
+        this.connectionHighlighter.highlightValidConnections(
+          this.block,
+          this.allConnections,
+          localConnections,
+        );
+      console.log('Valid connections to highlight:', validConnections.length);
+    } else if (!enabled && this.highlightingEnabled) {
+      // Exiting sticky mode - clear connection highlights
+      console.log('Exiting sticky mode - clearing connection highlights');
+      this.connectionHighlighter.clearHighlights();
+    }
   }
 
   /**
@@ -516,7 +517,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private refreshHighlightsForPreview(
     currentCandidate: ConnectionCandidate | null,
   ): void {
-    if (!this.highlightingEnabled) return;
+    // Only refresh highlights if we're in sticky mode
+    if (!this.highlightingEnabled || !this.isClickAndStick) return;
 
     console.log('Preview changed, refreshing connection highlights');
 
