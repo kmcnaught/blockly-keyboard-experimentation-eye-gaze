@@ -30,6 +30,7 @@ import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 import {Navigation} from '../navigation';
 import {clearMoveHints} from '../hints';
 import {MoveIndicatorBubble} from '../move_indicator';
+import {isWorkspaceElement} from '../dom_utils';
 
 /**
  * The distance to move an item, in workspace coordinates, when
@@ -75,14 +76,29 @@ export class Mover {
   protected moves: Map<WorkspaceSvg, MoveInfo> = new Map();
 
   /**
-   * The element's base drag strategy, which will be overridden during
-   * keyboard drags and reset at the end of the drag.
+   * PHASE 6: Store original drag strategies per-block using WeakMap.
+   * This prevents strategy corruption when multiple blocks are involved or
+   * when operations are interrupted. WeakMap ensures strategies are garbage
+   * collected when blocks are disposed.
    */
-  private oldDragStrategy: IDragStrategy | null = null;
+  private oldDragStrategies: WeakMap<BlockSvg, IDragStrategy> = new WeakMap();
 
   private moveIndicator?: MoveIndicatorBubble;
 
-  constructor(protected navigation: Navigation) {}
+  /** Whether connection highlighting is enabled for moves. */
+  private highlightConnections: boolean;
+
+  /** Optional callback to check if auto-scrolling should be disabled. */
+  private shouldDisableAutoScroll?: () => boolean;
+
+  constructor(
+    protected navigation: Navigation,
+    highlightConnections = true,
+    shouldDisableAutoScroll?: () => boolean,
+  ) {
+    this.highlightConnections = highlightConnections;
+    this.shouldDisableAutoScroll = shouldDisableAutoScroll;
+  }
 
   /**
    * Returns true iff we are able to begin moving the draggable element which
@@ -125,6 +141,7 @@ export class Mover {
    * @param moveType Whether this is an insert or a move.
    * @param startPoint Where to start the move, or null to use the current
    *     location if any.
+   * @param onMoveFinished Optional callback to call when move finishes (for exiting sticky mode).
    * @returns True iff a move has successfully begun.
    */
   startMove(
@@ -132,10 +149,19 @@ export class Mover {
     draggable: IDraggable & IFocusableNode & IBoundedElement & ISelectable,
     moveType: MoveType,
     startPoint: RenderedConnection | null,
+    onMoveFinished?: () => void,
   ) {
+    console.log('Mover.startMove called with:', {
+      draggableType: draggable.constructor.name,
+      moveType,
+      highlightConnections: this.highlightConnections,
+    });
+
     if (draggable instanceof BlockSvg) {
-      this.patchDragStrategy(draggable, moveType, startPoint);
+      console.log('Patching drag strategy for BlockSvg');
+      this.patchDragStrategy(draggable, moveType, startPoint, onMoveFinished);
     } else if (draggable instanceof comments.RenderedWorkspaceComment) {
+      console.log('Setting up move indicator for comment');
       this.moveIndicator = new MoveIndicatorBubble(draggable);
     }
     // Begin dragging element.
@@ -147,12 +173,43 @@ export class Mover {
     if (!DraggerClass) throw new Error('no Dragger registered');
     const dragger = new DraggerClass(draggable, workspace);
     // Set up a blur listener to end the move if the user clicks away
-    const blurListener = () => {
-      this.finishMove(workspace);
+    // BUT: During click-and-stick mode, only auto-finish if focus moved to something
+    // meaningful (toolbox, other UI), not if clicking workspace background to drop
+    const blurListener = (evt: Event) => {
+      const event = evt as FocusEvent;
+
+      // Check if we're in click-and-stick mode
+      const dragStrategy = (draggable as any).dragStrategy;
+      const isClickAndStick = dragStrategy?.isClickAndStickMode?.();
+
+      if (!isClickAndStick) {
+        console.log('Blur listener finishing move (not in click-and-stick mode)');
+        this.finishMove(workspace);
+        return;
+      }
+
+      // In click-and-stick mode: check where focus is going
+      const newFocusTarget = event.relatedTarget as any;
+      const activeElement = document.activeElement;
+
+      console.log('Blur during click-and-stick mode:');
+      console.log('  relatedTarget:', newFocusTarget);
+      console.log('  activeElement:', activeElement?.className);
+
+      const isWorkspaceBackground =
+        isWorkspaceElement(newFocusTarget) ||
+        isWorkspaceElement(activeElement);
+
+      if (isWorkspaceBackground) {
+        console.log('  → Ignoring blur (workspace background - will drop via click handler)');
+      } else {
+        console.log('  → Auto-finishing (focus moved to meaningful UI element)');
+        this.finishMove(workspace);
+      }
     };
     // Record that a move is in progress and start dragging.
     workspace.setKeyboardMoveInProgress(true);
-    const info = new MoveInfo(workspace, draggable, dragger, blurListener);
+    const info = new MoveInfo(workspace, draggable, dragger, blurListener, onMoveFinished);
     this.moves.set(workspace, info);
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
@@ -217,14 +274,33 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
+    console.log('=== Mover.finishMove called ===');
+    console.log('Call stack:', new Error().stack);
+    console.log('Workspace ID:', workspace?.id);
+    console.log('Has moves:', this.moves.has(workspace));
+    console.log('Moves size:', this.moves.size);
+
+    // Check if there's actually a move in progress
+    // This prevents errors if finishMove is called multiple times
+    if (!this.moves.has(workspace)) {
+      console.log('Mover.finishMove: No move in progress, skipping');
+      return false;
+    }
+
+    console.log('Calling preDragEndCleanup...');
     const info = this.preDragEndCleanup(workspace);
 
+    console.log('Calling dragger.onDragEnd...');
+    // The fakePointerEvent already contains the correct coordinates based on totalDelta
+    // The second parameter (0,0) represents that there's no additional delta since the last move
     info.dragger.onDragEnd(
       info.fakePointerEvent('pointerup'),
       new utils.Coordinate(0, 0),
     );
 
+    console.log('Calling postDragEndCleanup...');
     this.postDragEndCleanup(workspace, info);
+    console.log('finishMove complete, returning true');
     return true;
   }
 
@@ -237,6 +313,13 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
+    // Check if there's actually a move in progress
+    // This prevents errors if abortMove is called multiple times
+    if (!this.moves.has(workspace)) {
+      console.log('Mover.abortMove: No move in progress, skipping');
+      return false;
+    }
+
     const info = this.preDragEndCleanup(workspace);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -293,6 +376,8 @@ export class Mover {
    * @param info The info for the element.
    */
   private postDragEndCleanup(workspace: WorkspaceSvg, info: MoveInfo) {
+    console.log('Mover.postDragEndCleanup called');
+
     this.moveIndicator?.dispose();
     this.moveIndicator = undefined;
     if (info.draggable instanceof BlockSvg) {
@@ -300,10 +385,47 @@ export class Mover {
     }
     this.moves.delete(workspace);
     workspace.setKeyboardMoveInProgress(false);
-    // Delay scroll until after element has finished moving.
-    setTimeout(() => this.scrollCurrentElementIntoView(workspace), 0);
-    // If a block gets reattached, ensure it retains focus.
-    getFocusManager().focusNode(info.draggable);
+
+    // Call onMoveFinished callback after moves cleanup is complete
+    // This ensures the mover is no longer in moving state when the callback runs
+    if (info.onMoveFinished) {
+      console.log('Calling onMoveFinished callback after cleanup');
+      info.onMoveFinished();
+    }
+
+    // Use requestAnimationFrame to ensure rendering happens on the next frame
+    // This is deterministic and synchronized with the browser's rendering cycle
+    requestAnimationFrame(() => {
+      console.log('Rendering after move completion');
+
+      if (info.draggable instanceof BlockSvg) {
+        // Find the root block of the stack to render from the top
+        let rootBlock = info.draggable;
+        let parent = info.draggable.getParent();
+        while (parent instanceof BlockSvg) {
+          rootBlock = parent;
+          parent = parent.getParent() as BlockSvg;
+        }
+
+        // Render from the root of the entire stack
+        console.log(`Rendering from root block: ${rootBlock.type}`);
+        rootBlock.render();
+
+        // If the moved block is different from root, ensure it's also rendered
+        if (rootBlock !== info.draggable) {
+          info.draggable.render();
+        }
+      }
+
+      // Force full workspace render to catch any other changes
+      workspace.render();
+
+      // After rendering, scroll the element into view
+      this.scrollCurrentElementIntoView(workspace);
+
+      // Ensure focus is maintained
+      getFocusManager().focusNode(info.draggable);
+    });
   }
 
   /**
@@ -364,6 +486,7 @@ export class Mover {
 
   /**
    * Monkeypatch: replace the block's drag strategy and cache the old value.
+   * PHASE 6: Store strategy per-block in WeakMap for robustness.
    *
    * @param block The block to patch.
    * @param moveType Whether this is an insert or a move.
@@ -374,23 +497,68 @@ export class Mover {
     block: BlockSvg,
     moveType: MoveType,
     startPoint: RenderedConnection | null,
+    onMoveFinished?: () => void,
   ) {
     // @ts-expect-error block.dragStrategy is private.
-    this.oldDragStrategy = block.dragStrategy;
+    const currentStrategy = block.dragStrategy;
+
+    // PHASE 6: Store in WeakMap keyed by block (prevents corruption from overlapping operations)
+    this.oldDragStrategies.set(block, currentStrategy);
+
+    // Create callback to complete the move when connection is clicked
+    const onMoveComplete = () => {
+      console.log('onMoveComplete callback invoked');
+      const workspace = block.workspace as WorkspaceSvg;
+      console.log('Workspace:', workspace?.id);
+      console.log('Calling this.finishMove...');
+      const result = this.finishMove(workspace);
+      console.log('finishMove returned:', result);
+    };
+
     block.setDragStrategy(
-      new KeyboardDragStrategy(block, moveType, startPoint),
+      new KeyboardDragStrategy(
+        block,
+        moveType,
+        startPoint,
+        this.highlightConnections,
+        onMoveComplete,
+        onMoveFinished,
+      ),
     );
   }
 
   /**
    * Undo the monkeypatching of the block's drag strategy.
+   * PHASE 6: Retrieve strategy from WeakMap and add error handling.
    *
-   * @param block The block to patch.
+   * @param block The block to unpatch.
    */
   private unpatchDragStrategy(block: BlockSvg) {
-    if (this.oldDragStrategy) {
-      block.setDragStrategy(this.oldDragStrategy);
-      this.oldDragStrategy = null;
+    try {
+      // @ts-expect-error block.dragStrategy is private
+      const currentStrategy = block.dragStrategy;
+      if (currentStrategy instanceof KeyboardDragStrategy) {
+        // Disable click-and-stick mode so highlights will be cleared
+        console.log('Disabling click-and-stick mode');
+        currentStrategy.setClickAndStickMode(false);
+
+        // Clear any remaining connection highlights from the keyboard drag strategy
+        console.log('Clearing connection highlights from KeyboardDragStrategy');
+        currentStrategy.connectionHighlighter.clearHighlights();
+      }
+
+      // PHASE 6: Retrieve from WeakMap (per-block storage)
+      const oldStrategy = this.oldDragStrategies.get(block);
+      if (oldStrategy) {
+        block.setDragStrategy(oldStrategy);
+        this.oldDragStrategies.delete(block);
+        console.log('Restored original drag strategy for block');
+      } else {
+        console.warn('No original drag strategy found for block - may indicate corrupted state');
+      }
+    } catch (error) {
+      console.error('Error restoring drag strategy:', error);
+      // Don't throw - allow cleanup to continue even if strategy restoration fails
     }
   }
 
@@ -402,6 +570,11 @@ export class Mover {
    *     the workspace's viewport.
    */
   private scrollCurrentElementIntoView(workspace: WorkspaceSvg, padding = 0) {
+    // Skip auto-scrolling if the callback indicates it should be disabled
+    if (this.shouldDisableAutoScroll?.()) {
+      return;
+    }
+
     const draggable = this.moves.get(workspace)?.draggable;
     if (draggable) {
       const bounds = (
@@ -448,18 +621,21 @@ export class MoveInfo {
   readonly parentNext: Connection | null = null;
   readonly parentInput: Connection | null = null;
   readonly startLocation: utils.Coordinate;
+  readonly onMoveFinished?: () => void;
 
   constructor(
     readonly workspace: WorkspaceSvg,
     readonly draggable: IDraggable & IFocusableNode & IBoundedElement,
     readonly dragger: IDragger,
     readonly blurListener: EventListener,
+    onMoveFinished?: () => void,
   ) {
     if (draggable instanceof BlockSvg) {
       this.parentNext = draggable.previousConnection?.targetConnection ?? null;
       this.parentInput = draggable.outputConnection?.targetConnection ?? null;
     }
     this.startLocation = draggable.getRelativeToSurfaceXY();
+    this.onMoveFinished = onMoveFinished;
   }
 
   /**

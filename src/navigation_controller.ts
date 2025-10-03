@@ -44,7 +44,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
 export class NavigationController {
   private navigation: Navigation = new Navigation();
 
-  private mover = new Mover(this.navigation);
+  private mover: Mover;
 
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
@@ -68,19 +68,31 @@ export class NavigationController {
 
   exitAction: ExitAction = new ExitAction(this.navigation);
 
-  enterAction: EnterAction = new EnterAction(this.mover, this.navigation);
+  enterAction: EnterAction;
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
-  moveActions = new MoveActions(this.mover);
+  moveActions: MoveActions;
 
   stackNavigationAction: StackNavigationAction = new StackNavigationAction();
 
   constructor(
-    private options: {allowCrossWorkspacePaste: boolean} = {
+    private options: {
+      allowCrossWorkspacePaste: boolean;
+      highlightConnections?: boolean;
+      shouldDisableAutoScroll?: () => boolean;
+    } = {
       allowCrossWorkspacePaste: false,
+      highlightConnections: true,
     },
   ) {
+    this.mover = new Mover(
+      this.navigation,
+      options.highlightConnections ?? true,
+      options.shouldDisableAutoScroll
+    );
+    this.enterAction = new EnterAction(this.mover, this.navigation);
+    this.moveActions = new MoveActions(this.mover);
     this.clipboard = new Clipboard(this.navigation, options);
   }
 
