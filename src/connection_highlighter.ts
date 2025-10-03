@@ -175,7 +175,7 @@ export class ConnectionHighlighter {
     try {
       this.createConnectionVisualization(connection);
     } catch (error) {
-      // Silently fail - visual feedback is non-critical
+      console.debug('Failed to highlight connection (non-critical):', error);
     }
   }
 
@@ -249,7 +249,7 @@ export class ConnectionHighlighter {
               return true;
             }
           } catch (error) {
-            // Silently fail
+            console.debug('Failed to add highlight to DOM:', error);
           }
           return false;
         };
@@ -412,7 +412,7 @@ export class ConnectionHighlighter {
       }
 
     } catch (error) {
-      // Silently fail
+      console.debug('Failed to create core-based notch highlight, using fallback:', error);
     }
 
     return null;
@@ -504,7 +504,7 @@ export class ConnectionHighlighter {
       }
 
     } catch (error) {
-      // Silently fail
+      console.debug('Failed to create core-based value highlight, using fallback:', error);
     }
 
     return null;
@@ -652,6 +652,7 @@ export class ConnectionHighlighter {
         height: 30,
       };
     } catch (error) {
+      console.debug('Failed to get socket bounds, using defaults:', error);
       return {
         x: connection.x,
         y: connection.y - 15,
@@ -717,6 +718,7 @@ export class ConnectionHighlighter {
 
       return null;
     } catch (error) {
+      console.debug('Failed to estimate input bounds:', error);
       return null;
     }
   }
@@ -816,7 +818,7 @@ export class ConnectionHighlighter {
           element.parentNode.removeChild(element);
         }
       } catch (error) {
-        // Silently continue
+        console.warn('Failed to remove highlight element:', error);
       }
     }
 
@@ -846,7 +848,7 @@ export class ConnectionHighlighter {
             break;
         }
       } catch (error) {
-        // Silently continue
+        console.debug('Failed to update highlight position:', error);
       }
     }
   }

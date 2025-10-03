@@ -146,7 +146,7 @@ suite('Workspace comment navigation', function () {
     await sendKeyAndWait(this.browser, Key.Enter);
     const collapsed = await this.browser.execute((commentId) => {
       return Blockly.getMainWorkspace()
-        .getCommentById(commentId)
+        .getCommentById(commentId as string)
         ?.isCollapsed();
     }, this.commentId1 as string);
     chai.assert.isTrue(collapsed);
@@ -168,7 +168,7 @@ suite('Workspace comment navigation', function () {
     chai.assert.equal(focusedNodeId, `${this.commentId1}`);
 
     const commentText = await this.browser.execute((commentId) => {
-      return Blockly.getMainWorkspace().getCommentById(commentId)?.getText();
+      return Blockly.getMainWorkspace().getCommentById(commentId as string)?.getText();
     }, this.commentId1 as string);
     chai.assert.equal(commentText, 'Comment oneHello world');
   });
