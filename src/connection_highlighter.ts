@@ -57,10 +57,6 @@ export class ConnectionHighlighter {
   /** Scroll event listener for updating highlight positions. */
   private scrollListener?: () => void;
 
-  /** Whether to use core-based rendering for value connection highlights. */
-  private useCoreValueHighlights: boolean = true;
-
-
   constructor(
     workspace: WorkspaceSvg,
     onConnectionClick?: (connection: RenderedConnection) => void,
@@ -552,20 +548,18 @@ export class ConnectionHighlighter {
     connection: RenderedConnection,
     workspace: WorkspaceSvg,
   ): SVGElement {
-    if (this.useCoreValueHighlights) {
-      const sourceBlock = connection.getSourceBlock();
-      if (sourceBlock instanceof BlockSvg) {
-        const renderer = sourceBlock.workspace.getRenderer();
-        const rendererName = renderer.constructor.name;
-        const isZelos = rendererName.toLowerCase().includes('zelos');
+    const sourceBlock = connection.getSourceBlock();
+    if (sourceBlock instanceof BlockSvg) {
+      const renderer = sourceBlock.workspace.getRenderer();
+      const rendererName = renderer.constructor.name;
+      const isZelos = rendererName.toLowerCase().includes('zelos');
 
-        // Use core shapes for Geras/Thrasos (Zelos requires unavailable renderInfo)
-        if (!isZelos) {
-          const shapeHighlight = this.createCoreBasedValueHighlight(connection, sourceBlock);
-          if (shapeHighlight) {
-            shapeHighlight.setAttribute('data-already-in-dom', 'true');
-            return shapeHighlight;
-          }
+      // Use core shapes for Geras/Thrasos (Zelos requires unavailable renderInfo)
+      if (!isZelos) {
+        const shapeHighlight = this.createCoreBasedValueHighlight(connection, sourceBlock);
+        if (shapeHighlight) {
+          shapeHighlight.setAttribute('data-already-in-dom', 'true');
+          return shapeHighlight;
         }
       }
     }
