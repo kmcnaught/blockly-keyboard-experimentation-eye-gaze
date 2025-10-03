@@ -241,6 +241,60 @@ const simpleCircle = {
                   },
                 },
               },
+              'next': {
+                'block': {
+                  'type': 'simple_circle',
+                  'id': 'draw_circle_2',
+                  'inline': true,
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'draw_circle_2_color',
+                        'fields': {
+                          'COLOUR': '#ff0000',
+                        },
+                      },
+                    },
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'simple_circle',
+                      'id': 'draw_circle_3',
+                      'inline': true,
+                      'inputs': {
+                        'COLOR': {
+                          'shadow': {
+                            'type': 'colour_picker',
+                            'id': 'draw_circle_3_color',
+                            'fields': {
+                              'COLOUR': '#00ff00',
+                            },
+                          },
+                        },
+                      },
+                      'next': {
+                        'block': {
+                          'type': 'simple_circle',
+                          'id': 'draw_circle_4',
+                          'inline': true,
+                          'inputs': {
+                            'COLOR': {
+                              'shadow': {
+                                'type': 'colour_picker',
+                                'id': 'draw_circle_4_color',
+                                'fields': {
+                                  'COLOUR': '#0000ff',
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },
