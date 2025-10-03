@@ -6,6 +6,7 @@
 
 import * as chai from 'chai';
 import * as Blockly from 'blockly';
+import {suite, test, setup, afterEach} from 'mocha';
 import {
   testSetup,
   testFileLocations,
@@ -18,6 +19,7 @@ import {
   blockIsPresent,
   getFocusedBlockType,
   sendKeyAndWait,
+  assertNoJavaScriptErrors,
 } from './test_setup.js';
 import {Key, KeyAction, PointerAction, WheelAction} from 'webdriverio';
 
@@ -29,6 +31,11 @@ suite('Clipboard test', function () {
   setup(async function () {
     this.browser = await testSetup(testFileLocations.BASE);
     await this.browser.pause(PAUSE_TIME);
+  });
+
+  // Check for JavaScript errors after each clipboard operation
+  afterEach(async function () {
+    await assertNoJavaScriptErrors(this.browser, 'clipboard operations');
   });
 
   test('Copy and paste while block selected', async function () {

@@ -42,7 +42,7 @@ let driver: webdriverio.Browser | null = null;
  * the browser.wait* functions if you need your test to wait for
  * something to happen after sending input.
  */
-export const PAUSE_TIME = 0;
+export const PAUSE_TIME = 500;
 
 /**
  * Start up WebdriverIO and load the test page. This should only be
@@ -59,7 +59,11 @@ export async function driverSetup(): Promise<webdriverio.Browser> {
       'unhandledPromptBehavior': 'ignore',
       // eslint-disable-next-line @typescript-eslint/naming-convention
       'goog:chromeOptions': {
-        args: ['--allow-file-access-from-files'],
+        args: [
+          '--allow-file-access-from-files',
+          '--mute-audio',
+          '--autoplay-policy=no-user-gesture-required',
+        ],
       },
       // We aren't (yet) using any BiDi features, and BiDi is sensitive to
       // mismatches between Chrome version and Chromedriver version.
@@ -735,4 +739,45 @@ export async function rightClickOnFlyoutBlockType(
 ) {
   const elem = await browser.$(`.blocklyFlyout .${blockType}`);
   await elem.click({button: 'right'});
+}
+
+/**
+ * Checks for JavaScript errors in the browser console and asserts none occurred.
+ * This helps catch runtime errors that don't cause test failures but break user experience.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param testDescription Optional description for better error messages.
+ * @throws AssertionError if JavaScript errors are detected.
+ */
+export async function assertNoJavaScriptErrors(
+  browser: WebdriverIO.Browser,
+  testDescription?: string,
+): Promise<void> {
+  const logs = await browser.getLogs('browser');
+  const jsErrors = logs.filter((log: any) =>
+    log.level === 'SEVERE' &&
+    log.message &&
+    (log.message.includes('ERROR') ||
+     log.message.includes('Error') ||
+     log.message.includes('Uncaught') ||
+     log.message.includes('TypeError') ||
+     log.message.includes('ReferenceError'))
+  );
+
+  if (jsErrors.length > 0) {
+    const errorMessages = jsErrors.map((e: any) => e.message || e).join('; ');
+    const context = testDescription ? ` during ${testDescription}` : '';
+    throw new Error(`JavaScript errors detected${context}: ${errorMessages}`);
+  }
+}
+
+/**
+ * Clears the browser console logs to start fresh for error checking.
+ * Useful when you want to check for errors from a specific point onwards.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function clearBrowserLogs(browser: WebdriverIO.Browser): Promise<void> {
+  // Clear logs by fetching and discarding them
+  await browser.getLogs('browser');
 }

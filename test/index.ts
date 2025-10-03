@@ -24,6 +24,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
+import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRefresh} from '../src/build_info_component';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
@@ -99,7 +100,9 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
   Blockly.ContextMenuItems.registerCommentOptions();
-  new KeyboardNavigation(workspace);
+  const kbNav = new KeyboardNavigation(workspace);
+  // Expose keyboard navigation instance for debugging
+  (window as any).kbNav = kbNav;
   registerRunCodeShortcut();
 
   // Disable blocks that aren't inside the setup or draw loops.

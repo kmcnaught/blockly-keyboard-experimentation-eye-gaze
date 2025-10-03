@@ -5,6 +5,7 @@
  */
 
 import * as chai from 'chai';
+import { suite, test, setup, afterEach } from 'mocha';
 import {
   blockIsPresent,
   focusOnBlock,
@@ -18,6 +19,7 @@ import {
   sendKeyAndWait,
   keyRight,
   focusOnBlockField,
+  assertNoJavaScriptErrors,
 } from './test_setup.js';
 import {Key} from 'webdriverio';
 
@@ -29,6 +31,11 @@ suite('Deleting Blocks', function () {
   setup(async function () {
     this.browser = await testSetup(testFileLocations.NAVIGATION_TEST_BLOCKS);
     await this.browser.pause(PAUSE_TIME);
+  });
+
+  // Check for JavaScript errors after each delete operation
+  afterEach(async function () {
+    await assertNoJavaScriptErrors(this.browser, 'block deletion operations');
   });
 
   test('Deleting block selects parent block', async function () {

@@ -148,7 +148,7 @@ suite('Workspace comment navigation', function () {
       return Blockly.getMainWorkspace()
         .getCommentById(commentId)
         ?.isCollapsed();
-    }, this.commentId1);
+    }, this.commentId1 as string);
     chai.assert.isTrue(collapsed);
   });
 
@@ -169,7 +169,7 @@ suite('Workspace comment navigation', function () {
 
     const commentText = await this.browser.execute((commentId) => {
       return Blockly.getMainWorkspace().getCommentById(commentId)?.getText();
-    }, this.commentId1);
+    }, this.commentId1 as string);
     chai.assert.equal(commentText, 'Comment oneHello world');
   });
 

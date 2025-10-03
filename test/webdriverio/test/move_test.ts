@@ -7,6 +7,7 @@
 import * as Blockly from 'blockly';
 import * as chai from 'chai';
 import {Browser, Key} from 'webdriverio';
+import { suite, test, setup, afterEach } from 'mocha';
 import {
   PAUSE_TIME,
   focusOnBlock,
@@ -16,6 +17,7 @@ import {
   sendKeyAndWait,
   keyDown,
   contextMenuItems,
+  assertNoJavaScriptErrors,
 } from './test_setup.js';
 
 suite('Move start tests', function () {
@@ -92,6 +94,9 @@ suite('Move start tests', function () {
 
       // Abort move.
       await sendKeyAndWait(this.browser, Key.Escape);
+
+      // Check for JavaScript errors during move operations
+      await assertNoJavaScriptErrors(this.browser, 'statement block move with keyboard shortcut');
     }
   });
 
@@ -173,7 +178,16 @@ suite('Move start tests', function () {
 
       // Abort move.
       await sendKeyAndWait(this.browser, Key.Escape);
+
+      // Check for JavaScript errors during value block move operations
+      await assertNoJavaScriptErrors(this.browser, 'value block move with context menu');
     }
+  });
+
+  // Add JavaScript error checking after move operations
+  afterEach(async function () {
+    // Check for any JavaScript errors that occurred during the test
+    await assertNoJavaScriptErrors(this.browser, 'move test operations');
   });
 });
 
