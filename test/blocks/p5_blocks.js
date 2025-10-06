@@ -793,7 +793,7 @@ const drawFaceShape = {
   'type': 'draw_face_shape',
   'tooltip': 'Draw a face shape without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 face shape with %2 skin color %3',
+  'message0': '😊 draw %1 face shape with %2 skin color %3',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -822,7 +822,7 @@ const drawEyes = {
   'type': 'draw_eyes',
   'tooltip': 'Draw eyes without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 eyes',
+  'message0': '👀 draw %1 eyes',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -846,7 +846,7 @@ const drawNose = {
   'type': 'draw_nose',
   'tooltip': 'Draw a nose without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 nose',
+  'message0': '👃 draw %1 nose',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -868,7 +868,7 @@ const drawMouth = {
   'type': 'draw_mouth',
   'tooltip': 'Draw a mouth without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 mouth',
+  'message0': '👄 draw %1 mouth',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -891,7 +891,7 @@ const drawHair = {
   'type': 'draw_hair',
   'tooltip': 'Draw hair without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 hair with %2 color %3',
+  'message0': '💇 draw %1 hair with %2 color %3',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -921,7 +921,7 @@ const drawAccessories = {
   'type': 'draw_accessories',
   'tooltip': 'Draw face accessories without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1',
+  'message0': '👓 draw %1',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -944,7 +944,7 @@ const drawSky = {
   'type': 'draw_sky',
   'tooltip': 'Draw a sky without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 sky',
+  'message0': '☁️ draw %1 sky',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -969,7 +969,7 @@ const drawWeather = {
   'type': 'draw_weather',
   'tooltip': 'Draw weather elements without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1',
+  'message0': '🌤️ draw %1',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -995,7 +995,7 @@ const drawTerrain = {
   'type': 'draw_terrain',
   'tooltip': 'Draw terrain without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 terrain',
+  'message0': '⛰️ draw %1 terrain',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -1020,7 +1020,7 @@ const drawForeground = {
   'type': 'draw_foreground',
   'tooltip': 'Draw foreground elements without needing coordinates',
   'helpUrl': '',
-  'message0': 'draw %1 foreground',
+  'message0': '🌿 draw %1 foreground',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -1047,7 +1047,7 @@ const drawCompleteFace = {
   'type': 'draw_complete_face',
   'tooltip': 'Draw a complete face with all features',
   'helpUrl': '',
-  'message0': 'draw complete face: %1 shape, %2 eyes, %3 nose, %4 mouth, %5 hair',
+  'message0': '😊 draw complete face: %1 shape, %2 eyes, %3 nose, %4 mouth, %5 hair',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -1111,7 +1111,7 @@ const drawCompleteLandscape = {
   'type': 'draw_complete_landscape',
   'tooltip': 'Draw a complete landscape scene',
   'helpUrl': '',
-  'message0': 'draw complete landscape: %1 sky, %2 terrain, %3 weather',
+  'message0': '🏞️ draw complete landscape: %1 sky, %2 terrain, %3 weather',
   'args0': [
     {
       'type': 'field_dropdown',
