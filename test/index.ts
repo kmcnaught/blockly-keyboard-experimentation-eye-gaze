@@ -148,4 +148,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   window.Blockly = Blockly;
+
+  // Global error handler for media (audio/video) elements
+  document.addEventListener('error', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'AUDIO' || target.tagName === 'VIDEO') {
+      console.error('Media error detected:');
+      console.error('  Element:', target.tagName);
+      console.error('  Source:', (target as HTMLMediaElement).src || (target as HTMLMediaElement).currentSrc);
+      console.error('  Error:', e);
+      console.trace('Stack trace:');
+    }
+  }, true); // Use capture phase to catch errors before they bubble
 });
