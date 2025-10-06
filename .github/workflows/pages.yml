@@ -2,11 +2,10 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default and experimentation branches.
+  # Runs on pushes targeting the default branch.
   push:
     branches:
       - main
-      - add-screen-reader-support-experimental
 
   # Allows the workflow to be manually run from the Actions tab.
   workflow_dispatch:
@@ -35,23 +34,10 @@ jobs:
           repository: google/blockly
           ref: develop
 
-      - name: Checkout add-screen-reader-support-experimental core Blockly
-        uses: actions/checkout@v4
-        with:
-          path: blockly-add-screen-reader-support-experimental
-          repository: google/blockly
-          ref: add-screen-reader-support-experimental
-
       - name: Checkout tip-of-tree blockly-keyboard-experimentation
         uses: actions/checkout@v4
         with:
           path: blockly-keyboard-experimentation
-
-      - name: Checkout add-screen-reader-support-experimental blockly-keyboard-experimentation
-        uses: actions/checkout@v4
-        with:
-          path: blockly-keyboard-experimentation-add-screen-reader-support-experimental
-          ref: add-screen-reader-support-experimental
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -74,25 +60,6 @@ jobs:
           npm run ghpages
           mkdir ../ghpages
           cp -r build/* ../ghpages/
-
-      - name: Build add-screen-reader-support-experimental core Blockly
-        run: |
-          cd blockly/dist
-          npm unlink -g
-          cd ../../blockly-add-screen-reader-support-experimental
-          npm ci
-          npm run package
-          cd dist
-          npm link
-
-      - name: Build add-screen-reader-support-experimental blockly-keyboard-experimentation
-        run: |
-          cd blockly-keyboard-experimentation-add-screen-reader-support-experimental
-          npm ci
-          npm link blockly
-          npm run ghpages
-          mkdir ../ghpages/screenreader
-          cp -r build/* ../ghpages/screenreader/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
