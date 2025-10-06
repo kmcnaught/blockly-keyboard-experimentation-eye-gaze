@@ -438,7 +438,7 @@ export class Mover {
         this.oldDragStrategies.delete(block);
       }
     } catch (error) {
-      console.warn('Failed to unpatch drag strategy during cleanup:', error);
+      // Silently fail during cleanup
     }
   }
 

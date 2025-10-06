@@ -372,16 +372,11 @@ export class EnterAction {
   private createNewBlock(workspace: WorkspaceSvg): BlockSvg | null {
     const flyout = workspace.getFlyout();
     if (!flyout || !flyout.isVisible()) {
-      console.warn(
-        'Trying to insert from the flyout when the flyout does not ' +
-          ' exist or is not visible',
-      );
       return null;
     }
 
     const curBlock = this.navigation.getFlyoutCursor(workspace)?.getCurNode();
     if (!(curBlock instanceof BlockSvg) || !curBlock.isEnabled()) {
-      console.warn("Can't insert a disabled block.");
       return null;
     }
 

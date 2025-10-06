@@ -67,16 +67,6 @@ export class ConnectionHighlighter {
     this.scrollListener = () => {
       this.updateHighlights();
     };
-
-    // Global cleanup function for debugging/recovery if highlights get stuck
-    if (!(window as any).clearAllConnectionHighlights) {
-      (window as any).clearAllConnectionHighlights = () => {
-        const allCircles = document.querySelectorAll(
-          '.blocklyPotentialConnection',
-        );
-        allCircles.forEach((circle) => circle.remove());
-      };
-    }
   }
 
   /**
@@ -818,7 +808,7 @@ export class ConnectionHighlighter {
           element.parentNode.removeChild(element);
         }
       } catch (error) {
-        console.warn('Failed to remove highlight element:', error);
+        // Silently fail - element may have already been removed
       }
     }
 
