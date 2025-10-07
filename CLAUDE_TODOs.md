@@ -16,6 +16,7 @@ later implementation. Include any questions/decisions that need to be made. If i
 
 - [x] PLAN: Make it so that the block based code automatically re-runs whenever the blocks are changed, i.e. live re-rendering
   - Plan created using debounced auto-run approach (300ms delay). See "Plans for later implementation" section below.
+  - **IMPLEMENTED**: Auto-run feature successfully implemented with 300ms debounce. Code now re-runs automatically when blocks are changed, created, deleted, or reconnected.
 - [x] GO: the crescent moon strategy doesn't work unless the sky is the same colour
 as the second 'circle' - find a better way
   - Fixed by using p5.js erase() mode instead of drawing a colored circle on top. The erase() function cuts out pixels regardless of background color.
