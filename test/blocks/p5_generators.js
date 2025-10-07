@@ -1042,10 +1042,17 @@ sketch.circle(330, 302, 35);\n`;
       code = `sketch.fill('#696969');
 sketch.stroke('#000000');
 sketch.strokeWeight(1);
-sketch.circle(100, 370, 25);
-sketch.ellipse(180, 375, 30, 20);
-sketch.circle(280, 365, 20);
-sketch.ellipse(350, 380, 35, 25);\n`;
+for (let i = 0; i < 20; i++) {
+  let x = sketch.random(20, 380);
+  let y = sketch.random(360, 390);
+  let w = sketch.random(15, 35);
+  let h = sketch.random(12, 25);
+  if (sketch.random() > 0.5) {
+    sketch.circle(x, y, w);
+  } else {
+    sketch.ellipse(x, y, w, h);
+  }
+}\n`;
       break;
     case 'beach':
       code = `sketch.fill('#F5DEB3');
