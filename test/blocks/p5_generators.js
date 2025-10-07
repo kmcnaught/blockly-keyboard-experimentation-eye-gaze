@@ -962,7 +962,11 @@ sketch.vertex(350, 240);
 sketch.vertex(400, 260);
 sketch.vertex(400, 400);
 sketch.vertex(0, 400);
-sketch.endShape();\n`;
+sketch.endShape();
+sketch.fill('#D2B48C');
+sketch.arc(100, 215, 60, 30, sketch.PI, 0);
+sketch.arc(220, 210, 50, 25, sketch.PI, 0);
+sketch.arc(340, 205, 55, 28, sketch.PI, 0);\n`;
       break;
     case 'forest':
       code = `sketch.fill('#006400');
