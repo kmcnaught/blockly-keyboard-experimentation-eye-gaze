@@ -973,14 +973,18 @@ sketch.arc(340, 205, 55, 28, sketch.PI, 0);\n`;
 sketch.noStroke();
 sketch.rect(0, 250, 400, 150);
 sketch.fill('#8B4513');
+let treeHeights = [120, 100, 140, 110, 130, 105, 125, 115];
 for (let i = 0; i < 8; i++) {
   let x = 50 + i * 40;
-  sketch.rect(x, 200, 10, 100);
+  let h = treeHeights[i];
+  sketch.rect(x, 400 - h, 10, h);
 }
 sketch.fill('#228B22');
 for (let i = 0; i < 8; i++) {
   let x = 55 + i * 40;
-  sketch.triangle(x - 15, 200, x, 150, x + 15, 200);
+  let h = treeHeights[i];
+  let topY = 400 - h;
+  sketch.triangle(x - 15, topY, x, topY - 50, x + 15, topY);
 }\n`;
       break;
     case 'city':
