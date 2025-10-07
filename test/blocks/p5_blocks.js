@@ -778,6 +778,23 @@ const mouseMovedDistance = {
   'inputsInline': true,
 };
 
+const mouseMovedLessThan = {
+  'type': 'mouse_moved_less_than',
+  'tooltip': 'Check if mouse/gaze has moved less than a specific distance',
+  'helpUrl': '',
+  'message0': 'mouse moved less than %1 pixels',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'DISTANCE',
+      'check': 'Number',
+    },
+  ],
+  'output': 'Boolean',
+  'colour': 160,
+  'inputsInline': true,
+};
+
 const mouseInsideCanvas = {
   'type': 'mouse_inside_canvas',
   'tooltip': 'Check if mouse/gaze is within the canvas boundaries',
@@ -1188,6 +1205,7 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   mouseInZone,
   mouseMoved,
   mouseMovedDistance,
+  mouseMovedLessThan,
   mouseInsideCanvas,
   drawFaceShape,
   drawEyes,

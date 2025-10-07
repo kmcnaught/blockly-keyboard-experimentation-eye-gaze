@@ -277,6 +277,11 @@ forBlock['mouse_moved_distance'] = function (block, generator) {
   return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${distance})`, Order.RELATIONAL];
 };
 
+forBlock['mouse_moved_less_than'] = function (block, generator) {
+  const distance = generator.valueToCode(block, 'DISTANCE', Order.NONE) || '10';
+  return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) < ${distance})`, Order.RELATIONAL];
+};
+
 forBlock['mouse_inside_canvas'] = function (block, generator) {
   return ['(sketch.mouseX >= 0 && sketch.mouseX <= sketch.width && sketch.mouseY >= 0 && sketch.mouseY <= sketch.height)', Order.LOGICAL_AND];
 };

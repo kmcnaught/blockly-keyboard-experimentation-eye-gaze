@@ -230,6 +230,20 @@ export default {
           },
         },
         {
+          type: 'mouse_moved_less_than',
+          kind: 'block',
+          inputs: {
+            DISTANCE: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 20,
+                },
+              },
+            },
+          },
+        },
+        {
           type: 'mouse_in_zone',
           kind: 'block',
           inputs: {
