@@ -275,15 +275,6 @@ export default {
     },
     {
       kind: 'category',
-      name: 'Variables',
-      categorystyle: 'variable_category',
-      custom: 'VARIABLE',
-      cssConfig: {
-        icon: 'icon-variables',
-      },
-    },
-    {
-      kind: 'category',
       name: 'Input Values',
       categorystyle: 'math_category',
       cssConfig: {
@@ -611,6 +602,15 @@ export default {
           },
         },
       ],
+    },
+    {
+      kind: 'category',
+      name: 'Variables',
+      categorystyle: 'variable_category',
+      custom: 'VARIABLE',
+      cssConfig: {
+        icon: 'icon-variables',
+      },
     },
   ],
 };
