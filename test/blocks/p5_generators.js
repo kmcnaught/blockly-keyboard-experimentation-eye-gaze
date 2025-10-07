@@ -862,12 +862,12 @@ for (let i = 0; i < 25; i++) {
     case 'rainbow':
       code = `sketch.strokeWeight(8);
 sketch.noFill();
-sketch.stroke('#FF0000'); sketch.arc(200, 150, 200, 100, sketch.PI, 0);
-sketch.stroke('#FF8C00'); sketch.arc(200, 150, 185, 85, sketch.PI, 0);
-sketch.stroke('#FFD700'); sketch.arc(200, 150, 170, 70, sketch.PI, 0);
-sketch.stroke('#00FF00'); sketch.arc(200, 150, 155, 55, sketch.PI, 0);
-sketch.stroke('#0000FF'); sketch.arc(200, 150, 140, 40, sketch.PI, 0);
-sketch.stroke('#8A2BE2'); sketch.arc(200, 150, 125, 25, sketch.PI, 0);\n`;
+sketch.stroke('#FF0000'); sketch.arc(200, 200, 320, 260, sketch.PI, 0);
+sketch.stroke('#FF8C00'); sketch.arc(200, 200, 305, 245, sketch.PI, 0);
+sketch.stroke('#FFD700'); sketch.arc(200, 200, 290, 230, sketch.PI, 0);
+sketch.stroke('#00FF00'); sketch.arc(200, 200, 275, 215, sketch.PI, 0);
+sketch.stroke('#0000FF'); sketch.arc(200, 200, 260, 200, sketch.PI, 0);
+sketch.stroke('#8A2BE2'); sketch.arc(200, 200, 245, 185, sketch.PI, 0);\n`;
       break;
     case 'lightning':
       code = `sketch.stroke('#FFFF00');
