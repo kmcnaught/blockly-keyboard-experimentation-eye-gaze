@@ -285,6 +285,20 @@ export default {
           type: 'mouse_inside_canvas',
           kind: 'block',
         },
+        {
+          type: 'mouse_speed_greater_than',
+          kind: 'block',
+          inputs: {
+            SPEED: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 10,
+                },
+              },
+            },
+          },
+        },
       ],
     },
     {

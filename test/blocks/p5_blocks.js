@@ -804,6 +804,23 @@ const mouseInsideCanvas = {
   'colour': 160,
 };
 
+const mouseSpeedGreaterThan = {
+  'type': 'mouse_speed_greater_than',
+  'tooltip': 'Check if mouse/gaze speed is greater than a specific value',
+  'helpUrl': '',
+  'message0': 'mouse speed greater than %1',
+  'args0': [
+    {
+      'type': 'input_value',
+      'name': 'SPEED',
+      'check': 'Number',
+    },
+  ],
+  'output': 'Boolean',
+  'colour': 160,
+  'inputsInline': true,
+};
+
 // Face Drawing Blocks
 
 const drawFaceShape = {
@@ -1207,6 +1224,7 @@ const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   mouseMovedDistance,
   mouseMovedLessThan,
   mouseInsideCanvas,
+  mouseSpeedGreaterThan,
   drawFaceShape,
   drawEyes,
   drawNose,

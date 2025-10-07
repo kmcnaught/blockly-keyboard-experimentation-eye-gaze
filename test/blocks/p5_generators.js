@@ -286,6 +286,11 @@ forBlock['mouse_inside_canvas'] = function (block, generator) {
   return ['(sketch.mouseX >= 0 && sketch.mouseX <= sketch.width && sketch.mouseY >= 0 && sketch.mouseY <= sketch.height)', Order.LOGICAL_AND];
 };
 
+forBlock['mouse_speed_greater_than'] = function (block, generator) {
+  const speed = generator.valueToCode(block, 'SPEED', Order.NONE) || '10';
+  return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${speed})`, Order.RELATIONAL];
+};
+
 // Complete Scene Generators (adding them early)
 
 forBlock['draw_complete_face'] = function (block, generator) {
