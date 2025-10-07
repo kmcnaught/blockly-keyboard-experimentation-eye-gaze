@@ -1458,6 +1458,33 @@ const landscape = {
           },
         },
       },
+      {
+        'type': 'draw_weather',
+        'id': 'weather_orphan_1',
+        'x': 50,
+        'y': 600,
+        'fields': {
+          'STYLE': 'clouds',
+        },
+      },
+      {
+        'type': 'draw_foreground',
+        'id': 'foreground_orphan_1',
+        'x': 450,
+        'y': 500,
+        'fields': {
+          'STYLE': 'trees',
+        },
+      },
+      {
+        'type': 'draw_weather',
+        'id': 'weather_orphan_2',
+        'x': 400,
+        'y': 600,
+        'fields': {
+          'STYLE': 'rainbow',
+        },
+      },
     ],
   },
 };

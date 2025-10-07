@@ -22,8 +22,9 @@ as the second 'circle' - find a better way
 - [x] PLAN: add a block that lets you load a picture as a background. The field for loading
 should launch a file picker.
   - Plan created using button field with FileReader API to load images as data URLs. See "Plans for later implementation" section below. 
-- [ ] GO: make it so that the "landscape" scenario includes some orphaned blocks, like in the
-"face" scenario to allow users to rebuild it. 
+- [x] GO: make it so that the "landscape" scenario includes some orphaned blocks, like in the
+"face" scenario to allow users to rebuild it.
+  - Added three orphaned blocks to landscape scenario: draw_weather (clouds), draw_foreground (trees), and draw_weather (rainbow). Positioned similarly to face scenario orphaned blocks. 
 
 ## Plans for later implementation
 
