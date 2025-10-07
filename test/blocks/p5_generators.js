@@ -76,6 +76,25 @@ forBlock['p5_fill'] = function (block, generator) {
   return code;
 };
 
+forBlock['load_background_image'] = function (block) {
+  const imageData = block.data;
+  if (!imageData) {
+    return '// No background image selected\n';
+  }
+
+  // Generate unique variable name based on block ID to avoid conflicts
+  const varName = 'bgImg_' + block.id.replace(/[^a-zA-Z0-9]/g, '_');
+
+  // Load image and draw it to fill the canvas
+  const code = `if (typeof ${varName} === 'undefined') {
+  ${varName} = sketch.loadImage('${imageData}');
+}
+if (${varName}.width > 0) {
+  sketch.image(${varName}, 0, 0, sketch.width, sketch.height);
+}\n`;
+  return code;
+};
+
 forBlock['p5_ellipse'] = function (block, generator) {
   const x = generator.valueToCode(block, 'X', Order.NONE) || 0;
   const y = generator.valueToCode(block, 'Y', Order.NONE) || 0;
