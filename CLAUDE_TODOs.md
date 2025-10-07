@@ -22,7 +22,8 @@ as the second 'circle' - find a better way
   - Fixed by using p5.js erase() mode instead of drawing a colored circle on top. The erase() function cuts out pixels regardless of background color.
 - [x] PLAN: add a block that lets you load a picture as a background. The field for loading
 should launch a file picker.
-  - Plan created using button field with FileReader API to load images as data URLs. See "Plans for later implementation" section below. 
+  - Plan created using button field with FileReader API to load images as data URLs. See "Plans for later implementation" section below.
+  - **IMPLEMENTED**: Background image loading block successfully created with file picker, size validation (5MB max), and p5.js image rendering. Block added to Events toolbox category. 
 - [x] GO: make it so that the "landscape" scenario includes some orphaned blocks, like in the
 "face" scenario to allow users to rebuild it.
   - Added three orphaned blocks to landscape scenario: draw_weather (clouds), draw_foreground (trees), and draw_weather (rainbow). Positioned similarly to face scenario orphaned blocks. 
