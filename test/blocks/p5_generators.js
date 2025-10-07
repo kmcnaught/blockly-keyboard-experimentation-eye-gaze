@@ -766,13 +766,17 @@ sketch.circle(170, 70, 70);
 sketch.circle(190, 80, 60);\n`;
       break;
     case 'sunset':
-      code = `sketch.fill('#FF6347');
+      code = `sketch.fill('#FF4500');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 160);
+sketch.rect(0, 0, 400, 70);
+sketch.fill('#FF6347');
+sketch.rect(0, 70, 400, 85);
 sketch.fill('#FF8C00');
-sketch.rect(0, 160, 400, 120);
+sketch.rect(0, 155, 400, 95);
+sketch.fill('#FFA500');
+sketch.rect(0, 250, 400, 70);
 sketch.fill('#FFD700');
-sketch.rect(0, 280, 400, 120);\n`;
+sketch.rect(0, 320, 400, 80);\n`;
       break;
     case 'sunrise':
       code = `sketch.fill('#FFB6C1');
