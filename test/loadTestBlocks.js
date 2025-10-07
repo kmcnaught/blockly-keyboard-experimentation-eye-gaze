@@ -1266,13 +1266,13 @@ const emptyWorkspace = {
   },
 };
 
-const gazeArtDemo = {
+const face = {
   'blocks': {
     'languageVersion': 0,
     'blocks': [
       {
         'type': 'p5_setup',
-        'id': 'setup_gaze_art',
+        'id': 'setup_face',
         'x': 0,
         'y': 75,
         'deletable': false,
@@ -1280,7 +1280,7 @@ const gazeArtDemo = {
           'STATEMENTS': {
             'block': {
               'type': 'p5_canvas',
-              'id': 'canvas_gaze_art',
+              'id': 'canvas_face',
               'deletable': false,
               'movable': false,
               'fields': {
@@ -1290,14 +1290,14 @@ const gazeArtDemo = {
               'next': {
                 'block': {
                   'type': 'p5_background_color',
-                  'id': 'background_gaze_art',
+                  'id': 'background_face',
                   'inputs': {
                     'COLOR': {
                       'shadow': {
                         'type': 'colour_picker',
-                        'id': 'background_color_gaze_art',
+                        'id': 'background_color_face',
                         'fields': {
-                          'COLOUR': '#000033',
+                          'COLOUR': '#e6f3ff',
                         },
                       },
                     },
@@ -1310,91 +1310,190 @@ const gazeArtDemo = {
       },
       {
         'type': 'p5_draw_once',
-        'id': 'draw_once_gaze_art',
+        'id': 'draw_face',
         'x': 0,
-        'y': 300,
+        'y': 332,
         'deletable': false,
         'inputs': {
           'STATEMENTS': {
             'block': {
-              'type': 'configurable_circle',
-              'id': 'static_circle_1',
+              'type': 'draw_face_shape',
+              'id': 'face_shape_1',
+              'fields': {
+                'SHAPE': 'round',
+              },
               'inputs': {
                 'COLOR': {
                   'shadow': {
                     'type': 'colour_picker',
-                    'id': 'static_circle_1_color',
+                    'id': 'face_color_1',
                     'fields': {
-                      'COLOUR': '#ff6600',
-                    },
-                  },
-                },
-                'X': {
-                  'shadow': {
-                    'type': 'math_number',
-                    'id': 'static_circle_1_x',
-                    'fields': {
-                      'NUM': 100,
-                    },
-                  },
-                },
-                'Y': {
-                  'shadow': {
-                    'type': 'math_number',
-                    'id': 'static_circle_1_y',
-                    'fields': {
-                      'NUM': 100,
-                    },
-                  },
-                },
-                'DIAMETER': {
-                  'shadow': {
-                    'type': 'math_number',
-                    'id': 'static_circle_1_diameter',
-                    'fields': {
-                      'NUM': 60,
+                      'COLOUR': '#ffdbac',
                     },
                   },
                 },
               },
               'next': {
                 'block': {
-                  'type': 'configurable_circle',
-                  'id': 'static_circle_2',
+                  'type': 'draw_eyes',
+                  'id': 'eyes_1',
+                  'fields': {
+                    'STYLE': 'normal',
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'draw_nose',
+                      'id': 'nose_1',
+                      'fields': {
+                        'STYLE': 'button',
+                      },
+                      'next': {
+                        'block': {
+                          'type': 'draw_mouth',
+                          'id': 'mouth_1',
+                          'fields': {
+                            'STYLE': 'smile',
+                          },
+                          'next': {
+                            'block': {
+                              'type': 'draw_hair',
+                              'id': 'hair_1',
+                              'fields': {
+                                'STYLE': 'short',
+                              },
+                              'inputs': {
+                                'COLOR': {
+                                  'shadow': {
+                                    'type': 'colour_picker',
+                                    'id': 'hair_color_1',
+                                    'fields': {
+                                      'COLOUR': '#663300',
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+};
+
+const landscape = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': 'setup_landscape',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'canvas_landscape',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+            },
+          },
+        },
+      },
+      {
+        'type': 'p5_draw_once',
+        'id': 'draw_landscape',
+        'x': 0,
+        'y': 332,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'draw_sky',
+              'id': 'sky_1',
+              'fields': {
+                'STYLE': 'sunny',
+              },
+              'next': {
+                'block': {
+                  'type': 'draw_weather',
+                  'id': 'weather_1',
+                  'fields': {
+                    'STYLE': 'sun',
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'draw_terrain',
+                      'id': 'terrain_1',
+                      'fields': {
+                        'STYLE': 'hills',
+                      },
+                      'next': {
+                        'block': {
+                          'type': 'draw_foreground',
+                          'id': 'foreground_1',
+                          'fields': {
+                            'STYLE': 'flowers',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  },
+};
+
+const effects = {
+  'blocks': {
+    'languageVersion': 0,
+    'blocks': [
+      {
+        'type': 'p5_setup',
+        'id': 'setup_effects',
+        'x': 0,
+        'y': 75,
+        'deletable': false,
+        'inputs': {
+          'STATEMENTS': {
+            'block': {
+              'type': 'p5_canvas',
+              'id': 'canvas_effects',
+              'deletable': false,
+              'movable': false,
+              'fields': {
+                'WIDTH': 400,
+                'HEIGHT': 400,
+              },
+              'next': {
+                'block': {
+                  'type': 'p5_background_color',
+                  'id': 'background_effects',
                   'inputs': {
                     'COLOR': {
                       'shadow': {
                         'type': 'colour_picker',
-                        'id': 'static_circle_2_color',
+                        'id': 'background_color_effects',
                         'fields': {
-                          'COLOUR': '#00ff88',
-                        },
-                      },
-                    },
-                    'X': {
-                      'shadow': {
-                        'type': 'math_number',
-                        'id': 'static_circle_2_x',
-                        'fields': {
-                          'NUM': 300,
-                        },
-                      },
-                    },
-                    'Y': {
-                      'shadow': {
-                        'type': 'math_number',
-                        'id': 'static_circle_2_y',
-                        'fields': {
-                          'NUM': 300,
-                        },
-                      },
-                    },
-                    'DIAMETER': {
-                      'shadow': {
-                        'type': 'math_number',
-                        'id': 'static_circle_2_diameter',
-                        'fields': {
-                          'NUM': 80,
+                          'COLOUR': '#0a0033',
                         },
                       },
                     },
@@ -1406,126 +1505,178 @@ const gazeArtDemo = {
         },
       },
       {
-        'type': 'p5_animate',
-        'id': 'animate_gaze_art',
+        'type': 'p5_draw_once',
+        'id': 'draw_effects',
         'x': 0,
-        'y': 600,
+        'y': 332,
         'deletable': false,
         'inputs': {
           'STATEMENTS': {
             'block': {
-              'type': 'controls_if',
-              'id': 'if_mouse_moved',
+              'type': 'draw_sparkle',
+              'id': 'sparkle_1',
               'inputs': {
-                'IF0': {
-                  'block': {
-                    'type': 'mouse_moved',
-                    'id': 'mouse_moved_condition',
+                'COLOR': {
+                  'shadow': {
+                    'type': 'colour_picker',
+                    'id': 'sparkle_color_1',
+                    'fields': {
+                      'COLOUR': '#ffff00',
+                    },
                   },
                 },
-                'DO0': {
-                  'block': {
-                    'type': 'draw_sparkle',
-                    'id': 'sparkle_on_move',
-                    'inputs': {
-                      'COLOR': {
-                        'shadow': {
-                          'type': 'colour_picker',
-                          'id': 'sparkle_color',
-                          'fields': {
-                            'COLOUR': '#ffff00',
-                          },
-                        },
-                      },
-                      'X': {
-                        'shadow': {
-                          'type': 'mouse_x',
-                          'id': 'sparkle_x',
-                        },
-                      },
-                      'Y': {
-                        'shadow': {
-                          'type': 'mouse_y',
-                          'id': 'sparkle_y',
-                        },
-                      },
-                      'SIZE': {
-                        'shadow': {
-                          'type': 'math_number',
-                          'id': 'sparkle_size',
-                          'fields': {
-                            'NUM': 12,
-                          },
-                        },
-                      },
+                'X': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'sparkle_x_1',
+                    'fields': {
+                      'NUM': 100,
+                    },
+                  },
+                },
+                'Y': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'sparkle_y_1',
+                    'fields': {
+                      'NUM': 100,
+                    },
+                  },
+                },
+                'SIZE': {
+                  'shadow': {
+                    'type': 'math_number',
+                    'id': 'sparkle_size_1',
+                    'fields': {
+                      'NUM': 20,
                     },
                   },
                 },
               },
               'next': {
                 'block': {
-                  'type': 'controls_if',
-                  'id': 'if_fast_movement',
+                  'type': 'draw_sparkle',
+                  'id': 'sparkle_2',
                   'inputs': {
-                    'IF0': {
-                      'block': {
-                        'type': 'logic_compare',
-                        'id': 'speed_comparison',
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'sparkle_color_2',
                         'fields': {
-                          'OP': 'GT',
+                          'COLOUR': '#ff66ff',
                         },
-                        'inputs': {
-                          'A': {
-                            'block': {
-                              'type': 'mouse_speed',
-                              'id': 'current_mouse_speed',
+                      },
+                    },
+                    'X': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'sparkle_x_2',
+                        'fields': {
+                          'NUM': 200,
+                        },
+                      },
+                    },
+                    'Y': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'sparkle_y_2',
+                        'fields': {
+                          'NUM': 150,
+                        },
+                      },
+                    },
+                    'SIZE': {
+                      'shadow': {
+                        'type': 'math_number',
+                        'id': 'sparkle_size_2',
+                        'fields': {
+                          'NUM': 15,
+                        },
+                      },
+                    },
+                  },
+                  'next': {
+                    'block': {
+                      'type': 'draw_sparkle',
+                      'id': 'sparkle_3',
+                      'inputs': {
+                        'COLOR': {
+                          'shadow': {
+                            'type': 'colour_picker',
+                            'id': 'sparkle_color_3',
+                            'fields': {
+                              'COLOUR': '#00ffff',
                             },
                           },
-                          'B': {
-                            'shadow': {
-                              'type': 'math_number',
-                              'id': 'speed_threshold',
-                              'fields': {
-                                'NUM': 50,
-                              },
+                        },
+                        'X': {
+                          'shadow': {
+                            'type': 'math_number',
+                            'id': 'sparkle_x_3',
+                            'fields': {
+                              'NUM': 300,
+                            },
+                          },
+                        },
+                        'Y': {
+                          'shadow': {
+                            'type': 'math_number',
+                            'id': 'sparkle_y_3',
+                            'fields': {
+                              'NUM': 250,
+                            },
+                          },
+                        },
+                        'SIZE': {
+                          'shadow': {
+                            'type': 'math_number',
+                            'id': 'sparkle_size_3',
+                            'fields': {
+                              'NUM': 25,
                             },
                           },
                         },
                       },
-                    },
-                    'DO0': {
-                      'block': {
-                        'type': 'draw_particle_burst',
-                        'id': 'burst_on_fast_move',
-                        'inputs': {
-                          'COUNT': {
-                            'shadow': {
-                              'type': 'math_number',
-                              'id': 'burst_count',
-                              'fields': {
-                                'NUM': 6,
+                      'next': {
+                        'block': {
+                          'type': 'draw_particle_burst',
+                          'id': 'burst_1',
+                          'inputs': {
+                            'COUNT': {
+                              'shadow': {
+                                'type': 'math_number',
+                                'id': 'burst_count_1',
+                                'fields': {
+                                  'NUM': 8,
+                                },
                               },
                             },
-                          },
-                          'COLOR': {
-                            'shadow': {
-                              'type': 'colour_picker',
-                              'id': 'burst_color',
-                              'fields': {
-                                'COLOUR': '#00ffff',
+                            'COLOR': {
+                              'shadow': {
+                                'type': 'colour_picker',
+                                'id': 'burst_color_1',
+                                'fields': {
+                                  'COLOUR': '#ff9900',
+                                },
                               },
                             },
-                          },
-                          'X': {
-                            'shadow': {
-                              'type': 'mouse_x',
-                              'id': 'burst_x',
+                            'X': {
+                              'shadow': {
+                                'type': 'math_number',
+                                'id': 'burst_x_1',
+                                'fields': {
+                                  'NUM': 200,
+                                },
+                              },
                             },
-                          },
-                          'Y': {
-                            'shadow': {
-                              'type': 'mouse_y',
-                              'id': 'burst_y',
+                            'Y': {
+                              'shadow': {
+                                'type': 'math_number',
+                                'id': 'burst_y_1',
+                                'fields': {
+                                  'NUM': 320,
+                                },
+                              },
                             },
                           },
                         },
@@ -1550,6 +1701,9 @@ const gazeArtDemo = {
 export const load = function (workspace, scenarioString) {
   const scenarioMap = {
     'blank': blankCanvas,
+    face,
+    landscape,
+    effects,
     comments,
     moreBlocks,
     moveStartTestBlocks,
@@ -1559,7 +1713,6 @@ export const load = function (workspace, scenarioString) {
     simpleCircle,
     'sun': sunnyDay,
     emptyWorkspace,
-    gazeArtDemo,
   };
   // Don't emit events during loading.
   Blockly.Events.disable();

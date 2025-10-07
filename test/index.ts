@@ -93,7 +93,6 @@ function getOptions() {
   // result in the form inputs being out-of-sync with the actual
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
-    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
   });
