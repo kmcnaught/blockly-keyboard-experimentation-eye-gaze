@@ -251,6 +251,72 @@ const fill = {
   'helpUrl': '',
 };
 
+const loadBackgroundImageJson = {
+  'type': 'load_background_image',
+  'message0': '📷 load background image %1 %2',
+  'args0': [
+    {
+      'type': 'field_button',
+      'name': 'SELECT_BTN',
+      'text': 'Select File',
+    },
+    {
+      'type': 'field_label',
+      'name': 'FILENAME',
+      'text': '(no file)',
+    },
+  ],
+  'previousStatement': null,
+  'nextStatement': null,
+  'colour': 195,
+  'tooltip': 'Load an image file to use as background',
+  'helpUrl': '',
+};
+
+const loadBackgroundImage = {
+  init: function () {
+    this.jsonInit(loadBackgroundImageJson);
+
+    // Create hidden file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+
+    // Store reference to clean up later
+    this.fileInput = fileInput;
+
+    // Set button click handler
+    this.getField('SELECT_BTN').setOnClickHandler(() => {
+      fileInput.click();
+    });
+
+    // Handle file selection
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Size validation
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image too large (max 5MB). Please choose a smaller image.');
+        return;
+      }
+      if (file.size > 1 * 1024 * 1024) {
+        console.warn('Large image file (' + Math.round(file.size / 1024 / 1024 * 10) / 10 + 'MB), may impact performance');
+      }
+
+      // Read file as data URL
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.data = event.target.result;
+        this.getField('FILENAME').setValue(file.name);
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+};
+
 const ellipse = {
   'type': 'p5_ellipse',
   'message0': 'draw ellipse %1 x %2 y %3 width %4 height %5',
@@ -1251,5 +1317,6 @@ export const blocks = {
   'p5_draw': p5Draw,
   'p5_canvas': p5Canvas,
   'buttons_block': buttonsBlock,
+  'load_background_image': loadBackgroundImage,
   ...jsonBlocks,
 };
