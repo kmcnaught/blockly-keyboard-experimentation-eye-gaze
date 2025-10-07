@@ -140,8 +140,18 @@ function createWorkspace(): Blockly.WorkspaceSvg {
 
       // Set new timer to run code after 300ms delay
       autoRunTimer = window.setTimeout(() => {
-        runCode();
-        autoRunTimer = null;
+        // Check if a block is currently being dragged before auto-running
+        const isDragging = workspace.isDragging();
+        if (!isDragging) {
+          runCode();
+          autoRunTimer = null;
+        } else {
+          // Still dragging, retry in another 100ms
+          autoRunTimer = window.setTimeout(() => {
+            runCode();
+            autoRunTimer = null;
+          }, 100);
+        }
       }, 300);
     }
   });

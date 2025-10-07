@@ -34,7 +34,12 @@ export function runCode() {
     // in the generator for all of the p5 blocks.
     // eslint-disable-next-line new-cap
     new p5((sketch) => {
-      eval(code);
+      try {
+        eval(code);
+      } catch (error) {
+        // Silently catch errors during code evaluation (e.g., incomplete code during drag)
+        console.debug('P5 code evaluation error (likely incomplete code):', error);
+      }
     }, p5outputDiv);
   }
 }

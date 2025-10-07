@@ -87,7 +87,7 @@ forBlock['load_background_image'] = function (block) {
 
   // Load image and draw it to fill the canvas
   const code = `if (typeof ${varName} === 'undefined') {
-  ${varName} = sketch.loadImage('${imageData}');
+  var ${varName} = sketch.loadImage('${imageData}');
 }
 if (${varName}.width > 0) {
   sketch.image(${varName}, 0, 0, sketch.width, sketch.height);

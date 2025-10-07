@@ -256,9 +256,12 @@ const loadBackgroundImageJson = {
   'message0': '📷 load background image %1 %2',
   'args0': [
     {
-      'type': 'field_button',
+      'type': 'field_image',
       'name': 'SELECT_BTN',
-      'text': 'Select File',
+      'src': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSIyNCI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzRDQUY1MCIvPjx0ZXh0IHg9IjQwIiB5PSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2VsZWN0IEZpbGU8L3RleHQ+PC9zdmc+',
+      'width': 80,
+      'height': 24,
+      'alt': 'Select File',
     },
     {
       'type': 'field_label',
