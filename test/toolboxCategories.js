@@ -230,6 +230,20 @@ export default {
           },
         },
         {
+          type: 'mouse_moved_less_than',
+          kind: 'block',
+          inputs: {
+            DISTANCE: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 20,
+                },
+              },
+            },
+          },
+        },
+        {
           type: 'mouse_in_zone',
           kind: 'block',
           inputs: {
@@ -271,16 +285,21 @@ export default {
           type: 'mouse_inside_canvas',
           kind: 'block',
         },
+        {
+          type: 'mouse_speed_greater_than',
+          kind: 'block',
+          inputs: {
+            SPEED: {
+              shadow: {
+                type: 'math_number',
+                fields: {
+                  NUM: 10,
+                },
+              },
+            },
+          },
+        },
       ],
-    },
-    {
-      kind: 'category',
-      name: 'Variables',
-      categorystyle: 'variable_category',
-      custom: 'VARIABLE',
-      cssConfig: {
-        icon: 'icon-variables',
-      },
     },
     {
       kind: 'category',
@@ -611,6 +630,15 @@ export default {
           },
         },
       ],
+    },
+    {
+      kind: 'category',
+      name: 'Variables',
+      categorystyle: 'variable_category',
+      custom: 'VARIABLE',
+      cssConfig: {
+        icon: 'icon-variables',
+      },
     },
   ],
 };

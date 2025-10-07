@@ -28,6 +28,37 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
+let codeHasChanged = false;
+
+/**
+ * Show the overlay indicating code needs to be re-run.
+ */
+function showOverlay() {
+  const overlay = document.getElementById('canvasOverlay');
+  if (overlay) {
+    overlay.classList.add('visible');
+  }
+}
+
+/**
+ * Hide the overlay.
+ */
+function hideOverlay() {
+  const overlay = document.getElementById('canvasOverlay');
+  if (overlay) {
+    overlay.classList.remove('visible');
+  }
+}
+
+/**
+ * Wrapper for runCode that also hides the overlay.
+ */
+function runCodeAndHideOverlay() {
+  runCode();
+  codeHasChanged = false;
+  hideOverlay();
+}
+
 /**
  * Parse query params for inject and navigation options and update
  * the fields on the options form to match.
@@ -38,7 +69,7 @@ function getOptions() {
   const params = new URLSearchParams(window.location.search);
 
   const scenarioParam = params.get('scenario');
-  const scenario = scenarioParam ?? 'simpleCircle';
+  const scenario = scenarioParam ?? 'blank';
 
   const rendererParam = params.get('renderer');
   let renderer = 'zelos';
@@ -63,7 +94,6 @@ function getOptions() {
   // result in the form inputs being out-of-sync with the actual
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
-    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
   });
@@ -108,8 +138,23 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
+  // Track code changes and show overlay
+  workspace.addChangeListener((event: Blockly.Events.Abstract) => {
+    // Only show overlay for events that actually change the code
+    if (
+      event.type === Blockly.Events.BLOCK_MOVE ||
+      event.type === Blockly.Events.BLOCK_CREATE ||
+      event.type === Blockly.Events.BLOCK_DELETE ||
+      event.type === Blockly.Events.BLOCK_CHANGE
+    ) {
+      codeHasChanged = true;
+      showOverlay();
+    }
+  });
+
   load(workspace, scenario);
   runCode();
+  codeHasChanged = false;
 
   return workspace;
 }
@@ -133,7 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   addP5();
   createWorkspace();
-  document.getElementById('run')?.addEventListener('click', runCode);
+  document.getElementById('run')?.addEventListener('click', runCodeAndHideOverlay);
+  document.getElementById('rerunButton')?.addEventListener('click', runCodeAndHideOverlay);  
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();
