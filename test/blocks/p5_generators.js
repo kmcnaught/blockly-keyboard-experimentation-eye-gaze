@@ -731,7 +731,7 @@ sketch.rect(0, 0, 400, 400);\n`;
 sketch.noStroke();
 sketch.rect(0, 0, 400, 400);
 sketch.fill('#FFFFFF');
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 24; i++) {
   let x = sketch.random(0, 400);
   let y = sketch.random(0, 300);
   sketch.circle(x, y, 2);
@@ -821,7 +821,7 @@ sketch.pop();\n`;
       code = `sketch.fill('#FFFFFF');
 sketch.noStroke();
 sketch.textSize(15);
-for (let i = 0; i < 15; i++) {
+for (let i = 0; i < 18; i++) {
   let x = sketch.random(20, 380);
   let y = sketch.random(20, 150);
   sketch.text('★', x, y);
