@@ -120,7 +120,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // @ts-expect-error connectionCandidate is private.
     this.connectionCandidate = this.createInitialCandidate();
     // @ts-expect-error connectionCandidate is private.
-    this.initialConnectionNeighbour = this.connectionCandidate?.neighbour ?? null;
+    const candidate = this.connectionCandidate;
+    this.initialConnectionNeighbour = candidate?.neighbour ?? null;
     this.forceShowPreview();
     this.block.addIcon(new MoveIcon(this.block));
 
@@ -151,7 +152,10 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       this.searchNode = neighbour;
       if (this.isConstrainedMovement()) {
         this.block.moveDuringDrag(
-          new utils.Coordinate(neighbour.x + BLOCK_PREVIEW_OFFSET_X, neighbour.y + BLOCK_PREVIEW_OFFSET_Y),
+          new utils.Coordinate(
+            neighbour.x + BLOCK_PREVIEW_OFFSET_X,
+            neighbour.y + BLOCK_PREVIEW_OFFSET_Y,
+          ),
         );
       }
     } else {
@@ -372,7 +376,10 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       previewer.previewConnection(local, neighbour);
     }
     block.moveDuringDrag(
-      new utils.Coordinate(neighbour.x + BLOCK_PREVIEW_OFFSET_X, neighbour.y + BLOCK_PREVIEW_OFFSET_Y),
+      new utils.Coordinate(
+        neighbour.x + BLOCK_PREVIEW_OFFSET_X,
+        neighbour.y + BLOCK_PREVIEW_OFFSET_Y,
+      ),
     );
   }
 
@@ -462,7 +469,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
     for (const topBlock of topBlocks) {
       const descendants = topBlock.getDescendants(true);
-      const nonShadowDescendants = descendants.filter((block: BlockSvg) => !block.isShadow());
+      const nonShadowDescendants = descendants.filter(
+        (block: BlockSvg) => !block.isShadow(),
+      );
 
       currentConnections.push(
         ...nonShadowDescendants
@@ -519,7 +528,10 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       const targetY = targetConnection.y;
 
       this.block.moveDuringDrag(
-        new utils.Coordinate(targetX + BLOCK_PREVIEW_OFFSET_X, targetY + BLOCK_PREVIEW_OFFSET_Y),
+        new utils.Coordinate(
+          targetX + BLOCK_PREVIEW_OFFSET_X,
+          targetY + BLOCK_PREVIEW_OFFSET_Y,
+        ),
       );
 
       this.forceShowPreview();
