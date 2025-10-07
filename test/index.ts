@@ -28,37 +28,7 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
-let codeHasChanged = false;
 let autoRunTimer: number | null = null;
-
-/**
- * Show the overlay indicating code needs to be re-run.
- */
-function showOverlay() {
-  const overlay = document.getElementById('canvasOverlay');
-  if (overlay) {
-    overlay.classList.add('visible');
-  }
-}
-
-/**
- * Hide the overlay.
- */
-function hideOverlay() {
-  const overlay = document.getElementById('canvasOverlay');
-  if (overlay) {
-    overlay.classList.remove('visible');
-  }
-}
-
-/**
- * Wrapper for runCode that also hides the overlay.
- */
-function runCodeAndHideOverlay() {
-  runCode();
-  codeHasChanged = false;
-  hideOverlay();
-}
 
 /**
  * Parse query params for inject and navigation options and update
@@ -134,7 +104,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const kbNav = new KeyboardNavigation(workspace);
   // Expose keyboard navigation instance for debugging
   (window as any).kbNav = kbNav;
-  registerRunCodeShortcut(runCodeAndHideOverlay);
+  registerRunCodeShortcut(runCode);
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
@@ -178,7 +148,6 @@ function createWorkspace(): Blockly.WorkspaceSvg {
 
   load(workspace, scenario);
   runCode();
-  codeHasChanged = false;
 
   return workspace;
 }
@@ -202,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   addP5();
   createWorkspace();
-  document.getElementById('run')?.addEventListener('click', runCodeAndHideOverlay);
-  document.getElementById('rerunButton')?.addEventListener('click', runCodeAndHideOverlay);  
+  document.getElementById('run')?.addEventListener('click', runCode);
+  document.getElementById('rerunButton')?.addEventListener('click', runCode);  
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();
