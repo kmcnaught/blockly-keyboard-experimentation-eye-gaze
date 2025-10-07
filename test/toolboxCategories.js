@@ -25,6 +25,10 @@ export default {
           type: 'p5_animate',
           kind: 'block',
         },
+        {
+          type: 'load_background_image',
+          kind: 'block',
+        },
       ],
     },
     {
