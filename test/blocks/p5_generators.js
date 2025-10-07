@@ -84,13 +84,32 @@ forBlock['load_background_image'] = function (block) {
 
   // Generate unique variable name based on block ID to avoid conflicts
   const varName = 'bgImg_' + block.id.replace(/[^a-zA-Z0-9]/g, '_');
+  const loadedVarName = varName + '_loaded';
 
-  // Load image and draw it to fill the canvas
-  const code = `if (typeof ${varName} === 'undefined') {
-  var ${varName} = sketch.loadImage('${imageData}');
+  // Load image with callback and draw when loaded
+  // Variables are attached to sketch object to persist across setup/draw functions
+  const code = `if (typeof sketch.${varName} === 'undefined') {
+  sketch.${varName} = null;
+  sketch.${loadedVarName} = false;
+  sketch.loadImage('${imageData}', function(img) {
+    sketch.${varName} = img;
+    sketch.${loadedVarName} = true;
+    console.log('Background image loaded successfully');
+    // Draw the image immediately when it loads (if canvas exists)
+    if (sketch._renderer) {
+      sketch.image(img, 0, 0, sketch.width, sketch.height);
+      // Also trigger drawOnce if it exists to redraw everything
+      if (typeof sketch.drawOnce === 'function') {
+        sketch.drawOnce();
+      }
+    }
+  }, function(err) {
+    console.error('Failed to load background image:', err);
+  });
 }
-if (${varName}.width > 0) {
-  sketch.image(${varName}, 0, 0, sketch.width, sketch.height);
+// Also draw the image if it's already loaded (for draw loops)
+if (sketch.${loadedVarName} && sketch.${varName}) {
+  sketch.image(sketch.${varName}, 0, 0, sketch.width, sketch.height);
 }\n`;
   return code;
 };
