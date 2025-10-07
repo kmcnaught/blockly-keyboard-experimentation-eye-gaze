@@ -29,6 +29,7 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
 let codeHasChanged = false;
+let autoRunTimer: number | null = null;
 
 /**
  * Show the overlay indicating code needs to be re-run.
