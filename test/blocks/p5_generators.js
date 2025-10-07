@@ -912,14 +912,24 @@ sketch.triangle(190, 150, 200, 140, 210, 150);\n`;
     case 'seaside':
       code = `sketch.fill('#1E90FF');
 sketch.noStroke();
-sketch.rect(0, 250, 400, 150);
+sketch.beginShape();
+sketch.vertex(0, 250);
+for (let i = 0; i <= 20; i++) {
+  let x = i * 20;
+  let y = 250 + sketch.sin(i * 0.5) * 8;
+  sketch.vertex(x, y);
+}
+sketch.vertex(400, 400);
+sketch.vertex(0, 400);
+sketch.endShape(sketch.CLOSE);
 sketch.fill('#F5DEB3');
 sketch.rect(0, 320, 400, 80);
 sketch.stroke('#FFFFFF');
 sketch.strokeWeight(2);
 for (let i = 0; i < 5; i++) {
   let x = i * 80;
-  sketch.line(x, 250, x + 40, 260);
+  let waveY = 250 + sketch.sin(i * 2) * 8;
+  sketch.line(x, waveY, x + 40, waveY + 10);
 }\n`;
       break;
     case 'fields':
