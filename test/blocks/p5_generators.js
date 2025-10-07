@@ -85,6 +85,52 @@ forBlock['load_background_image'] = function (block) {
   // Generate unique variable name based on block ID to avoid conflicts
   const varName = 'bgImg_' + block.id.replace(/[^a-zA-Z0-9]/g, '_');
   const loadedVarName = varName + '_loaded';
+  const fitMode = block.getFieldValue('FIT_MODE') || 'contain';
+
+  // Generate the drawing code based on fit mode
+  let drawCode;
+  if (fitMode === 'stretch') {
+    // Stretch to fill canvas (may distort)
+    drawCode = `sketch.image(img, 0, 0, sketch.width, sketch.height);`;
+  } else if (fitMode === 'contain') {
+    // Fit inside canvas (letterbox/pillarbox if needed)
+    drawCode = `let imgAspect = img.width / img.height;
+    let canvasAspect = sketch.width / sketch.height;
+    let drawWidth, drawHeight, drawX, drawY;
+    if (imgAspect > canvasAspect) {
+      // Image is wider than canvas
+      drawWidth = sketch.width;
+      drawHeight = sketch.width / imgAspect;
+      drawX = 0;
+      drawY = (sketch.height - drawHeight) / 2;
+    } else {
+      // Image is taller than canvas
+      drawWidth = sketch.height * imgAspect;
+      drawHeight = sketch.height;
+      drawX = (sketch.width - drawWidth) / 2;
+      drawY = 0;
+    }
+    sketch.image(img, drawX, drawY, drawWidth, drawHeight);`;
+  } else if (fitMode === 'cover') {
+    // Fill canvas (may crop)
+    drawCode = `let imgAspect = img.width / img.height;
+    let canvasAspect = sketch.width / sketch.height;
+    let drawWidth, drawHeight, drawX, drawY;
+    if (imgAspect > canvasAspect) {
+      // Image is wider - fit to height
+      drawHeight = sketch.height;
+      drawWidth = sketch.height * imgAspect;
+      drawX = (sketch.width - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      // Image is taller - fit to width
+      drawWidth = sketch.width;
+      drawHeight = sketch.width / imgAspect;
+      drawX = 0;
+      drawY = (sketch.height - drawHeight) / 2;
+    }
+    sketch.image(img, drawX, drawY, drawWidth, drawHeight);`;
+  }
 
   // Load image with callback and draw when loaded
   // Variables are attached to sketch object to persist across setup/draw functions
@@ -94,10 +140,10 @@ forBlock['load_background_image'] = function (block) {
   sketch.loadImage('${imageData}', function(img) {
     sketch.${varName} = img;
     sketch.${loadedVarName} = true;
-    console.log('Background image loaded successfully');
+    console.log('Background image loaded successfully (${fitMode} mode)');
     // Draw the image immediately when it loads (if canvas exists)
     if (sketch._renderer) {
-      sketch.image(img, 0, 0, sketch.width, sketch.height);
+      ${drawCode}
       // Also trigger drawOnce if it exists to redraw everything
       if (typeof sketch.drawOnce === 'function') {
         sketch.drawOnce();
@@ -109,7 +155,8 @@ forBlock['load_background_image'] = function (block) {
 }
 // Also draw the image if it's already loaded (for draw loops)
 if (sketch.${loadedVarName} && sketch.${varName}) {
-  sketch.image(sketch.${varName}, 0, 0, sketch.width, sketch.height);
+  let img = sketch.${varName};
+  ${drawCode}
 }\n`;
   return code;
 };

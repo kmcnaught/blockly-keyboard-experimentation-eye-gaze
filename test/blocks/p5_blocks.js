@@ -253,7 +253,7 @@ const fill = {
 
 const loadBackgroundImageJson = {
   'type': 'load_background_image',
-  'message0': '📷 load background image %1 %2',
+  'message0': '📷 load background image %1 %2 %3 fit mode %4',
   'args0': [
     {
       'type': 'field_image',
@@ -267,6 +267,18 @@ const loadBackgroundImageJson = {
       'type': 'field_label',
       'name': 'FILENAME',
       'text': '(no file)',
+    },
+    {
+      'type': 'input_dummy',
+    },
+    {
+      'type': 'field_dropdown',
+      'name': 'FIT_MODE',
+      'options': [
+        ['contain (fit inside)', 'contain'],
+        ['cover (fill canvas)', 'cover'],
+        ['stretch to fit', 'stretch'],
+      ],
     },
   ],
   'previousStatement': null,
