@@ -139,10 +139,10 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
-  // Track code changes and show overlay
+  // Track code changes and auto-run with debounce
   workspace.addChangeListener((event: Blockly.Events.Abstract) => {
-    // Only show overlay for events that actually change the generated code (AST changes)
-    let shouldShowOverlay = false;
+    // Only auto-run for events that actually change the generated code (AST changes)
+    let shouldAutoRun = false;
 
     if (event.type === Blockly.Events.BLOCK_MOVE) {
       // Only trigger if the block's connections changed, not just position
@@ -151,7 +151,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
       // (which indicates a connection change rather than just a drag)
       if (moveEvent.oldParentId !== moveEvent.newParentId ||
           moveEvent.oldInputName !== moveEvent.newInputName) {
-        shouldShowOverlay = true;
+        shouldAutoRun = true;
       }
     } else if (
       event.type === Blockly.Events.BLOCK_CREATE ||
@@ -159,12 +159,20 @@ function createWorkspace(): Blockly.WorkspaceSvg {
       event.type === Blockly.Events.BLOCK_CHANGE
     ) {
       // These always affect the generated code
-      shouldShowOverlay = true;
+      shouldAutoRun = true;
     }
 
-    if (shouldShowOverlay) {
-      codeHasChanged = true;
-      showOverlay();
+    if (shouldAutoRun) {
+      // Clear any existing timer
+      if (autoRunTimer !== null) {
+        window.clearTimeout(autoRunTimer);
+      }
+
+      // Set new timer to run code after 300ms delay
+      autoRunTimer = window.setTimeout(() => {
+        runCode();
+        autoRunTimer = null;
+      }, 300);
     }
   });
 
