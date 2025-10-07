@@ -942,7 +942,13 @@ sketch.stroke('#654321');
 sketch.strokeWeight(3);
 for (let i = 1; i < 4; i++) {
   sketch.line(i * 100, 220, i * 100, 400);
-}\n`;
+}
+sketch.stroke('#8B4513');
+sketch.strokeWeight(4);
+for (let i = 0; i <= 400; i += 20) {
+  sketch.line(i, 218, i, 224);
+}
+sketch.line(0, 220, 400, 220);\n`;
       break;
     case 'desert':
       code = `sketch.fill('#F4A460');
