@@ -817,8 +817,9 @@ for (let i = 0; i < 8; i++) {
 sketch.fill('#F5F5DC');
 sketch.noStroke();
 sketch.circle(320, 80, 40);
-sketch.fill('#87CEEB');
+sketch.erase();
 sketch.circle(335, 75, 38);
+sketch.noErase();
 sketch.pop();\n`;
       break;
     case 'stars':
