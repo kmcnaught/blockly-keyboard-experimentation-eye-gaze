@@ -902,12 +902,12 @@ sketch.endShape();\n`;
       code = `sketch.fill('#8B7355');
 sketch.stroke('#000000');
 sketch.strokeWeight(2);
-sketch.triangle(0, 400, 80, 180, 160, 400);
-sketch.triangle(120, 400, 200, 160, 280, 400);
-sketch.triangle(240, 400, 320, 190, 400, 400);
+sketch.triangle(0, 400, 60, 200, 140, 400);
+sketch.triangle(100, 400, 200, 140, 320, 400);
+sketch.triangle(280, 400, 360, 180, 400, 400);
 sketch.fill('#FFFFFF');
 sketch.noStroke();
-sketch.triangle(185, 170, 200, 160, 215, 170);\n`;
+sketch.triangle(190, 150, 200, 140, 210, 150);\n`;
       break;
     case 'seaside':
       code = `sketch.fill('#1E90FF');
