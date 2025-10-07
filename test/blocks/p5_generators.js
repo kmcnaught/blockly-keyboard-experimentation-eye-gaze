@@ -809,10 +809,13 @@ for (let i = 0; i < 8; i++) {
 }\n`;
       break;
     case 'moon':
-      code = `sketch.fill('#F5F5DC');
-sketch.stroke('#000000');
-sketch.strokeWeight(2);
-sketch.circle(320, 80, 40);\n`;
+      code = `sketch.push();
+sketch.fill('#F5F5DC');
+sketch.noStroke();
+sketch.circle(320, 80, 40);
+sketch.fill('#87CEEB');
+sketch.circle(335, 75, 38);
+sketch.pop();\n`;
       break;
     case 'stars':
       code = `sketch.fill('#FFFFFF');
