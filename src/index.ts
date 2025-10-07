@@ -90,7 +90,8 @@ export class KeyboardNavigation {
     this.navigationController.enable(workspace);
 
     // Now set the navigation controller on the sticky mode controller
-    (this.stickyModeController as any).navigationController = this.navigationController;
+    (this.stickyModeController as any).navigationController =
+      this.navigationController;
 
     this.cursor = new Blockly.LineCursor(workspace);
 
@@ -550,9 +551,13 @@ export class KeyboardNavigation {
 
 `);
   }
-
 }
 
 // Export build info components for use by plugin consumers
-export {createBuildInfoComponent, registerBuildInfoStyles, updateBuildInfo, startBuildInfoAutoRefresh} from './build_info_component';
+export {
+  createBuildInfoComponent,
+  registerBuildInfoStyles,
+  updateBuildInfo,
+  startBuildInfoAutoRefresh,
+} from './build_info_component';
 export {BUILD_INFO} from './build_info';

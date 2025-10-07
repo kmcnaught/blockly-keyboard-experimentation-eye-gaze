@@ -89,7 +89,7 @@ export class NavigationController {
     this.mover = new Mover(
       this.navigation,
       options.highlightConnections ?? true,
-      options.shouldDisableAutoScroll
+      options.shouldDisableAutoScroll,
     );
     this.enterAction = new EnterAction(this.mover, this.navigation);
     this.moveActions = new MoveActions(this.mover);

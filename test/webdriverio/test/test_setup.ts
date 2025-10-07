@@ -754,14 +754,15 @@ export async function assertNoJavaScriptErrors(
   testDescription?: string,
 ): Promise<void> {
   const logs = await browser.getLogs('browser');
-  const jsErrors = logs.filter((log: any) =>
-    log.level === 'SEVERE' &&
-    log.message &&
-    (log.message.includes('ERROR') ||
-     log.message.includes('Error') ||
-     log.message.includes('Uncaught') ||
-     log.message.includes('TypeError') ||
-     log.message.includes('ReferenceError'))
+  const jsErrors = logs.filter(
+    (log: any) =>
+      log.level === 'SEVERE' &&
+      log.message &&
+      (log.message.includes('ERROR') ||
+        log.message.includes('Error') ||
+        log.message.includes('Uncaught') ||
+        log.message.includes('TypeError') ||
+        log.message.includes('ReferenceError')),
   );
 
   if (jsErrors.length > 0) {
@@ -777,7 +778,9 @@ export async function assertNoJavaScriptErrors(
  *
  * @param browser The active WebdriverIO Browser object.
  */
-export async function clearBrowserLogs(browser: WebdriverIO.Browser): Promise<void> {
+export async function clearBrowserLogs(
+  browser: WebdriverIO.Browser,
+): Promise<void> {
   // Clear logs by fetching and discarding them
   await browser.getLogs('browser');
 }

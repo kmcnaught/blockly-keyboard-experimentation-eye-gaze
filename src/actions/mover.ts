@@ -157,8 +157,7 @@ export class Mover {
       const activeElement = document.activeElement;
 
       const isWorkspaceBackground =
-        isWorkspaceElement(newFocusTarget) ||
-        isWorkspaceElement(activeElement);
+        isWorkspaceElement(newFocusTarget) || isWorkspaceElement(activeElement);
 
       if (!isWorkspaceBackground) {
         this.finishMove(workspace);
@@ -166,7 +165,13 @@ export class Mover {
     };
 
     workspace.setKeyboardMoveInProgress(true);
-    const info = new MoveInfo(workspace, draggable, dragger, blurListener, onMoveFinished);
+    const info = new MoveInfo(
+      workspace,
+      draggable,
+      dragger,
+      blurListener,
+      onMoveFinished,
+    );
     this.moves.set(workspace, info);
 
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));

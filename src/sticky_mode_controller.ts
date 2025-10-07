@@ -100,17 +100,32 @@ export class StickyModeController {
     const workspaceElement = this.workspace.getParentSvg();
     if (!workspaceElement) return;
 
-    this.addListener(workspaceElement, 'dblclick', (event) => {
-      this.handleDoubleClick(event as MouseEvent);
-    }, false);
+    this.addListener(
+      workspaceElement,
+      'dblclick',
+      (event) => {
+        this.handleDoubleClick(event as MouseEvent);
+      },
+      false,
+    );
 
-    this.addListener(document, 'pointermove', (event) => {
-      this.handlePointerMove(event as PointerEvent);
-    }, false);
+    this.addListener(
+      document,
+      'pointermove',
+      (event) => {
+        this.handlePointerMove(event as PointerEvent);
+      },
+      false,
+    );
 
-    this.addListener(document, 'click', (event) => {
-      this.handleClick(event as MouseEvent);
-    }, true);
+    this.addListener(
+      document,
+      'click',
+      (event) => {
+        this.handleClick(event as MouseEvent);
+      },
+      true,
+    );
   }
 
   /**
@@ -258,11 +273,10 @@ export class StickyModeController {
     const moveInfo = (this.mover as any)?.moves?.get(this.workspace);
     if (!moveInfo) return;
 
-    const targetWorkspaceCoords =
-      Blockly.utils.svgMath.screenToWsCoordinates(
-        this.workspace,
-        new Blockly.utils.Coordinate(event.clientX, event.clientY),
-      );
+    const targetWorkspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
+      this.workspace,
+      new Blockly.utils.Coordinate(event.clientX, event.clientY),
+    );
 
     const deltaX = targetWorkspaceCoords.x - moveInfo.startLocation.x;
     const deltaY = targetWorkspaceCoords.y - moveInfo.startLocation.y;
@@ -271,10 +285,7 @@ export class StickyModeController {
     moveInfo.totalDelta.y = deltaY;
 
     if (moveInfo.dragger) {
-      moveInfo.dragger.onDrag(
-        event as any,
-        moveInfo.totalDelta,
-      );
+      moveInfo.dragger.onDrag(event as any, moveInfo.totalDelta);
     }
   }
 
@@ -340,7 +351,9 @@ export class StickyModeController {
 
     if (allBlockElements.length > 0) {
       const innermostBlockElement = allBlockElements[0];
-      const block = blocks.find((b) => b.getSvgRoot() === innermostBlockElement);
+      const block = blocks.find(
+        (b) => b.getSvgRoot() === innermostBlockElement,
+      );
 
       if (block && block instanceof Blockly.BlockSvg) {
         return block;
@@ -532,11 +545,10 @@ export class StickyModeController {
       info.block &&
       !info.block.isDisposed()
     ) {
-      const targetWorkspaceCoords =
-        Blockly.utils.svgMath.screenToWsCoordinates(
-          this.workspace,
-          new Blockly.utils.Coordinate(clientX, clientY),
-        );
+      const targetWorkspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
+        this.workspace,
+        new Blockly.utils.Coordinate(clientX, clientY),
+      );
 
       if (moveInfo) {
         const currentX = moveInfo.startLocation.x + moveInfo.totalDelta.x;

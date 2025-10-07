@@ -7,7 +7,7 @@
 import * as Blockly from 'blockly';
 import * as chai from 'chai';
 import {Browser, Key} from 'webdriverio';
-import { suite, test, setup, afterEach } from 'mocha';
+import {suite, test, setup, afterEach} from 'mocha';
 
 import {
   PAUSE_TIME,
@@ -28,7 +28,10 @@ import {
  * @param browser The WebdriverIO browser object.
  * @param blockId The ID of the block to double-click.
  */
-async function doubleClickBlock(browser: Browser, blockId: string): Promise<void> {
+async function doubleClickBlock(
+  browser: Browser,
+  blockId: string,
+): Promise<void> {
   const findableId = 'doubleClickTarget';
 
   // In browser context, find the element and mark it
@@ -82,7 +85,9 @@ async function hasTrashcan(browser: Browser): Promise<boolean> {
  * @param browser The WebdriverIO browser object.
  * @returns Object with x, y, width, height of the trashcan or null if not found.
  */
-async function getTrashcanBounds(browser: Browser): Promise<{x: number, y: number, width: number, height: number} | null> {
+async function getTrashcanBounds(
+  browser: Browser,
+): Promise<{x: number; y: number; width: number; height: number} | null> {
   const trashcanElement = await browser.$('.blocklyTrash');
   if (!(await trashcanElement.isExisting())) {
     return null;
@@ -94,7 +99,7 @@ async function getTrashcanBounds(browser: Browser): Promise<{x: number, y: numbe
     x: location.x,
     y: location.y,
     width: size.width,
-    height: size.height
+    height: size.height,
   };
 }
 
@@ -148,8 +153,16 @@ suite('Bin Click Tests', function () {
 
       const bounds = await getTrashcanBounds(this.browser);
       chai.assert.isNotNull(bounds, 'Trashcan should have valid bounds');
-      chai.assert.isAbove(bounds!.width, 0, 'Trashcan should have positive width');
-      chai.assert.isAbove(bounds!.height, 0, 'Trashcan should have positive height');
+      chai.assert.isAbove(
+        bounds!.width,
+        0,
+        'Trashcan should have positive width',
+      );
+      chai.assert.isAbove(
+        bounds!.height,
+        0,
+        'Trashcan should have positive height',
+      );
     });
   });
 
@@ -162,7 +175,10 @@ suite('Bin Click Tests', function () {
 
       // Navigate to a block and verify it exists
       await focusOnBlock(this.browser, 'draw_circle_1');
-      chai.assert.isTrue(await blockIsPresent(this.browser, 'draw_circle_1'), 'Block should exist initially');
+      chai.assert.isTrue(
+        await blockIsPresent(this.browser, 'draw_circle_1'),
+        'Block should exist initially',
+      );
 
       // Enter sticky mode by double-clicking the block
       await doubleClickBlock(this.browser, 'draw_circle_1');
@@ -170,12 +186,18 @@ suite('Bin Click Tests', function () {
 
       // Wait for move indicator to appear to confirm we're in sticky mode
       await this.browser.$('.blocklyMoveIndicatorBubble').waitForExist();
-      chai.assert.isTrue(await isInStickyMode(this.browser), 'Should be in sticky mode');
+      chai.assert.isTrue(
+        await isInStickyMode(this.browser),
+        'Should be in sticky mode',
+      );
       chai.assert.isTrue(await isDragging(this.browser), 'Should be dragging');
 
       // Get trashcan bounds
       const trashcanBounds = await getTrashcanBounds(this.browser);
-      chai.assert.isNotNull(trashcanBounds, 'Trashcan bounds should be available');
+      chai.assert.isNotNull(
+        trashcanBounds,
+        'Trashcan bounds should be available',
+      );
 
       // Click directly on the center of the trashcan
       const centerX = trashcanBounds!.x + trashcanBounds!.width / 2;
@@ -186,7 +208,11 @@ suite('Bin Click Tests', function () {
           type: 'pointer',
           id: 'mouse',
           actions: [
-            {type: 'pointerMove', x: Math.round(centerX), y: Math.round(centerY)},
+            {
+              type: 'pointerMove',
+              x: Math.round(centerX),
+              y: Math.round(centerY),
+            },
             {type: 'pointerDown', button: 0},
             {type: 'pointerUp', button: 0},
           ],
@@ -195,9 +221,18 @@ suite('Bin Click Tests', function () {
       await this.browser.pause(PAUSE_TIME);
 
       // Block should be deleted and no longer in sticky mode
-      chai.assert.isFalse(await blockIsPresent(this.browser, 'draw_circle_1'), 'Block should be deleted after clicking bin');
-      chai.assert.isFalse(await isInStickyMode(this.browser), 'Should no longer be in sticky mode');
-      chai.assert.isFalse(await isDragging(this.browser), 'Should no longer be dragging');
+      chai.assert.isFalse(
+        await blockIsPresent(this.browser, 'draw_circle_1'),
+        'Block should be deleted after clicking bin',
+      );
+      chai.assert.isFalse(
+        await isInStickyMode(this.browser),
+        'Should no longer be in sticky mode',
+      );
+      chai.assert.isFalse(
+        await isDragging(this.browser),
+        'Should no longer be dragging',
+      );
     });
 
     test('Click near but not on bin should not delete block', async function () {
@@ -208,16 +243,25 @@ suite('Bin Click Tests', function () {
 
       // Navigate to a block and verify it exists
       await focusOnBlock(this.browser, 'draw_circle_1');
-      chai.assert.isTrue(await blockIsPresent(this.browser, 'draw_circle_1'), 'Block should exist initially');
+      chai.assert.isTrue(
+        await blockIsPresent(this.browser, 'draw_circle_1'),
+        'Block should exist initially',
+      );
 
       // Enter sticky mode
       await doubleClickBlock(this.browser, 'draw_circle_1');
       await this.browser.$('.blocklyMoveIndicatorBubble').waitForExist();
-      chai.assert.isTrue(await isInStickyMode(this.browser), 'Should be in sticky mode');
+      chai.assert.isTrue(
+        await isInStickyMode(this.browser),
+        'Should be in sticky mode',
+      );
 
       // Get trashcan bounds
       const trashcanBounds = await getTrashcanBounds(this.browser);
-      chai.assert.isNotNull(trashcanBounds, 'Trashcan bounds should be available');
+      chai.assert.isNotNull(
+        trashcanBounds,
+        'Trashcan bounds should be available',
+      );
 
       // Click just outside the trashcan (offset by 20 pixels to the left, keeping within workspace)
       const nearX = Math.max(50, trashcanBounds!.x - 20);
@@ -237,9 +281,18 @@ suite('Bin Click Tests', function () {
       await this.browser.pause(PAUSE_TIME);
 
       // Block should still exist (just dropped in new location)
-      chai.assert.isTrue(await blockIsPresent(this.browser, 'draw_circle_1'), 'Block should still exist after clicking near bin');
-      chai.assert.isFalse(await isInStickyMode(this.browser), 'Should no longer be in sticky mode');
-      chai.assert.isFalse(await isDragging(this.browser), 'Should no longer be dragging');
+      chai.assert.isTrue(
+        await blockIsPresent(this.browser, 'draw_circle_1'),
+        'Block should still exist after clicking near bin',
+      );
+      chai.assert.isFalse(
+        await isInStickyMode(this.browser),
+        'Should no longer be in sticky mode',
+      );
+      chai.assert.isFalse(
+        await isDragging(this.browser),
+        'Should no longer be dragging',
+      );
     });
 
     test('Click on bin with no block in sticky mode should do nothing', async function () {
@@ -249,11 +302,17 @@ suite('Bin Click Tests', function () {
       }
 
       // Verify we're not in sticky mode initially
-      chai.assert.isFalse(await isInStickyMode(this.browser), 'Should not be in sticky mode initially');
+      chai.assert.isFalse(
+        await isInStickyMode(this.browser),
+        'Should not be in sticky mode initially',
+      );
 
       // Get trashcan bounds
       const trashcanBounds = await getTrashcanBounds(this.browser);
-      chai.assert.isNotNull(trashcanBounds, 'Trashcan bounds should be available');
+      chai.assert.isNotNull(
+        trashcanBounds,
+        'Trashcan bounds should be available',
+      );
 
       // Click on the trashcan when not in sticky mode
       const centerX = trashcanBounds!.x + trashcanBounds!.width / 2;
@@ -264,7 +323,11 @@ suite('Bin Click Tests', function () {
           type: 'pointer',
           id: 'mouse',
           actions: [
-            {type: 'pointerMove', x: Math.round(centerX), y: Math.round(centerY)},
+            {
+              type: 'pointerMove',
+              x: Math.round(centerX),
+              y: Math.round(centerY),
+            },
             {type: 'pointerDown', button: 0},
             {type: 'pointerUp', button: 0},
           ],
@@ -273,8 +336,14 @@ suite('Bin Click Tests', function () {
       await this.browser.pause(PAUSE_TIME);
 
       // Should still not be in sticky mode and all blocks should still exist
-      chai.assert.isFalse(await isInStickyMode(this.browser), 'Should still not be in sticky mode');
-      chai.assert.isTrue(await blockIsPresent(this.browser, 'draw_circle_1'), 'Blocks should still exist');
+      chai.assert.isFalse(
+        await isInStickyMode(this.browser),
+        'Should still not be in sticky mode',
+      );
+      chai.assert.isTrue(
+        await blockIsPresent(this.browser, 'draw_circle_1'),
+        'Blocks should still exist',
+      );
     });
   });
 });

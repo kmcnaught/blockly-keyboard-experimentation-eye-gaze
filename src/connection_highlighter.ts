@@ -124,7 +124,10 @@ export class ConnectionHighlighter {
 
     for (const localConn of localConnections) {
       for (const potentialNeighbour of allConnections) {
-        const filterReason = this.getFilterReason(potentialNeighbour, movingBlock);
+        const filterReason = this.getFilterReason(
+          potentialNeighbour,
+          movingBlock,
+        );
         if (filterReason) {
           continue;
         }
@@ -224,7 +227,8 @@ export class ConnectionHighlighter {
         highlight.addEventListener('pointerdown', clickHandler);
       }
 
-      const attachedToBlock = highlight.getAttribute('data-attached-to-block') === 'true';
+      const attachedToBlock =
+        highlight.getAttribute('data-attached-to-block') === 'true';
 
       if (attachedToBlock) {
         this.highlightedElements.add(highlight);
@@ -279,18 +283,22 @@ export class ConnectionHighlighter {
     }
 
     const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
-    const highlightPath = (
+    const highlightPath =
       `M ${-xLen} 0 ` +
       `h ${xLen} ` +
       (connectionShape as any).pathLeft +
-      `h ${xLen}`
-    );
+      `h ${xLen}`;
 
-    const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const highlightSvg = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'path',
+    );
 
     // Use block-relative coordinates so highlight moves with block
     const offset = connection.getOffsetInBlock();
-    const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
+    const transformation =
+      `translate(${offset.x}, ${offset.y})` +
+      (sourceBlock.RTL ? ' scale(-1 1)' : '');
 
     highlightSvg.setAttribute('d', highlightPath);
     highlightSvg.setAttribute('transform', transformation);
@@ -327,29 +335,41 @@ export class ConnectionHighlighter {
       const renderInfo = (sourceBlock as any).renderInfo_;
 
       if (renderInfo) {
-        const DrawerClass = (renderer as any).constructor.Drawer ||
-                           (renderer as any).drawer?.constructor;
+        const DrawerClass =
+          (renderer as any).constructor.Drawer ||
+          (renderer as any).drawer?.constructor;
 
         if (DrawerClass) {
           const drawer = new DrawerClass(sourceBlock, renderInfo);
-          const connectionMeasurable = this.findConnectionMeasurable(connection, renderInfo);
+          const connectionMeasurable = this.findConnectionMeasurable(
+            connection,
+            renderInfo,
+          );
 
-          if (connectionMeasurable && drawer.getStatementConnectionHighlightPath) {
-            const highlightPath = drawer.getStatementConnectionHighlightPath(connectionMeasurable);
+          if (
+            connectionMeasurable &&
+            drawer.getStatementConnectionHighlightPath
+          ) {
+            const highlightPath =
+              drawer.getStatementConnectionHighlightPath(connectionMeasurable);
 
             if (highlightPath) {
-              const highlightSvg = sourceBlock.pathObject.addConnectionHighlight?.(
-                connection,
-                highlightPath,
-                connection.getOffsetInBlock(),
-                sourceBlock.RTL
-              );
+              const highlightSvg =
+                sourceBlock.pathObject.addConnectionHighlight?.(
+                  connection,
+                  highlightPath,
+                  connection.getOffsetInBlock(),
+                  sourceBlock.RTL,
+                );
 
               if (highlightSvg) {
                 highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
                 highlightSvg.setAttribute('stroke', '#fff200');
                 highlightSvg.setAttribute('stroke-width', '3');
-                highlightSvg.setAttribute('style', 'pointer-events: auto; cursor: pointer;');
+                highlightSvg.setAttribute(
+                  'style',
+                  'pointer-events: auto; cursor: pointer;',
+                );
 
                 return highlightSvg;
               }
@@ -363,18 +383,17 @@ export class ConnectionHighlighter {
 
       if (connectionShape && (connectionShape as any).pathLeft) {
         const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
-        const highlightPath = (
+        const highlightPath =
           `M ${-xLen} 0 ` +
           `h ${xLen} ` +
           (connectionShape as any).pathLeft +
-          `h ${xLen}`
-        );
+          `h ${xLen}`;
 
         const highlightSvg = sourceBlock.pathObject.addConnectionHighlight?.(
           connection,
           highlightPath,
           connection.getOffsetInBlock(),
-          sourceBlock.RTL
+          sourceBlock.RTL,
         );
 
         if (highlightSvg) {
@@ -382,7 +401,10 @@ export class ConnectionHighlighter {
           highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
           highlightSvg.setAttribute('stroke', '#fff200');
           highlightSvg.setAttribute('stroke-width', '3');
-          highlightSvg.setAttribute('style', 'display: block !important; pointer-events: auto !important; cursor: pointer !important;');
+          highlightSvg.setAttribute(
+            'style',
+            'display: block !important; pointer-events: auto !important; cursor: pointer !important;',
+          );
 
           if (this.onConnectionClick) {
             const clickHandler = (event: Event) => {
@@ -400,9 +422,11 @@ export class ConnectionHighlighter {
           return highlightSvg;
         }
       }
-
     } catch (error) {
-      console.debug('Failed to create core-based notch highlight, using fallback:', error);
+      console.debug(
+        'Failed to create core-based notch highlight, using fallback:',
+        error,
+      );
     }
 
     return null;
@@ -435,7 +459,10 @@ export class ConnectionHighlighter {
 
         const renderInfo = (sourceBlock as any).renderInfo_;
         if (renderInfo) {
-          const connectionMeasurable = this.findConnectionMeasurable(connection, renderInfo);
+          const connectionMeasurable = this.findConnectionMeasurable(
+            connection,
+            renderInfo,
+          );
           if (connectionMeasurable && connectionMeasurable.height) {
             measurableHeight = connectionMeasurable.height;
           }
@@ -449,16 +476,17 @@ export class ConnectionHighlighter {
       }
 
       const yLen = constants.TAB_OFFSET_FROM_TOP;
-      const highlightPath = (
-        `M 0 ${-yLen} ` +
-        `v ${yLen} ` +
-        connPath +
-        `v ${yLen}`
-      );
+      const highlightPath =
+        `M 0 ${-yLen} ` + `v ${yLen} ` + connPath + `v ${yLen}`;
 
-      const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const highlightSvg = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'path',
+      );
       const offset = connection.getOffsetInBlock();
-      const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
+      const transformation =
+        `translate(${offset.x}, ${offset.y})` +
+        (sourceBlock.RTL ? ' scale(-1 1)' : '');
 
       highlightSvg.setAttribute('d', highlightPath);
       highlightSvg.setAttribute('transform', transformation);
@@ -492,9 +520,11 @@ export class ConnectionHighlighter {
 
         return highlightSvg;
       }
-
     } catch (error) {
-      console.debug('Failed to create core-based value highlight, using fallback:', error);
+      console.debug(
+        'Failed to create core-based value highlight, using fallback:',
+        error,
+      );
     }
 
     return null;
@@ -507,7 +537,10 @@ export class ConnectionHighlighter {
    * @param renderInfo The block's render info.
    * @returns The connection measurable, or null if not found.
    */
-  private findConnectionMeasurable(connection: RenderedConnection, renderInfo: any): any {
+  private findConnectionMeasurable(
+    connection: RenderedConnection,
+    renderInfo: any,
+  ): any {
     if (!renderInfo || !renderInfo.rows) {
       return null;
     }
@@ -546,7 +579,10 @@ export class ConnectionHighlighter {
 
       // Use core shapes for Geras/Thrasos (Zelos requires unavailable renderInfo)
       if (!isZelos) {
-        const shapeHighlight = this.createCoreBasedValueHighlight(connection, sourceBlock);
+        const shapeHighlight = this.createCoreBasedValueHighlight(
+          connection,
+          sourceBlock,
+        );
         if (shapeHighlight) {
           shapeHighlight.setAttribute('data-already-in-dom', 'true');
           return shapeHighlight;
@@ -791,7 +827,6 @@ export class ConnectionHighlighter {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-
   /**
    * Removes all connection highlighting.
    */
@@ -877,7 +912,9 @@ export class ConnectionHighlighter {
     if (!(sourceBlock instanceof BlockSvg)) return;
 
     const offset = connection.getOffsetInBlock();
-    const transformation = `translate(${offset.x}, ${offset.y})` + (sourceBlock.RTL ? ' scale(-1 1)' : '');
+    const transformation =
+      `translate(${offset.x}, ${offset.y})` +
+      (sourceBlock.RTL ? ' scale(-1 1)' : '');
     path.setAttribute('transform', transformation);
   }
 
@@ -915,11 +952,18 @@ export class ConnectionHighlighter {
    * @param screenY Screen Y coordinate.
    * @returns The connection at the point, or null if no connection found.
    */
-  findConnectionAtPoint(screenX: number, screenY: number): RenderedConnection | null {
+  findConnectionAtPoint(
+    screenX: number,
+    screenY: number,
+  ): RenderedConnection | null {
     for (const element of this.highlightedElements) {
       const bounds = element.getBoundingClientRect();
-      if (screenX >= bounds.left && screenX <= bounds.right &&
-          screenY >= bounds.top && screenY <= bounds.bottom) {
+      if (
+        screenX >= bounds.left &&
+        screenX <= bounds.right &&
+        screenY >= bounds.top &&
+        screenY <= bounds.bottom
+      ) {
         const connection = this.elementToConnection.get(element);
         if (connection) {
           return connection;
@@ -939,7 +983,11 @@ export class ConnectionHighlighter {
     bounds: DOMRect;
     element: Element;
   }> {
-    const results: Array<{connection: RenderedConnection; bounds: DOMRect; element: Element}> = [];
+    const results: Array<{
+      connection: RenderedConnection;
+      bounds: DOMRect;
+      element: Element;
+    }> = [];
 
     for (const element of this.highlightedElements) {
       const connection = this.elementToConnection.get(element);
@@ -948,7 +996,7 @@ export class ConnectionHighlighter {
         results.push({
           connection,
           bounds,
-          element
+          element,
         });
       }
     }

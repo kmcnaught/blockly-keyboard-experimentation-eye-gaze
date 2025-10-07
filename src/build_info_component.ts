@@ -151,7 +151,7 @@ function getFreshBuildInfo(): typeof BUILD_INFO {
  */
 export function startBuildInfoAutoRefresh(
   element: HTMLElement,
-  fallbackIntervalMs: number = 5000
+  fallbackIntervalMs: number = 5000,
 ): () => void {
   let lastBuildTime = BUILD_INFO.buildTime;
 
@@ -177,7 +177,9 @@ export function startBuildInfoAutoRefresh(
       element.style.transform = 'scale(1)';
     }, 200);
 
-    console.log(`🔄 Build info updated: ${buildInfo.versionLabel} (${timeString})`);
+    console.log(
+      `🔄 Build info updated: ${buildInfo.versionLabel} (${timeString})`,
+    );
   };
 
   // Primary method: listen for custom events from webpack plugin
@@ -207,7 +209,10 @@ export function startBuildInfoAutoRefresh(
   // Return cleanup function
   return () => {
     if (typeof window !== 'undefined' && window.removeEventListener) {
-      window.removeEventListener('buildInfoUpdated', eventListener as EventListener);
+      window.removeEventListener(
+        'buildInfoUpdated',
+        eventListener as EventListener,
+      );
     }
     clearInterval(intervalId);
   };

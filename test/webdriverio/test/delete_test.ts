@@ -5,7 +5,7 @@
  */
 
 import * as chai from 'chai';
-import { suite, test, setup, afterEach } from 'mocha';
+import {suite, test, setup, afterEach} from 'mocha';
 import {
   blockIsPresent,
   focusOnBlock,

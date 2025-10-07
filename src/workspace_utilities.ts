@@ -13,7 +13,9 @@ import * as Blockly from 'blockly/core';
  * @param block The block to start from (may be a shadow block)
  * @returns The first non-shadow block ancestor, or null if none found
  */
-export function getNonShadowBlock(block: Blockly.BlockSvg | null): Blockly.BlockSvg | null {
+export function getNonShadowBlock(
+  block: Blockly.BlockSvg | null,
+): Blockly.BlockSvg | null {
   if (!block) return null;
 
   while (block.isShadow()) {

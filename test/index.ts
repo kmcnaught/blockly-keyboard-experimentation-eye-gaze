@@ -24,7 +24,11 @@ import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
 import {load} from './loadTestBlocks';
 import {runCode, registerRunCodeShortcut} from './runCode';
-import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRefresh} from '../src/build_info_component';
+import {
+  createBuildInfoComponent,
+  registerBuildInfoStyles,
+  startBuildInfoAutoRefresh,
+} from '../src/build_info_component';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
@@ -148,8 +152,10 @@ function createWorkspace(): Blockly.WorkspaceSvg {
       const moveEvent = event as Blockly.Events.BlockMove;
       // Check if parent changed (connection change) or if oldCoordinate is undefined
       // (which indicates a connection change rather than just a drag)
-      if (moveEvent.oldParentId !== moveEvent.newParentId ||
-          moveEvent.oldInputName !== moveEvent.newInputName) {
+      if (
+        moveEvent.oldParentId !== moveEvent.newParentId ||
+        moveEvent.oldInputName !== moveEvent.newInputName
+      ) {
         shouldShowOverlay = true;
       }
     } else if (
@@ -193,8 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   addP5();
   createWorkspace();
-  document.getElementById('run')?.addEventListener('click', runCodeAndHideOverlay);
-  document.getElementById('rerunButton')?.addEventListener('click', runCodeAndHideOverlay);  
+  document
+    .getElementById('run')
+    ?.addEventListener('click', runCodeAndHideOverlay);
+  document
+    .getElementById('rerunButton')
+    ?.addEventListener('click', runCodeAndHideOverlay);
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();
@@ -211,14 +221,22 @@ document.addEventListener('DOMContentLoaded', () => {
   window.Blockly = Blockly;
 
   // Global error handler for media (audio/video) elements
-  document.addEventListener('error', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'AUDIO' || target.tagName === 'VIDEO') {
-      console.error('Media error detected:');
-      console.error('  Element:', target.tagName);
-      console.error('  Source:', (target as HTMLMediaElement).src || (target as HTMLMediaElement).currentSrc);
-      console.error('  Error:', e);
-      console.trace('Stack trace:');
-    }
-  }, true); // Use capture phase to catch errors before they bubble
+  document.addEventListener(
+    'error',
+    (e) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'AUDIO' || target.tagName === 'VIDEO') {
+        console.error('Media error detected:');
+        console.error('  Element:', target.tagName);
+        console.error(
+          '  Source:',
+          (target as HTMLMediaElement).src ||
+            (target as HTMLMediaElement).currentSrc,
+        );
+        console.error('  Error:', e);
+        console.trace('Stack trace:');
+      }
+    },
+    true,
+  ); // Use capture phase to catch errors before they bubble
 });

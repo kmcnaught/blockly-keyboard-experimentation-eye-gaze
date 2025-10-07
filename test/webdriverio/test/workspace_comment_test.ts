@@ -168,7 +168,9 @@ suite('Workspace comment navigation', function () {
     chai.assert.equal(focusedNodeId, `${this.commentId1}`);
 
     const commentText = await this.browser.execute((commentId) => {
-      return Blockly.getMainWorkspace().getCommentById(commentId as string)?.getText();
+      return Blockly.getMainWorkspace()
+        .getCommentById(commentId as string)
+        ?.getText();
     }, this.commentId1 as string);
     chai.assert.equal(commentText, 'Comment oneHello world');
   });

@@ -5,6 +5,7 @@
 After using touch-based sticky mode to move a block and dropping it on the workspace, subsequent single taps/clicks on other blocks no longer work for selection. The user is unable to select any blocks using touch until the page is reloaded.
 
 **Reproduction Steps:**
+
 1. Double-tap a block to enter sticky mode
 2. Tap on empty workspace to drop the block
 3. Try to single-tap another block
@@ -15,12 +16,14 @@ After using touch-based sticky mode to move a block and dropping it on the works
 ### Event Flow Analysis
 
 **What happens during workspace tap:**
+
 - User taps workspace → generates: `touchstart` → `touchend` → `pointerup` → `click`
 - Plugin's click handler processes the workspace drop
 - Block is dropped and sticky mode exits
 - All cleanup appears to complete successfully
 
 **What happens on subsequent tap:**
+
 - Click events ARE reaching the plugin's listener
 - Events ARE flowing through to Blockly core
 - BUT Blockly is receiving the events and not processing them
@@ -35,22 +38,30 @@ After using touch-based sticky mode to move a block and dropping it on the works
 ## Attempted Fixes (What Didn't Work)
 
 ### 1. Remove `pointerup` Event Blocking ❌
+
 **Change:** Removed the `pointerup` listener that was calling `stopPropagation()`
+
 ```javascript
 // REMOVED:
-document.addEventListener('pointerup', (event) => {
-  if (this.stickyBlock) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-}, true);
+document.addEventListener(
+  'pointerup',
+  (event) => {
+    if (this.stickyBlock) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  },
+  true,
+);
 ```
 
 **Reasoning:** Thought this was preventing Blockly from seeing pointer events
 **Result:** No change - bug persisted
 
 ### 2. Selective Event Propagation ❌
+
 **Change:** Only stop propagation for bin/connection clicks, not workspace drops
+
 ```javascript
 // Let workspace clicks through to Blockly
 if (droppingOnWorkspace) {
@@ -62,7 +73,9 @@ if (droppingOnWorkspace) {
 **Result:** No change - bug persisted
 
 ### 3. Change Event Listener Phase ❌
+
 **Change:** Switched click listener from capture phase (`true`) to bubble phase (`false`)
+
 ```javascript
 document.addEventListener('click', handler, false); // Changed from true
 ```
@@ -71,7 +84,9 @@ document.addEventListener('click', handler, false); // Changed from true
 **Result:** No change - bug persisted
 
 ### 4. Force Clear Gesture State ❌
+
 **Change:** Manually clear `workspace.currentGesture_`
+
 ```javascript
 if (ws.currentGesture_) {
   ws.currentGesture_.cancel();
@@ -83,7 +98,9 @@ if (ws.currentGesture_) {
 **Result:** No change - `currentGesture_` was already null
 
 ### 5. Clear Keyboard Move Flag ❌
+
 **Change:** Force `workspace.keyboardMoveInProgress` to false
+
 ```javascript
 if (ws.keyboardMoveInProgress) {
   ws.setKeyboardMoveInProgress(false);
@@ -124,6 +141,7 @@ export function checkTouchIdentifier(e: PointerEvent): boolean {
 ```
 
 **How it works:**
+
 1. When a touch/pointer interaction starts (`pointerdown`), Blockly saves the `pointerId`
 2. **All subsequent events with different `pointerId` values are ignored**
 3. The identifier is cleared when the gesture ends via `clearTouchIdentifier()`
@@ -131,6 +149,7 @@ export function checkTouchIdentifier(e: PointerEvent): boolean {
 ### The Bug
 
 **What was happening:**
+
 1. User taps workspace to drop → sets `touchIdentifier_ = "123"` (example ID)
 2. Plugin exits sticky mode but **doesn't clear the identifier**
 3. User taps another block with pointer ID `"456"`
@@ -138,6 +157,7 @@ export function checkTouchIdentifier(e: PointerEvent): boolean {
 5. Blockly **silently ignores the tap** (returns false from `checkTouchIdentifier`)
 
 **Why this only affects touch:**
+
 - Mouse events typically use the same pointer ID consistently
 - Touch events can have different pointer IDs for each tap
 - Real browser touches generate proper PointerEvents with varied IDs
@@ -191,10 +211,12 @@ if (selection) {
 ### Minimal Required Changes
 
 1. **Remove pointerup blocking** (lines 620-628 in `src/index.ts`)
+
    - The pointerup event blocker was unnecessary and potentially problematic
    - Sticky mode works fine without it
 
 2. **Clear touch identifier** (in `resetStickyState()`)
+
    - Call `Blockly.Touch.clearTouchIdentifier()` when exiting sticky mode
    - Do it both immediately and after setTimeout to handle all timing scenarios
 
@@ -223,12 +245,14 @@ workspace.dispatchEvent(new MouseEvent('click', { ... }));
 ```
 
 **The Issue:**
+
 - Real browser touches generate `PointerEvent` objects
 - Blockly's touch identifier system specifically checks for `PointerEvent` instances
 - Synthetic `TouchEvent` objects don't trigger the same code paths
 - The test's synthetic events may not interact with Blockly's gesture system the same way
 
 **Why this matters:**
+
 - Real user interactions: ✅ FIXED
 - Automated test: ❌ Still fails (synthetic event limitation)
 
@@ -241,10 +265,12 @@ The test file explicitly states it cannot be modified, but the bug IS fixed in r
 ### Debugging Multi-System Event Flows
 
 1. **Events reaching our code ≠ Events being processed**
+
    - We saw events arrive but Blockly still ignored them
    - Need to trace through ALL systems involved
 
 2. **Check for multi-touch tracking mechanisms**
+
    - Modern browsers use sophisticated pointer tracking
    - Systems may silently ignore events from "wrong" pointers
 
@@ -257,14 +283,17 @@ The test file explicitly states it cannot be modified, but the bug IS fixed in r
 **Critical state to manage when using keyboard navigation with touch:**
 
 1. **Touch Identifier:** `Blockly.Touch.clearTouchIdentifier()`
+
    - Must be cleared after any keyboard-initiated drag
    - Otherwise blocks future touch interactions
 
 2. **Selection State:** `selection.unselect()`
+
    - Clear after programmatic moves
    - Prevents stuck selection state
 
 3. **Gesture State:** `workspace.currentGesture_`
+
    - Check and clear if stuck
    - Usually clears automatically but worth verifying
 
@@ -284,10 +313,12 @@ The test file explicitly states it cannot be modified, but the bug IS fixed in r
 ### Code Cleanup Opportunities
 
 1. **Remove unnecessary event blocking**
+
    - The pointerup blocker was defensive but not needed
    - Simpler event handling is better
 
 2. **Consolidate cleanup code**
+
    - Currently split between `resetStickyState()` and other locations
    - Could centralize all state cleanup
 
@@ -298,14 +329,17 @@ The test file explicitly states it cannot be modified, but the bug IS fixed in r
 ## Related Code
 
 ### Files Modified
+
 - `src/index.ts` - Main keyboard navigation plugin file
   - `setupClickAndStick()` - Removed pointerup blocker
   - `resetStickyState()` - Added touch identifier and selection clearing
 
 ### Blockly Core Files Referenced
+
 - `blockly/core/touch.ts` - Touch identifier tracking system
 - `blockly/core/gesture.ts` - Gesture handling system
 - `blockly/core/common.ts` - Selection management
 
 ### Test Files
+
 - `test/webdriverio/test/touch_click_stick_test.ts` - Integration tests (one still fails due to synthetic event limitations)

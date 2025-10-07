@@ -3,6 +3,7 @@
 ## Current Problem
 
 When double-clicking a different block while in sticky mode:
+
 1. **First click** of double-click → `handleClick()` fires → calls `handleStickyModeClick()` → **completes the move** ("Dropping block at clicked position")
 2. **Second click** of double-click → `handleDoubleClick()` fires → but sticky mode is already gone (finished in step 1)
 
@@ -13,6 +14,7 @@ Result: The first move is **completed** instead of **aborted**, then a new move 
 ## Root Cause
 
 Click events fire before dblclick events. The browser sequence is:
+
 1. mousedown → mouseup → **click**
 2. mousedown → mouseup → **click** → **dblclick**
 
@@ -25,11 +27,13 @@ Add a timeout to delay single-click processing, giving the double-click event ti
 ### Implementation:
 
 1. **Add instance variable**:
+
    ```typescript
    private pendingClickTimeout: number | null = null;
    ```
 
 2. **Update `handleClick()`**:
+
    ```typescript
    private handleClick(event: MouseEvent) {
      if (!this.stickyBlock) return;
@@ -57,6 +61,7 @@ Add a timeout to delay single-click processing, giving the double-click event ti
    ```
 
 3. **Update `handleDoubleClick()`**:
+
    ```typescript
    private handleDoubleClick(event: MouseEvent) {
      if (event.defaultPrevented) return;
@@ -117,7 +122,9 @@ Add a timeout to delay single-click processing, giving the double-click event ti
    ```typescript
    // Exit if already in sticky mode
    if (this.stickyBlock) {
-     console.log('ABC enterStickyMode: Already in sticky mode, calling cleanupStickyMode(abort)');
+     console.log(
+       'ABC enterStickyMode: Already in sticky mode, calling cleanupStickyMode(abort)',
+     );
      this.cleanupStickyMode('abort'); // Changed from exitStickyModeAndDrop()
    }
    ```
@@ -125,10 +132,12 @@ Add a timeout to delay single-click processing, giving the double-click event ti
 ## Behavior with This Solution
 
 ### Single Click:
+
 1. Click → starts 250ms timeout
 2. After 250ms → processes click (drop/connect/etc.)
 
 ### Double Click:
+
 1. First click → starts 250ms timeout
 2. Second click → cancels timeout, processes double-click
 3. If already in sticky mode with different block → aborts current move, starts new move
@@ -137,11 +146,13 @@ Add a timeout to delay single-click processing, giving the double-click event ti
 ## Trade-offs
 
 **Pros:**
+
 - Solves the double-click problem cleanly
 - Works for all scenarios (different block, same block, workspace)
 - Relatively simple implementation
 
 **Cons:**
+
 - Adds 250ms delay to single-click actions (drop, connect, delete)
 - May feel slightly less responsive for single-click operations
 - Standard double-click time varies by OS (typically 200-500ms)
@@ -155,7 +166,9 @@ Keep it simple - just fix the double-click early return:
 if (this.stickyBlock) {
   // If clicking a different block, abort current move and start new one
   if (block && block !== this.stickyBlock && block.isMovable()) {
-    console.log('ABC handleDoubleClick: Different block, aborting and starting new move');
+    console.log(
+      'ABC handleDoubleClick: Different block, aborting and starting new move',
+    );
     this.cleanupStickyMode('abort');
     // Continue below to start new move
   } else {

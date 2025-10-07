@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is the @blockly/keyboard-navigation plugin for Blockly, enabling keyboard navigation for visual programming environments. The plugin supports accessibility features by allowing users to navigate Blockly workspaces using keyboard shortcuts and arrow keys, which is particularly important for visually impaired and motor-impaired users.
 
 The plugin extends Blockly's core functionality with a comprehensive keyboard navigation system that includes:
+
 - Cursor-based navigation through blocks, connections, and fields
 - Context-aware keyboard shortcuts
 - Intelligent block insertion and movement
@@ -16,6 +17,7 @@ The plugin extends Blockly's core functionality with a comprehensive keyboard na
 ## Development Commands
 
 ### Building and Development
+
 ```bash
 # Build the plugin
 npm run build
@@ -34,6 +36,7 @@ npm run format:check
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -53,6 +56,7 @@ npm run wdio:clean
 ```
 
 ### Linting
+
 ```bash
 # Lint code
 npm run lint
@@ -62,6 +66,7 @@ npm run lint:fix
 ```
 
 ### Deployment
+
 ```bash
 # Deploy to GitHub Pages
 npm run ghpages
@@ -106,6 +111,7 @@ npm run predeploy
 ### Styling and Visual Indicators
 
 The plugin registers extensive CSS for visual focus indicators:
+
 - Active focus (solid yellow outline): Current navigation target
 - Passive focus (dashed yellow outline): Secondary focus indicators
 - Tree focus (blue outline): Indicates which major area (workspace/toolbox/flyout) is active
@@ -123,11 +129,13 @@ The plugin registers extensive CSS for visual focus indicators:
 The project uses a two-tier testing approach:
 
 ### Unit Tests (Mocha)
+
 - Located in `test/controller_test.mocha.js`
 - Test core navigation logic and action functionality
 - Run with `npm run test:mocha`
 
 ### Integration Tests (WebdriverIO)
+
 - Located in `test/webdriverio/test/`
 - Browser-based tests that simulate real user interactions
 - Test files cover specific functionality:
@@ -141,6 +149,7 @@ The project uses a two-tier testing approach:
   - And more specific test suites for different features
 
 ### Test Architecture
+
 - Tests use a custom test setup (`test_setup.ts`) that provides helper functions
 - Hooks (`hooks.ts`) handle test environment setup and cleanup
 - Tests build a webpack bundle for the browser environment
@@ -149,6 +158,7 @@ The project uses a two-tier testing approach:
 ## Working with the Plugin
 
 ### Development Workflow
+
 1. Make changes to source files in `src/`
 2. Run `npm run format` to format code
 3. Run `npm run lint` to check for issues
@@ -157,6 +167,7 @@ The project uses a two-tier testing approach:
 6. Build with `npm run build` before committing
 
 ### Adding New Actions
+
 1. Create new action class in `src/actions/`
 2. Implement `install()` and `uninstall()` methods
 3. Register shortcuts and context menu items
@@ -164,6 +175,7 @@ The project uses a two-tier testing approach:
 5. Add corresponding tests in appropriate test files
 
 ### Debugging Navigation Issues
+
 - Use browser developer tools to inspect focus states
 - Check for `.blocklyActiveFocus` and `.blocklyPassiveFocus` classes
 - Monitor keyboard events and shortcut registration
@@ -172,15 +184,19 @@ The project uses a two-tier testing approach:
 ## Plugin Usage Notes
 
 ### Initialization Requirements
+
 1. Call `KeyboardNavigation.registerKeyboardNavigationStyles()` before `Blockly.inject()`
 2. Call `KeyboardNavigation.registerNavigationDeferringToolbox()` if using default toolbox
 3. Create KeyboardNavigation instance after workspace injection
 4. Add empty `<div id="shortcuts"></div>` to page for help dialog
 
 ### Custom Toolbox Integration
+
 If using a custom toolbox, override the `onKeyDown_` method to be a no-op to prevent conflicts with the plugin's navigation system.
 
 ### Cross-tab Copy/Paste Compatibility
+
 When integrating with @blockly/plugin-cross-tab-copy-paste:
+
 1. Initialize the cross-tab plugin first with `contextMenu: false`
 2. Initialize KeyboardNavigation with `allowCrossWorkspacePaste: true`

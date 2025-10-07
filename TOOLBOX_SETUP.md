@@ -5,6 +5,7 @@ This document explains how the toolbox is configured in the Blockly keyboard nav
 ## Overview
 
 The demo app supports two toolbox modes:
+
 1. **Category Toolbox** (`toolboxCategories.js`) - Traditional toolbox with collapsible categories
 2. **Flyout Toolbox** (`test/blocks/toolbox.js`) - Simple flyout with p5.js blocks only
 
@@ -31,6 +32,7 @@ test/
 This is the main toolbox configuration that includes both standard Blockly blocks and custom p5.js blocks organized into categories.
 
 **Structure:**
+
 ```javascript
 export default {
   kind: 'categoryToolbox',
@@ -58,11 +60,12 @@ export default {
 A simplified toolbox that displays only p5.js blocks in a single flyout.
 
 **Structure:**
+
 ```javascript
 export const toolbox = {
   kind: 'flyoutToolbox',
-  contents: p5CategoryContents
-}
+  contents: p5CategoryContents,
+};
 ```
 
 ### 3. P5.js Category Contents (`test/blocks/toolbox.js`)
@@ -99,6 +102,7 @@ export const p5CategoryContents = [
 ### Custom P5.js Category
 
 Contains demo-specific blocks for creative coding:
+
 - `p5_background_color` - Set canvas background color
 - `colour_random` - Generate random colors
 - `draw_emoji` - Draw emoji characters
@@ -108,6 +112,7 @@ Contains demo-specific blocks for creative coding:
 ### Misc Category
 
 Demonstrates advanced toolbox features:
+
 - Labels for organization
 - Subcategories
 - Buttons with click handlers
@@ -120,6 +125,7 @@ Demonstrates advanced toolbox features:
 This file defines the visual appearance and behavior of custom blocks.
 
 **Block Definition Structure:**
+
 ```javascript
 const blockDefinition = {
   type: 'block_name',
@@ -150,11 +156,12 @@ const blockDefinition = {
 Defines how blocks generate JavaScript code:
 
 ```javascript
-forBlock['block_name'] = function(block, generator) {
-  const input = generator.valueToCode(block, 'INPUT_NAME', Order.ATOMIC) || 'default';
+forBlock['block_name'] = function (block, generator) {
+  const input =
+    generator.valueToCode(block, 'INPUT_NAME', Order.ATOMIC) || 'default';
   const field = block.getFieldValue('FIELD_NAME');
   return `sketch.someFunction(${input}, '${field}');\n`;
-}
+};
 ```
 
 ## How to Modify the Toolbox
@@ -162,43 +169,47 @@ forBlock['block_name'] = function(block, generator) {
 ### Adding a New Block
 
 1. **Define the block** in `test/blocks/p5_blocks.js`:
+
 ```javascript
 const myNewBlock = {
   type: 'my_new_block',
   message0: 'do something with %1',
-  args0: [{ type: 'input_value', name: 'INPUT' }],
+  args0: [{type: 'input_value', name: 'INPUT'}],
   previousStatement: null,
   nextStatement: null,
   colour: 160,
-  tooltip: 'Does something cool'
-}
+  tooltip: 'Does something cool',
+};
 ```
 
 2. **Add to block registry** in the same file:
+
 ```javascript
 const jsonBlocks = Blockly.common.createBlockDefinitionsFromJsonArray([
   // ... existing blocks
-  myNewBlock
-])
+  myNewBlock,
+]);
 ```
 
 3. **Create code generator** in `test/blocks/p5_generators.js`:
+
 ```javascript
-forBlock['my_new_block'] = function(block, generator) {
+forBlock['my_new_block'] = function (block, generator) {
   const input = generator.valueToCode(block, 'INPUT', Order.ATOMIC) || '0';
   return `sketch.doSomething(${input});\n`;
-}
+};
 ```
 
 4. **Add to toolbox** in `test/blocks/toolbox.js`:
+
 ```javascript
 export const p5CategoryContents = [
   // ... existing blocks
   {
     kind: 'block',
-    type: 'my_new_block'
-  }
-]
+    type: 'my_new_block',
+  },
+];
 ```
 
 ### Moving Blocks Between Categories
@@ -234,6 +245,7 @@ Example - Moving `colour_random` from p5 category to Logic category:
 3. **Remove code generator** (optional) - Remove from `p5_generators.js` if no longer needed
 
 **To temporarily disable a block:**
+
 ```javascript
 {
   kind: 'block',
@@ -305,11 +317,13 @@ Example - Moving `colour_random` from p5 category to Logic category:
 ## Block Configuration Options
 
 ### Input Types
+
 - `input_value` - Accepts value blocks (expressions)
 - `input_statement` - Accepts statement blocks (commands)
 - `input_dummy` - No input, just spacing
 
 ### Field Types
+
 - `field_input` - Text input
 - `field_number` - Number input with optional constraints
 - `field_dropdown` - Dropdown selection
@@ -318,6 +332,7 @@ Example - Moving `colour_random` from p5 category to Logic category:
 - `field_image` - Image display
 
 ### Block Properties
+
 - `previousStatement` - Can connect above another block
 - `nextStatement` - Can connect below another block
 - `output` - Returns a value (specify type or `null`)
@@ -328,12 +343,14 @@ Example - Moving `colour_random` from p5 category to Logic category:
 ## Testing Your Changes
 
 1. **Rebuild the demo:**
+
    ```bash
    npm run build
    npm start
    ```
 
 2. **Test different scenarios:**
+
    - Navigate to `http://localhost:3000`
    - Try different URL parameters:
      - `?toolbox=flyout` - Test flyout mode

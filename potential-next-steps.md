@@ -5,6 +5,7 @@
 **Test Results: 173 passing, 10 pending, 11 failing** (down from 21 failing)
 
 ### Successfully Fixed ✅
+
 - Bin clicks (delete on bin, no delete near bin)
 - Cursor-following (blocks follow mouse movement)
 - Single click releases (drop on workspace, drop at position, connect to highlights)
@@ -12,6 +13,7 @@
 - Mouse-based click-and-stick fully functional
 
 ### Refactoring Complete ✅
+
 - Refactored to use **PointerEvents** (following Blockly core pattern)
 - Restored **cursor-following** with `handlePointerMove()`
 - Restored **click handling** with `handleStickyModeClick()`
@@ -24,6 +26,7 @@
 ### Root Cause Identified: Sticky Mode Not Exiting
 
 **Issues 1 & 3: Enter/Escape don't exit sticky mode**
+
 - Test: "Enter key returns block to original position when no move made"
 - Test: "Double-click block, move mouse, Esc cancels and returns to original position"
 - Error: `isInStickyMode` stays `true` after Enter/Escape keypress
@@ -32,6 +35,7 @@
 - This causes **test contamination** - sticky mode bleeds into subsequent tests
 
 **Issues 6-11: Touch interactions fail**
+
 - All tests show "expected true to be false" - tests expect NOT to be in sticky mode initially
 - **Root cause**: Same as above - previous test's sticky mode contaminates the next test
 - Tests expect clean slate but sticky mode is already active from previous test
@@ -45,11 +49,13 @@
   - Test 11: "Double-tap to enter move mode, use arrow keys, tap to confirm" (contaminated state)
 
 **Issue 4: Copy/paste creates 5 blocks instead of 2**
+
 - Test: "Copy and paste while block selected"
 - Expected 2 blocks total, got 5 blocks
 - Likely related - sticky mode contamination affecting clipboard operations
 
 **Issue 5: Stack navigation timeout**
+
 - Test: "before each" hook for "Next"
 - Error: "Timeout of 2000ms exceeded"
 - Likely related - sticky mode contamination blocking test setup
@@ -57,6 +63,7 @@
 ### Other Issues
 
 **Issue 2: Click on connection selector not found**
+
 - Test: "Click on connection point moves block there"
 - Error: `Can't call click on element with selector "[data-id="draw_circle_1"] .blocklyConnection"`
 - **Root cause**: Test bug - uses `.blocklyConnection` selector but should use `.blocklyPotentialConnection`
@@ -72,6 +79,7 @@
 **Problem**: Mover's callback mechanism doesn't work - `onMoveFinished` never fires
 
 **Why the callback doesn't work**:
+
 - The Mover's finish/abort keyboard shortcuts are handling Enter/Escape
 - But they're not calling our callback properly
 - Our `onMoveFinished` callback passed to `mover.startMove()` isn't being invoked
@@ -116,6 +124,7 @@ ShortcutRegistry.registry.register({
 After fixing Priority 1, re-run WDIO tests.
 
 **Expected**: Issues 6-11 should automatically resolve because:
+
 - Tests will start with clean state (not in sticky mode)
 - Sticky mode will properly exit between tests
 - Highlights will properly clear on exit
@@ -124,11 +133,13 @@ After fixing Priority 1, re-run WDIO tests.
 ### Priority 3: Address Remaining Issues
 
 **Issue 2 - Test selector bug**:
+
 - Update test to use `.blocklyPotentialConnection` instead of `.blocklyConnection`
 - Or investigate if connection highlights should have `.blocklyConnection` class
 - File: `test/webdriverio/test/click_stick_test.ts`
 
 **Issues 4 & 5 - Copy/paste and stack navigation**:
+
 - Re-evaluate after fixing root cause
 - Likely will auto-resolve with proper sticky mode cleanup
 - If still failing, investigate separately
@@ -138,15 +149,18 @@ After fixing Priority 1, re-run WDIO tests.
 ## Implementation Steps
 
 1. **Fix Enter/Escape exit handler**
+
    - Edit `src/index.ts` line ~591 in `setupClickAndStick()`
    - Replace empty keydown handler with call to `resetStickyState()`
    - Build: `npm run build`
 
 2. **Run full test suite**
+
    - Command: `npm run test:wdio`
    - Expected: 9-11 tests should now pass
 
 3. **Fix test selector (if needed)**
+
    - Edit `test/webdriverio/test/click_stick_test.ts`
    - Update `.blocklyConnection` to `.blocklyPotentialConnection`
    - Or investigate connection highlight CSS classes
@@ -160,12 +174,14 @@ After fixing Priority 1, re-run WDIO tests.
 ## Expected Outcome
 
 **After Priority 1 fix**:
+
 - ✅ Issues 1, 3: Enter/Escape will properly exit sticky mode
 - ✅ Issues 6-11: Touch tests will start with clean state (no contamination)
 - ✅ Possibly 4, 5: May auto-resolve with proper cleanup
 - ❓ Issue 2: Test selector bug - separate fix needed
 
 **Final expected results**:
+
 - **180-182 passing** (up from 173)
 - **10 pending** (unchanged)
 - **1-3 failing** (down from 11)

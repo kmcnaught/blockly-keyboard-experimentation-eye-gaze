@@ -20,17 +20,21 @@ export function isWorkspaceElement(target: any): boolean {
   // These have baseVal and animVal properties containing the actual class name
   if (target.baseVal !== undefined) {
     const className = target.baseVal || target.animVal || '';
-    return className.includes('blocklyWorkspace') ||
-           className.includes('blocklyMainBackground') ||
-           className.includes('blocklySvg');
+    return (
+      className.includes('blocklyWorkspace') ||
+      className.includes('blocklyMainBackground') ||
+      className.includes('blocklySvg')
+    );
   }
 
   // Handle regular DOM elements with classList
   const classList = target.classList;
   if (classList) {
-    return classList.contains('blocklyMainBackground') ||
-           classList.contains('blocklySvg') ||
-           classList.contains('blocklyWorkspace');
+    return (
+      classList.contains('blocklyMainBackground') ||
+      classList.contains('blocklySvg') ||
+      classList.contains('blocklyWorkspace')
+    );
   }
 
   return false;

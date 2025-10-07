@@ -1726,7 +1726,7 @@ export const load = function (workspace, scenarioString) {
   // Manually disable orphaned blocks after loading
   // (since disableOrphans listener doesn't run during load)
   const topBlocks = workspace.getTopBlocks(false);
-  topBlocks.forEach(block => {
+  topBlocks.forEach((block) => {
     Blockly.Events.disableOrphans({
       type: Blockly.Events.BLOCK_MOVE,
       blockId: block.id,
