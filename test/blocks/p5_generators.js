@@ -1027,8 +1027,16 @@ sketch.noStroke();
 sketch.rect(80, 300, 15, 100);
 sketch.rect(320, 280, 20, 120);
 sketch.fill('#228B22');
-sketch.circle(87, 300, 40);
-sketch.circle(330, 280, 60);\n`;
+// Blobby deciduous tree on left
+sketch.circle(87, 290, 35);
+sketch.circle(75, 305, 30);
+sketch.circle(99, 305, 30);
+sketch.circle(87, 318, 28);
+// Blobby deciduous tree on right
+sketch.circle(330, 265, 45);
+sketch.circle(315, 285, 38);
+sketch.circle(345, 285, 38);
+sketch.circle(330, 302, 35);\n`;
       break;
     case 'rocks':
       code = `sketch.fill('#696969');
