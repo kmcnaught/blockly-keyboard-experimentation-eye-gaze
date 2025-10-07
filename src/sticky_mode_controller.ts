@@ -157,6 +157,10 @@ export class StickyModeController {
       return false;
     }
 
+    // Close any open fields before entering sticky mode
+    Blockly.DropDownDiv.hide();
+    Blockly.WidgetDiv.hide();
+
     try {
       const onMoveFinished = () => {
         this.resetStickyState();
