@@ -1335,45 +1335,18 @@ const face = {
               },
               'next': {
                 'block': {
-                  'type': 'draw_eyes',
-                  'id': 'eyes_1',
+                  'type': 'draw_hair',
+                  'id': 'hair_1',
                   'fields': {
-                    'STYLE': 'normal',
+                    'STYLE': 'short',
                   },
-                  'next': {
-                    'block': {
-                      'type': 'draw_nose',
-                      'id': 'nose_1',
-                      'fields': {
-                        'STYLE': 'button',
-                      },
-                      'next': {
-                        'block': {
-                          'type': 'draw_mouth',
-                          'id': 'mouth_1',
-                          'fields': {
-                            'STYLE': 'smile',
-                          },
-                          'next': {
-                            'block': {
-                              'type': 'draw_hair',
-                              'id': 'hair_1',
-                              'fields': {
-                                'STYLE': 'short',
-                              },
-                              'inputs': {
-                                'COLOR': {
-                                  'shadow': {
-                                    'type': 'colour_picker',
-                                    'id': 'hair_color_1',
-                                    'fields': {
-                                      'COLOUR': '#663300',
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
+                  'inputs': {
+                    'COLOR': {
+                      'shadow': {
+                        'type': 'colour_picker',
+                        'id': 'hair_color_1',
+                        'fields': {
+                          'COLOUR': '#663300',
                         },
                       },
                     },
@@ -1382,6 +1355,33 @@ const face = {
               },
             },
           },
+        },
+      },
+      {
+        'type': 'draw_eyes',
+        'id': 'eyes_1',
+        'x': 50,
+        'y': 600,
+        'fields': {
+          'STYLE': 'normal',
+        },
+      },
+      {
+        'type': 'draw_nose',
+        'id': 'nose_1',
+        'x': 450,
+        'y': 500,
+        'fields': {
+          'STYLE': 'button',
+        },
+      },
+      {
+        'type': 'draw_mouth',
+        'id': 'mouth_1',
+        'x': 400,
+        'y': 600,
+        'fields': {
+          'STYLE': 'smile',
         },
       },
     ],
@@ -1722,4 +1722,15 @@ export const load = function (workspace, scenarioString) {
     false,
   );
   Blockly.Events.enable();
+
+  // Manually disable orphaned blocks after loading
+  // (since disableOrphans listener doesn't run during load)
+  const topBlocks = workspace.getTopBlocks(false);
+  topBlocks.forEach(block => {
+    Blockly.Events.disableOrphans({
+      type: Blockly.Events.BLOCK_MOVE,
+      blockId: block.id,
+      workspaceId: workspace.id,
+    });
+  });
 };
