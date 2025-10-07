@@ -209,7 +209,7 @@ forBlock['draw_trail_circle'] = function (block, generator) {
   const size = generator.valueToCode(block, 'SIZE', Order.NONE) || '20';
   return `sketch.push();
 let trailColor = sketch.color(${color});
-trailColor.setAlpha(100); // Semi-transparent for trail effect
+trailColor.setAlpha(50); // Semi-transparent for trail effect (faster fade)
 sketch.fill(trailColor);
 sketch.noStroke();
 sketch.circle(${x}, ${y}, ${size});
