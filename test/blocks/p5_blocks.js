@@ -41,7 +41,8 @@ const p5DrawOnceJson = {
     },
   ],
   'colour': 300,
-  'tooltip': 'Draw static elements on the canvas. This code runs once after setup.',
+  'tooltip':
+    'Draw static elements on the canvas. This code runs once after setup.',
   'helpUrl': '',
 };
 
@@ -63,7 +64,8 @@ const p5AnimateJson = {
     },
   ],
   'colour': 320,
-  'tooltip': 'Animate interactive effects. This code runs continuously (~60fps) for gaze-responsive elements.',
+  'tooltip':
+    'Animate interactive effects. This code runs continuously (~60fps) for gaze-responsive elements.',
   'helpUrl': '',
 };
 
@@ -459,7 +461,8 @@ const drawLine = {
 
 const drawRectangle = {
   'type': 'draw_rectangle',
-  'tooltip': 'Draw a rectangle at specific coordinates with custom size and color',
+  'tooltip':
+    'Draw a rectangle at specific coordinates with custom size and color',
   'helpUrl': 'https://p5js.org/reference/#/p5/rect',
   'message0': 'draw %1 rectangle at x %2 y %3 width %4 height %5 %6',
   'args0': [
@@ -548,7 +551,8 @@ const mouseSpeed = {
 
 const drawSparkle = {
   'type': 'draw_sparkle',
-  'tooltip': 'Draw a star-shaped sparkle at the specified position with color and size',
+  'tooltip':
+    'Draw a star-shaped sparkle at the specified position with color and size',
   'helpUrl': '',
   'message0': 'draw %1 sparkle at x %2 y %3 size %4 %5',
   'args0': [
@@ -583,7 +587,8 @@ const drawSparkle = {
 
 const drawTrailCircle = {
   'type': 'draw_trail_circle',
-  'tooltip': 'Draw a fading circle that creates a trail effect behind gaze movement',
+  'tooltip':
+    'Draw a fading circle that creates a trail effect behind gaze movement',
   'helpUrl': '',
   'message0': 'draw fading %1 circle at x %2 y %3 size %4 %5',
   'args0': [
@@ -690,7 +695,8 @@ const addGlowEffect = {
 
 const distanceBetween = {
   'type': 'distance_between',
-  'tooltip': 'Calculate the distance between two points (useful for proximity effects)',
+  'tooltip':
+    'Calculate the distance between two points (useful for proximity effects)',
   'helpUrl': '',
   'message0': 'distance from x1 %1 y1 %2 to x2 %3 y2 %4',
   'args0': [
@@ -1041,7 +1047,6 @@ const drawTerrain = {
         ['fields', 'fields'],
         ['desert', 'desert'],
         ['forest', 'forest'],
-        ['city', 'city'],
       ],
     },
   ],
@@ -1081,7 +1086,8 @@ const drawCompleteFace = {
   'type': 'draw_complete_face',
   'tooltip': 'Draw a complete face with all features',
   'helpUrl': '',
-  'message0': '😊 draw complete face: %1 shape, %2 eyes, %3 nose, %4 mouth, %5 hair',
+  'message0':
+    '😊 draw complete face: %1 shape, %2 eyes, %3 nose, %4 mouth, %5 hair',
   'args0': [
     {
       'type': 'field_dropdown',
@@ -1170,7 +1176,6 @@ const drawCompleteLandscape = {
         ['fields', 'fields'],
         ['desert', 'desert'],
         ['forest', 'forest'],
-        ['city', 'city'],
       ],
     },
     {

@@ -987,23 +987,6 @@ for (let i = 0; i < 8; i++) {
   sketch.triangle(x - 15, topY, x, topY - 50, x + 15, topY);
 }\n`;
       break;
-    case 'city':
-      code = `sketch.fill('#696969');
-sketch.stroke('#000000');
-sketch.strokeWeight(2);
-sketch.rect(50, 150, 40, 250);
-sketch.rect(120, 100, 50, 300);
-sketch.rect(200, 180, 35, 220);
-sketch.rect(270, 120, 45, 280);
-sketch.rect(340, 160, 40, 240);
-sketch.fill('#FFFF00');
-sketch.noStroke();
-for (let i = 0; i < 20; i++) {
-  let x = 60 + (i % 4) * 20;
-  let y = 170 + Math.floor(i / 4) * 20;
-  if (sketch.random() > 0.6) sketch.rect(x, y, 8, 8);
-}\n`;
-      break;
   }
   return code;
 };
