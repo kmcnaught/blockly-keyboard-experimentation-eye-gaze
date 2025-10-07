@@ -1116,7 +1116,7 @@ for (let i = 0; i < 12; i++) {
 sketch.noStroke();
 sketch.rect(80, 300, 15, 100);
 sketch.rect(320, 280, 20, 120);
-sketch.fill('#228B22');
+sketch.fill('#1B5E20');
 // Blobby deciduous tree on left
 sketch.circle(87, 290, 35);
 sketch.circle(75, 305, 30);
