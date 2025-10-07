@@ -133,20 +133,35 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const kbNav = new KeyboardNavigation(workspace);
   // Expose keyboard navigation instance for debugging
   (window as any).kbNav = kbNav;
-  registerRunCodeShortcut();
+  registerRunCodeShortcut(runCodeAndHideOverlay);
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
 
   // Track code changes and show overlay
   workspace.addChangeListener((event: Blockly.Events.Abstract) => {
-    // Only show overlay for events that actually change the code
-    if (
-      event.type === Blockly.Events.BLOCK_MOVE ||
+    // Only show overlay for events that actually change the generated code (AST changes)
+    let shouldShowOverlay = false;
+
+    if (event.type === Blockly.Events.BLOCK_MOVE) {
+      // Only trigger if the block's connections changed, not just position
+      const moveEvent = event as Blockly.Events.BlockMove;
+      // Check if parent changed (connection change) or if oldCoordinate is undefined
+      // (which indicates a connection change rather than just a drag)
+      if (moveEvent.oldParentId !== moveEvent.newParentId ||
+          moveEvent.oldInputName !== moveEvent.newInputName) {
+        shouldShowOverlay = true;
+      }
+    } else if (
       event.type === Blockly.Events.BLOCK_CREATE ||
       event.type === Blockly.Events.BLOCK_DELETE ||
       event.type === Blockly.Events.BLOCK_CHANGE
     ) {
+      // These always affect the generated code
+      shouldShowOverlay = true;
+    }
+
+    if (shouldShowOverlay) {
       codeHasChanged = true;
       showOverlay();
     }

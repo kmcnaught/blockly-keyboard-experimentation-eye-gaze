@@ -18,8 +18,18 @@ export function runCode() {
   const code = javascriptGenerator.workspaceToCode(Blockly.getMainWorkspace());
   const p5outputDiv = document.getElementById('p5output');
   if (p5outputDiv) {
-    // Clear the old canvas.
+    // Preserve the overlay element before clearing
+    const overlay = document.getElementById('canvasOverlay');
+    const overlayParent = overlay?.parentElement;
+
+    // Clear the old canvas
     p5outputDiv.innerHTML = '';
+
+    // Restore the overlay if it existed
+    if (overlay && overlayParent === p5outputDiv) {
+      p5outputDiv.appendChild(overlay);
+    }
+
     // Run P5 in instance mode. The name 'sketch' matches the name used
     // in the generator for all of the p5 blocks.
     // eslint-disable-next-line new-cap
@@ -30,16 +40,18 @@ export function runCode() {
 }
 
 /**
- * Register a shortcut under ctrl+R to run code in the test page.
+ * Register a shortcut under Shift+R to run code in the test page.
+ * @param runCallback - Optional callback to run instead of the default runCode function.
  */
-export function registerRunCodeShortcut() {
+export function registerRunCodeShortcut(runCallback?: () => void) {
+  const callback = runCallback || runCode;
   const runCodeShortcut = {
     name: 'Run code',
     preconditionFn: (workspace: Blockly.WorkspaceSvg) => {
       return true;
     },
     callback: (workspace: Blockly.WorkspaceSvg) => {
-      runCode();
+      callback();
       return true;
     },
   };
