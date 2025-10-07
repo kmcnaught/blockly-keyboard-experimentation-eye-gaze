@@ -125,7 +125,8 @@ sketch.text(${text}, 50, 350);\n`;
 // New drawing block generators
 
 forBlock['configurable_circle'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ff0000'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ff0000'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '100';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '100';
   const diameter = generator.valueToCode(block, 'DIAMETER', Order.NONE) || '50';
@@ -135,7 +136,8 @@ sketch.circle(${x}, ${y}, ${diameter});\n`;
 };
 
 forBlock['draw_line'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#000000'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#000000'`;
   const x1 = generator.valueToCode(block, 'X1', Order.NONE) || '0';
   const y1 = generator.valueToCode(block, 'Y1', Order.NONE) || '0';
   const x2 = generator.valueToCode(block, 'X2', Order.NONE) || '100';
@@ -145,7 +147,8 @@ sketch.line(${x1}, ${y1}, ${x2}, ${y2});\n`;
 };
 
 forBlock['draw_rectangle'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#0000ff'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#0000ff'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '50';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '50';
   const width = generator.valueToCode(block, 'WIDTH', Order.NONE) || '100';
@@ -174,13 +177,17 @@ forBlock['previous_mouse_y'] = function (block, generator) {
 };
 
 forBlock['mouse_speed'] = function (block, generator) {
-  return ['sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY)', Order.FUNCTION_CALL];
+  return [
+    'sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY)',
+    Order.FUNCTION_CALL,
+  ];
 };
 
 // Sparkle and Effect Generators
 
 forBlock['draw_sparkle'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ffff00'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ffff00'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '100';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '100';
   const size = generator.valueToCode(block, 'SIZE', Order.NONE) || '10';
@@ -203,7 +210,8 @@ sketch.pop();\n`;
 };
 
 forBlock['draw_trail_circle'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ff00ff'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ff00ff'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '100';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '100';
   const size = generator.valueToCode(block, 'SIZE', Order.NONE) || '20';
@@ -218,7 +226,8 @@ sketch.pop();\n`;
 
 forBlock['draw_particle_burst'] = function (block, generator) {
   const count = generator.valueToCode(block, 'COUNT', Order.NONE) || '10';
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#00ffff'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#00ffff'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '100';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '100';
   return `sketch.push();
@@ -236,7 +245,8 @@ sketch.pop();\n`;
 };
 
 forBlock['add_glow_effect'] = function (block, generator) {
-  const color = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ffffff'`;
+  const color =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#ffffff'`;
   const x = generator.valueToCode(block, 'X', Order.NONE) || '100';
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '100';
   const radius = generator.valueToCode(block, 'RADIUS', Order.NONE) || '50';
@@ -265,30 +275,48 @@ forBlock['mouse_in_zone'] = function (block, generator) {
   const y = generator.valueToCode(block, 'Y', Order.NONE) || '0';
   const width = generator.valueToCode(block, 'WIDTH', Order.NONE) || '100';
   const height = generator.valueToCode(block, 'HEIGHT', Order.NONE) || '100';
-  return [`(sketch.mouseX >= ${x} && sketch.mouseX <= ${x} + ${width} && sketch.mouseY >= ${y} && sketch.mouseY <= ${y} + ${height})`, Order.LOGICAL_AND];
+  return [
+    `(sketch.mouseX >= ${x} && sketch.mouseX <= ${x} + ${width} && sketch.mouseY >= ${y} && sketch.mouseY <= ${y} + ${height})`,
+    Order.LOGICAL_AND,
+  ];
 };
 
 forBlock['mouse_moved'] = function (block, generator) {
-  return ['(sketch.mouseX !== sketch.pmouseX || sketch.mouseY !== sketch.pmouseY)', Order.LOGICAL_OR];
+  return [
+    '(sketch.mouseX !== sketch.pmouseX || sketch.mouseY !== sketch.pmouseY)',
+    Order.LOGICAL_OR,
+  ];
 };
 
 forBlock['mouse_moved_distance'] = function (block, generator) {
   const distance = generator.valueToCode(block, 'DISTANCE', Order.NONE) || '10';
-  return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${distance})`, Order.RELATIONAL];
+  return [
+    `(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${distance})`,
+    Order.RELATIONAL,
+  ];
 };
 
 forBlock['mouse_moved_less_than'] = function (block, generator) {
   const distance = generator.valueToCode(block, 'DISTANCE', Order.NONE) || '10';
-  return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) < ${distance})`, Order.RELATIONAL];
+  return [
+    `(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) < ${distance})`,
+    Order.RELATIONAL,
+  ];
 };
 
 forBlock['mouse_inside_canvas'] = function (block, generator) {
-  return ['(sketch.mouseX >= 0 && sketch.mouseX <= sketch.width && sketch.mouseY >= 0 && sketch.mouseY <= sketch.height)', Order.LOGICAL_AND];
+  return [
+    '(sketch.mouseX >= 0 && sketch.mouseX <= sketch.width && sketch.mouseY >= 0 && sketch.mouseY <= sketch.height)',
+    Order.LOGICAL_AND,
+  ];
 };
 
 forBlock['mouse_speed_greater_than'] = function (block, generator) {
   const speed = generator.valueToCode(block, 'SPEED', Order.NONE) || '10';
-  return [`(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${speed})`, Order.RELATIONAL];
+  return [
+    `(sketch.dist(sketch.mouseX, sketch.mouseY, sketch.pmouseX, sketch.pmouseY) > ${speed})`,
+    Order.RELATIONAL,
+  ];
 };
 
 // Complete Scene Generators (adding them early)
@@ -381,7 +409,8 @@ sketch.circle(320, 80, 50);
 
 forBlock['draw_face_shape'] = function (block, generator) {
   const shape = block.getFieldValue('SHAPE');
-  const skinColor = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#CD853F'`;
+  const skinColor =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#CD853F'`;
   let code = '';
 
   switch (shape) {
@@ -577,7 +606,8 @@ sketch.line(185, 225, 215, 225);\n`;
 
 forBlock['draw_hair'] = function (block, generator) {
   const style = block.getFieldValue('STYLE');
-  const hairColor = generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#654321'`;
+  const hairColor =
+    generator.valueToCode(block, 'COLOR', Order.ATOMIC) || `'#654321'`;
   let code = '';
 
   switch (style) {
@@ -694,30 +724,30 @@ forBlock['draw_sky'] = function (block, generator) {
     case 'clear_blue':
       code = `sketch.fill('#87CEEB');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 200);\n`;
+sketch.rect(0, 0, 400, 400);\n`;
       break;
     case 'starry_night':
       code = `sketch.fill('#191970');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 200);
+sketch.rect(0, 0, 400, 400);
 sketch.fill('#FFFFFF');
 for (let i = 0; i < 20; i++) {
   let x = sketch.random(0, 400);
-  let y = sketch.random(0, 150);
+  let y = sketch.random(0, 300);
   sketch.circle(x, y, 2);
 }\n`;
       break;
     case 'sunny':
       code = `sketch.fill('#87CEEB');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 200);
+sketch.rect(0, 0, 400, 400);
 sketch.fill('#FFD700');
 sketch.circle(320, 80, 60);\n`;
       break;
     case 'cloudy':
       code = `sketch.fill('#B0C4DE');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 200);
+sketch.rect(0, 0, 400, 400);
 sketch.fill('#FFFFFF');
 sketch.circle(100, 80, 40);
 sketch.circle(120, 70, 50);
@@ -729,7 +759,7 @@ sketch.circle(290, 60, 35);\n`;
     case 'stormy':
       code = `sketch.fill('#2F4F4F');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 200);
+sketch.rect(0, 0, 400, 400);
 sketch.fill('#696969');
 sketch.circle(150, 80, 60);
 sketch.circle(170, 70, 70);
@@ -738,22 +768,22 @@ sketch.circle(190, 80, 60);\n`;
     case 'sunset':
       code = `sketch.fill('#FF6347');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 80);
+sketch.rect(0, 0, 400, 160);
 sketch.fill('#FF8C00');
-sketch.rect(0, 80, 400, 60);
+sketch.rect(0, 160, 400, 120);
 sketch.fill('#FFD700');
-sketch.rect(0, 140, 400, 60);\n`;
+sketch.rect(0, 280, 400, 120);\n`;
       break;
     case 'sunrise':
       code = `sketch.fill('#FFB6C1');
 sketch.noStroke();
-sketch.rect(0, 0, 400, 70);
+sketch.rect(0, 0, 400, 140);
 sketch.fill('#FFA07A');
-sketch.rect(0, 70, 400, 70);
+sketch.rect(0, 140, 400, 140);
 sketch.fill('#FFFFE0');
-sketch.rect(0, 140, 400, 60);
+sketch.rect(0, 280, 400, 120);
 sketch.fill('#FFD700');
-sketch.circle(350, 50, 40);\n`;
+sketch.circle(350, 100, 40);\n`;
       break;
   }
   return code;
