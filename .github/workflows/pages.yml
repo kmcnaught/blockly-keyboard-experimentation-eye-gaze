@@ -2,10 +2,11 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch.
+  # Runs on pushes targeting the default branch and test-blockly branch.
   push:
     branches:
       - main
+      - test-blockly
 
   # Allows the workflow to be manually run from the Actions tab.
   workflow_dispatch:
@@ -23,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  # Build and deploy both branches
   build:
     runs-on: ubuntu-latest
     steps:
@@ -33,11 +34,6 @@ jobs:
           path: blockly
           repository: google/blockly
           ref: develop
-
-      - name: Checkout tip-of-tree blockly-keyboard-experimentation
-        uses: actions/checkout@v4
-        with:
-          path: blockly-keyboard-experimentation
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -52,14 +48,43 @@ jobs:
           cd dist
           npm link
 
-      - name: Build tip-of-tree blockly-keyboard-experimentation
+      # Build main branch
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: blockly-keyboard-experimentation-main
+
+      - name: Build main branch
         run: |
-          cd blockly-keyboard-experimentation
+          cd blockly-keyboard-experimentation-main
           npm ci
           npm link blockly
           npm run ghpages
-          mkdir ../ghpages
-          cp -r build/* ../ghpages/
+
+      - name: Copy main branch build to root
+        run: |
+          mkdir -p ghpages
+          cp -r blockly-keyboard-experimentation-main/build/* ghpages/
+
+      # Build test-blockly branch
+      - name: Checkout test-blockly branch
+        uses: actions/checkout@v4
+        with:
+          ref: test-blockly
+          path: blockly-keyboard-experimentation-test
+
+      - name: Build test-blockly branch
+        run: |
+          cd blockly-keyboard-experimentation-test
+          npm ci
+          npm link blockly
+          npm run ghpages
+
+      - name: Copy test-blockly branch build to subdirectory
+        run: |
+          mkdir -p ghpages/test-blockly
+          cp -r blockly-keyboard-experimentation-test/build/* ghpages/test-blockly/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
