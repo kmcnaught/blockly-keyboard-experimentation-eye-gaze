@@ -17,7 +17,10 @@
       "Bash(npx mocha:*)",
       "Bash(npm run wdio:run:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run test:mocha:*)"
+      "Bash(npm run test:mocha:*)",
+      "WebFetch(domain:google.github.io)",
+      "WebSearch",
+      "WebFetch(domain:developers.google.com)"
     ],
     "deny": [],
     "ask": []

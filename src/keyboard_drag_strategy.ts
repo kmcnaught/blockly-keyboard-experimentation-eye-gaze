@@ -576,6 +576,15 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   }
 
   /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.connectionHighlighter?.setFatterConnections(enabled);
+  }
+
+  /**
    * Gets the initial connection where the block started.
    */
   getInitialConnectionNeighbour(): RenderedConnection | null {

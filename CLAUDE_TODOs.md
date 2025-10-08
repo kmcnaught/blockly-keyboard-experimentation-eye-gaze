@@ -27,6 +27,9 @@ should launch a file picker.
 - [x] GO: make it so that the "landscape" scenario includes some orphaned blocks, like in the
 "face" scenario to allow users to rebuild it.
   - Added three orphaned blocks to landscape scenario: draw_weather (clouds), draw_foreground (trees), and draw_weather (rainbow). Positioned similarly to face scenario orphaned blocks. 
+- [x] make the green colour of the trees different to any of the greens of the landscapes
+- [ ] Make the 'conditions' category colour the same as (most of) the conditional blocks are
+
 
 ## Plans for later implementation
 

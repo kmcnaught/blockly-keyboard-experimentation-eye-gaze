@@ -289,6 +289,15 @@ export class NavigationController {
   }
 
   /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.mover.setFatterConnections(enabled);
+  }
+
+  /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {

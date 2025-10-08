@@ -77,6 +77,9 @@ export class Mover {
   /** Whether connection highlighting is enabled for moves. */
   private highlightConnections: boolean;
 
+  /** Whether to use fatter connection highlights with larger click targets. */
+  private fatterConnections: boolean = true;
+
   /** Optional callback to check if auto-scrolling should be disabled. */
   private shouldDisableAutoScroll?: () => boolean;
 
@@ -122,6 +125,22 @@ export class Mover {
    */
   setHighlightConnections(enabled: boolean): void {
     this.highlightConnections = enabled;
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.fatterConnections = enabled;
+    // Update any active drag strategies
+    for (const [_workspace, moveInfo] of this.moves) {
+      const dragStrategy = (moveInfo.draggable as any).dragStrategy;
+      if (dragStrategy instanceof KeyboardDragStrategy) {
+        dragStrategy.setFatterConnections(enabled);
+      }
+    }
   }
 
   /**
@@ -434,16 +453,16 @@ export class Mover {
       this.finishMove(workspace);
     };
 
-    block.setDragStrategy(
-      new KeyboardDragStrategy(
-        block,
-        moveType,
-        startPoint,
-        this.highlightConnections,
-        onMoveComplete,
-        onMoveFinished,
-      ),
+    const keyboardDragStrategy = new KeyboardDragStrategy(
+      block,
+      moveType,
+      startPoint,
+      this.highlightConnections,
+      onMoveComplete,
+      onMoveFinished,
     );
+    keyboardDragStrategy.setFatterConnections(this.fatterConnections);
+    block.setDragStrategy(keyboardDragStrategy);
   }
 
   /**

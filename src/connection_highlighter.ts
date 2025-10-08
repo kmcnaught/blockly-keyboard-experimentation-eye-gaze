@@ -57,6 +57,9 @@ export class ConnectionHighlighter {
   /** Scroll event listener for updating highlight positions. */
   private scrollListener?: () => void;
 
+  /** Whether to use fatter connection highlights for larger click targets. */
+  private useFatterConnections: boolean = true;
+
   constructor(
     workspace: WorkspaceSvg,
     onConnectionClick?: (connection: RenderedConnection) => void,
@@ -67,6 +70,15 @@ export class ConnectionHighlighter {
     this.scrollListener = () => {
       this.updateHighlights();
     };
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.useFatterConnections = enabled;
   }
 
   /**
@@ -278,25 +290,36 @@ export class ConnectionHighlighter {
       throw new Error('No connection shape available');
     }
 
-    // Make the highlight extend further horizontally and vertically for bigger click target
     const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
-    const topPadding = 4; // Extra padding above the notch
-    const bottomPadding = 4; // Extra padding below the notch
     const pathLeft = (connectionShape as any).pathLeft;
     const notchWidth = (connectionShape as any).width;
 
-    // Create a flat-top, notched-bottom shape
-    // Top is flat, bottom follows the notch contour
-    const highlightPath = (
-      `M ${-xLen} ${-topPadding} ` +           // Start top-left
-      `v ${topPadding + bottomPadding} ` +     // Go down left side
-      `h ${xLen} ` +                           // Go right to notch start (x=0)
-      pathLeft +                               // Draw notch at bottom
-      `h ${xLen} ` +                           // Go right from notch end
-      `v ${-(topPadding + bottomPadding)} ` +  // Go up right side
-      `h ${-(notchWidth + xLen * 2)} ` +       // Go left across top back to start
-      `Z`                                      // Close path
-    );
+    let highlightPath: string;
+
+    if (this.useFatterConnections) {
+      // Fatter connection: flat-top, notched-bottom shape for larger click target
+      const topPadding = 4; // Extra padding above the notch
+      const bottomPadding = 4; // Extra padding below the notch
+
+      highlightPath = (
+        `M ${-xLen} ${-topPadding} ` +           // Start top-left
+        `v ${topPadding + bottomPadding} ` +     // Go down left side
+        `h ${xLen} ` +                           // Go right to notch start (x=0)
+        pathLeft +                               // Draw notch at bottom
+        `h ${xLen} ` +                           // Go right from notch end
+        `v ${-(topPadding + bottomPadding)} ` +  // Go up right side
+        `h ${-(notchWidth + xLen * 2)} ` +       // Go left across top back to start
+        `Z`                                      // Close path
+      );
+    } else {
+      // Standard connection: simple notch outline
+      highlightPath = (
+        `M ${-xLen} 0 ` +
+        `h ${xLen} ` +
+        pathLeft +
+        `h ${xLen}`
+      );
+    }
 
     const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 

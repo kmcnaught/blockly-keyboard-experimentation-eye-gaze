@@ -188,12 +188,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wire up connection highlighting checkbox
   const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
-  // Sync initial state from checkbox (in case browser restored cached form state)
+  // Load from localStorage, or use checkbox default
+  const savedHighlightConnections = localStorage.getItem('highlightConnections');
+  if (savedHighlightConnections !== null) {
+    highlightCheckbox.checked = savedHighlightConnections === 'true';
+  }
   if (highlightCheckbox) {
     keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
   }
   highlightCheckbox?.addEventListener('change', () => {
-    keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
+    const enabled = highlightCheckbox.checked;
+    keyboardNavigation?.setHighlightConnections(enabled);
+    localStorage.setItem('highlightConnections', String(enabled));
+  });
+
+  // Wire up fatter connections checkbox
+  const fatterConnectionsCheckbox = document.getElementById('fatterConnections') as HTMLInputElement;
+  // Load from localStorage, or use checkbox default
+  const savedFatterConnections = localStorage.getItem('fatterConnections');
+  if (savedFatterConnections !== null) {
+    fatterConnectionsCheckbox.checked = savedFatterConnections === 'true';
+  }
+  if (fatterConnectionsCheckbox) {
+    keyboardNavigation?.setFatterConnections(fatterConnectionsCheckbox.checked);
+  }
+  fatterConnectionsCheckbox?.addEventListener('change', () => {
+    const enabled = fatterConnectionsCheckbox.checked;
+    keyboardNavigation?.setFatterConnections(enabled);
+    localStorage.setItem('fatterConnections', String(enabled));
   });
 
   // Wire up trigger mode dropdown
@@ -201,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   triggerModeSelect?.addEventListener('change', () => {
     const mode = triggerModeSelect.value as TriggerMode;
     keyboardNavigation?.setTriggerMode(mode);
-  });  
+  });
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();
