@@ -10,6 +10,18 @@ import {Mover, MoveType} from './actions/mover';
 import {getNonShadowBlock} from './workspace_utilities';
 
 /**
+ * Trigger modes for entering sticky mode.
+ */
+export enum TriggerMode {
+  /** Double-click to enter sticky mode (default behavior). */
+  DOUBLE_CLICK = 'double_click',
+  /** Shift + single click to enter sticky mode. */
+  SHIFT_CLICK = 'shift_click',
+  /** Single click on an already-focused block to enter sticky mode. */
+  FOCUSED_CLICK = 'focused_click',
+}
+
+/**
  * Information about an active sticky mode operation.
  */
 export class StickyModeInfo {
@@ -36,6 +48,9 @@ export class StickyModeController {
     handler: EventListener;
     options?: boolean | AddEventListenerOptions;
   }> = [];
+
+  /** The current trigger mode for entering sticky mode. */
+  private triggerMode: TriggerMode = TriggerMode.DOUBLE_CLICK;
 
   constructor(
     private workspace: Blockly.WorkspaceSvg,
@@ -79,6 +94,14 @@ export class StickyModeController {
   getActiveBlock(): Blockly.BlockSvg | null {
     const info = this.stickyModes.get(this.workspace);
     return info ? info.block : null;
+  }
+
+  /**
+   * Set the trigger mode for entering sticky mode.
+   * @param mode The trigger mode to use.
+   */
+  setTriggerMode(mode: TriggerMode): void {
+    this.triggerMode = mode;
   }
 
   /**
@@ -216,6 +239,11 @@ export class StickyModeController {
    * Handles double-click events on blocks to enter sticky mode.
    */
   private handleDoubleClick(event: MouseEvent) {
+    // Only handle double-clicks if trigger mode is set to DOUBLE_CLICK
+    if (this.triggerMode !== TriggerMode.DOUBLE_CLICK) {
+      return;
+    }
+
     if (event.defaultPrevented) return;
 
     if (this.isActive()) {
@@ -245,11 +273,70 @@ export class StickyModeController {
   }
 
   /**
-   * Handles click events during sticky mode.
+   * Handles click events during sticky mode or to trigger sticky mode.
    */
   private handleClick(event: MouseEvent) {
-    if (!this.isActive()) return;
-    this.handleStickyModeClick(event);
+    // If already in sticky mode, handle the drop/connect action
+    if (this.isActive()) {
+      this.handleStickyModeClick(event);
+      return;
+    }
+
+    // Check if this click should trigger sticky mode based on trigger mode
+    const shouldTrigger = this.shouldTriggerStickyMode(event);
+    if (shouldTrigger) {
+      const target = event.target as Element;
+      const clickedBlock = this.getBlockFromEvent(event);
+
+      if (clickedBlock) {
+        this.workspace.getAudioManager().preload();
+      }
+
+      if (target && this.isDoubleClickOnField(target)) {
+        return;
+      }
+
+      const block = getNonShadowBlock(clickedBlock);
+      if (block && block.isMovable()) {
+        if (this.enter(block, event.clientX, event.clientY)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }
+    }
+  }
+
+  /**
+   * Check if the current click event should trigger sticky mode.
+   * @param event The click event.
+   * @returns True if sticky mode should be triggered.
+   */
+  private shouldTriggerStickyMode(event: MouseEvent): boolean {
+    switch (this.triggerMode) {
+      case TriggerMode.SHIFT_CLICK:
+        return event.shiftKey;
+
+      case TriggerMode.FOCUSED_CLICK: {
+        const clickedBlock = this.getBlockFromEvent(event);
+        if (!clickedBlock) return false;
+        return this.isBlockFocused(clickedBlock);
+      }
+
+      case TriggerMode.DOUBLE_CLICK:
+      default:
+        // Double-click is handled separately
+        return false;
+    }
+  }
+
+  /**
+   * Check if a block currently has keyboard focus.
+   * @param block The block to check.
+   * @returns True if the block is focused.
+   */
+  private isBlockFocused(block: Blockly.BlockSvg): boolean {
+    const svgRoot = block.getSvgRoot();
+    return svgRoot?.classList.contains('blocklyActiveFocus') ?? false;
   }
 
   /**

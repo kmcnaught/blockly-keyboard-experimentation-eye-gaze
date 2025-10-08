@@ -8,7 +8,10 @@ import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {enableBlocksOnDrag} from './disabled_blocks';
 import {registerHtmlToast} from './html_toast';
-import {StickyModeController} from './sticky_mode_controller';
+import {StickyModeController, TriggerMode} from './sticky_mode_controller';
+
+// Re-export TriggerMode for external use
+export {TriggerMode};
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -182,6 +185,14 @@ export class KeyboardNavigation {
    */
   setHighlightConnections(enabled: boolean): void {
     this.navigationController.setHighlightConnections(enabled);
+  }
+
+  /**
+   * Set the trigger mode for entering sticky move mode.
+   * @param mode The trigger mode to use (DOUBLE_CLICK, SHIFT_CLICK, or FOCUSED_CLICK).
+   */
+  setTriggerMode(mode: TriggerMode): void {
+    this.stickyModeController.setTriggerMode(mode);
   }
 
   /**

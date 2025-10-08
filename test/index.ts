@@ -8,7 +8,7 @@ import * as Blockly from 'blockly';
 // Import the default blocks.
 import 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
-import {KeyboardNavigation} from '../src/index';
+import {KeyboardNavigation, TriggerMode} from '../src/index';
 import {registerFlyoutCursor} from '../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../src/navigation_deferring_toolbox';
 // @ts-expect-error No types in js file
@@ -188,6 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
   highlightCheckbox?.addEventListener('change', () => {
     keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
+  });
+
+  // Wire up trigger mode dropdown
+  const triggerModeSelect = document.getElementById('triggerMode') as HTMLSelectElement;
+  triggerModeSelect?.addEventListener('change', () => {
+    const mode = triggerModeSelect.value as TriggerMode;
+    keyboardNavigation?.setTriggerMode(mode);
   });  
 
   // Add build info component to the page
