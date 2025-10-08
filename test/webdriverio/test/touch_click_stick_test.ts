@@ -622,6 +622,9 @@ suite('Touch-based Click-n-Stick Tests', function () {
  * Perform a double-tap on a block using touch events.
  * Uses browser touch event dispatch to simulate touch interactions.
  * Also dispatches click events since Blockly's double-click detection uses mouse events.
+ *
+ * @param browser
+ * @param blockId
  */
 async function doubleTapBlock(browser: Browser, blockId: string): Promise<void> {
   await browser.execute((blockId) => {
@@ -714,6 +717,9 @@ async function doubleTapBlock(browser: Browser, blockId: string): Promise<void> 
 
 /**
  * Perform a single tap on a block using touch events.
+ *
+ * @param browser
+ * @param blockId
  */
 async function tapBlock(browser: Browser, blockId: string): Promise<void> {
   await browser.execute((blockId) => {
@@ -760,6 +766,9 @@ async function tapBlock(browser: Browser, blockId: string): Promise<void> {
 
 /**
  * Perform a tap on an element using touch events.
+ *
+ * @param browser
+ * @param element
  */
 async function tapElement(browser: Browser, element: any): Promise<void> {
   // Get element attributes we need for touch event
@@ -822,6 +831,9 @@ async function tapElement(browser: Browser, element: any): Promise<void> {
 
 /**
  * Get the position of a block.
+ *
+ * @param browser
+ * @param blockId
  */
 function getBlockPosition(browser: Browser, blockId: string): Promise<Blockly.utils.Coordinate> {
   return browser.execute((blockId: string) => {
@@ -833,6 +845,9 @@ function getBlockPosition(browser: Browser, blockId: string): Promise<Blockly.ut
 
 /**
  * Get connection information for a block.
+ *
+ * @param browser
+ * @param blockId
  */
 function getBlockConnectionInfo(browser: Browser, blockId: string) {
   return browser.execute((blockId: string) => {
@@ -852,6 +867,8 @@ function getBlockConnectionInfo(browser: Browser, blockId: string) {
 
 /**
  * Check if the keyboard navigation is in sticky mode.
+ *
+ * @param browser
  */
 function isInStickyMode(browser: Browser): Promise<boolean> {
   return browser.execute(() => {
@@ -862,6 +879,8 @@ function isInStickyMode(browser: Browser): Promise<boolean> {
 
 /**
  * Get the count of connection highlight elements.
+ *
+ * @param browser
  */
 async function getConnectionHighlightCount(browser: Browser): Promise<number> {
   // Use WebDriver's $$ method which works better with SVG elements
@@ -871,6 +890,9 @@ async function getConnectionHighlightCount(browser: Browser): Promise<number> {
 
 /**
  * Check if two coordinates are equal.
+ *
+ * @param coord1
+ * @param coord2
  */
 function coordinatesEqual(
   coord1: Blockly.utils.Coordinate,

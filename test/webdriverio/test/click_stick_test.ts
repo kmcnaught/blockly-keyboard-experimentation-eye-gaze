@@ -378,8 +378,8 @@ suite('Click and Stick Move Mode Tests', function () {
 
       // Move mouse to the right to empty space
       const workspace = await this.browser.$('.blocklySvg');
-      var xOff = 150;
-      var yOff = 50;
+      const xOff = 150;
+      const yOff = 50;
       await workspace.moveTo({xOffset: xOff, yOffset: yOff});
       await this.browser.pause(PAUSE_TIME);
 
@@ -874,6 +874,8 @@ async function doubleClickBlock(browser: Browser, blockId: string): Promise<void
 
 /**
  * Get information about the currently-focused block's connections.
+ *
+ * @param browser
  */
 function getFocusedNeighbourInfo(browser: Browser) {
   return browser.execute(() => {
@@ -897,6 +899,8 @@ function getFocusedNeighbourInfo(browser: Browser) {
 
 /**
  * Get the current connection candidate for the moving block.
+ *
+ * @param browser
  */
 function getConnectionCandidate(browser: Browser): Promise<{id: string; index: number} | null> {
   return browser.execute(() => {
@@ -923,6 +927,9 @@ function getConnectionCandidate(browser: Browser): Promise<{id: string; index: n
 
 /**
  * Get the position of a block.
+ *
+ * @param browser
+ * @param blockId
  */
 function getBlockPosition(browser: Browser, blockId: string): Promise<Blockly.utils.Coordinate> {
   return browser.execute((blockId: string) => {
@@ -934,6 +941,9 @@ function getBlockPosition(browser: Browser, blockId: string): Promise<Blockly.ut
 
 /**
  * Find a connection point element for a block.
+ *
+ * @param browser
+ * @param blockId
  */
 async function findConnectionPoint(browser: Browser, blockId: string) {
   // Look for connection elements - this might need adjustment based on actual DOM structure
@@ -942,6 +952,9 @@ async function findConnectionPoint(browser: Browser, blockId: string) {
 
 /**
  * Find a value connection point for a block.
+ *
+ * @param browser
+ * @param blockId
  */
 async function findValueConnectionPoint(browser: Browser, blockId: string) {
   // Look for value input connections
@@ -951,6 +964,9 @@ async function findValueConnectionPoint(browser: Browser, blockId: string) {
 
 /**
  * Get connection information for a block.
+ *
+ * @param browser
+ * @param blockId
  */
 function getBlockConnectionInfo(browser: Browser, blockId: string) {
   return browser.execute((blockId: string) => {
@@ -968,6 +984,8 @@ function getBlockConnectionInfo(browser: Browser, blockId: string) {
 
 /**
  * Check if the keyboard navigation is in sticky mode.
+ *
+ * @param browser
  */
 function isInStickyMode(browser: Browser): Promise<boolean> {
   return browser.execute(() => {
@@ -979,6 +997,8 @@ function isInStickyMode(browser: Browser): Promise<boolean> {
 
 /**
  * Set up event logging to debug what events are being fired.
+ *
+ * @param browser
  */
 async function setupEventLogging(browser: Browser) {
   await browser.execute(() => {
@@ -1000,6 +1020,8 @@ async function setupEventLogging(browser: Browser) {
 
 /**
  * Get the event log from the browser.
+ *
+ * @param browser
  */
 async function getEventLog(browser: Browser): Promise<string[]> {
   return browser.execute(() => {
@@ -1009,6 +1031,8 @@ async function getEventLog(browser: Browser): Promise<string[]> {
 
 /**
  * Get the sticky block ID if in sticky mode.
+ *
+ * @param browser
  */
 function getStickyBlockId(browser: Browser): Promise<string | null> {
   return browser.execute(() => {
@@ -1021,6 +1045,9 @@ function getStickyBlockId(browser: Browser): Promise<string | null> {
 /**
  * Manually dispatch a double-click event as the browser would for real user interaction.
  * This bypasses WebdriverIO's double-click method to create more realistic events.
+ *
+ * @param browser
+ * @param blockId
  */
 async function realDoubleClickBlock(browser: Browser, blockId: string): Promise<void> {
   await browser.execute((blockId) => {
@@ -1103,6 +1130,8 @@ async function realDoubleClickBlock(browser: Browser, blockId: string): Promise<
 /**
  * Get the count of connection highlight elements currently visible on the page.
  * These are the green highlights that show potential drop locations during move mode.
+ *
+ * @param browser
  */
 async function getConnectionHighlightCount(browser: Browser): Promise<number> {
   const elements = await browser.$$('.blocklyPotentialConnection');
@@ -1111,6 +1140,8 @@ async function getConnectionHighlightCount(browser: Browser): Promise<number> {
 
 /**
  * Debug function to check highlighting state and configuration.
+ *
+ * @param browser
  */
 async function debugHighlightingState(browser: Browser): Promise<any> {
   return await browser.execute(() => {
@@ -1150,6 +1181,9 @@ async function debugHighlightingState(browser: Browser): Promise<any> {
 
 /**
  * Double-tap a block using touch events to enter move mode.
+ *
+ * @param browser
+ * @param blockId
  */
 async function doubleTapBlock(browser: Browser, blockId: string): Promise<void> {
   const findableId = 'doubleTapTarget';
@@ -1521,6 +1555,8 @@ suite('Highlight Persistence During Stack Navigation', function () {
 
 /**
  * Find a block that's in the middle of a stack (has both previous and next connections).
+ *
+ * @param browser
  */
 async function findMiddleStackBlock(browser: Browser): Promise<string> {
   const result = await browser.execute(() => {
@@ -1554,6 +1590,8 @@ async function findMiddleStackBlock(browser: Browser): Promise<string> {
 
 /**
  * Get browser console errors, filtering out non-critical warnings.
+ *
+ * @param browser
  */
 async function getBrowserErrors(browser: Browser): Promise<any[]> {
   const logs = await browser.getLogs('browser');
@@ -1571,6 +1609,8 @@ async function getBrowserErrors(browser: Browser): Promise<any[]> {
 
 /**
  * Get the positions of all connection highlight elements.
+ *
+ * @param browser
  */
 async function getConnectionHighlightPositions(browser: Browser): Promise<Array<{x: number, y: number}>> {
   return await browser.execute(() => {
@@ -1587,6 +1627,8 @@ async function getConnectionHighlightPositions(browser: Browser): Promise<Array<
 
 /**
  * Check that all highlight elements are properly attached to the DOM.
+ *
+ * @param browser
  */
 async function checkHighlightsAttachedToDOM(browser: Browser): Promise<boolean> {
   return await browser.execute(() => {

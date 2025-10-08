@@ -109,9 +109,10 @@ export class MoveGrip {
       class: GRIP_CLASS,
     }) as SVGGElement;
 
-    const blockBBox = this.block.getBoundingRectangle();
-    const blockWidth = blockBBox.right - blockBBox.left;
-    const blockHeight = blockBBox.bottom - blockBBox.top;
+    // Use the block's direct height/width properties to get just this block's size,
+    // not including blocks below it in the stack
+    const blockWidth = this.block.width;
+    const blockHeight = this.block.height;
 
     // Determine if block is too narrow for full grip
     const isNarrow = blockWidth < MIN_BLOCK_WIDTH_FOR_FULL_GRIP;
