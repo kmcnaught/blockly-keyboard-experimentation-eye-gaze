@@ -18,6 +18,12 @@ export function runCode() {
   const code = javascriptGenerator.workspaceToCode(Blockly.getMainWorkspace());
   const p5outputDiv = document.getElementById('p5output');
   if (p5outputDiv) {
+    // Check if the code contains a setup function - if not, it's incomplete
+    if (!code.includes('sketch.setup')) {
+      console.debug('P5 code incomplete - no setup block found, skipping render');
+      return;
+    }
+
     // Preserve the overlay element before clearing
     const overlay = document.getElementById('canvasOverlay');
     const overlayParent = overlay?.parentElement;
