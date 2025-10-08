@@ -29,6 +29,7 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
 let autoRunTimer: number | null = null;
+let keyboardNavigation: KeyboardNavigation | null = null;
 
 /**
  * Parse query params for inject and navigation options and update
@@ -102,6 +103,7 @@ function createWorkspace(): Blockly.WorkspaceSvg {
 
   Blockly.ContextMenuItems.registerCommentOptions();
   const kbNav = new KeyboardNavigation(workspace);
+  keyboardNavigation = kbNav;
   // Expose keyboard navigation instance for debugging
   (window as any).kbNav = kbNav;
   registerRunCodeShortcut(runCode);
@@ -180,7 +182,13 @@ document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
-  document.getElementById('rerunButton')?.addEventListener('click', runCode);  
+  document.getElementById('rerunButton')?.addEventListener('click', runCode);
+
+  // Wire up connection highlighting checkbox
+  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  highlightCheckbox?.addEventListener('change', () => {
+    keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
+  });  
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();

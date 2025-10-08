@@ -177,6 +177,14 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Enable or disable connection highlighting during move operations.
+   * @param enabled Whether to show connection highlights when moving blocks.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.navigationController.setHighlightConnections(enabled);
+  }
+
+  /**
    * Registers a default toolbox implementation that doesn't handle
    * keydown events, since we now handle them in this plugin. If you
    * use the default toolbox, call this function before calling

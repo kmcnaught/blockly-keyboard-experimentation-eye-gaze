@@ -111,6 +111,14 @@ export class Mover {
   }
 
   /**
+   * Enable or disable connection highlighting during move operations.
+   * @param enabled Whether to show connection highlights.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.highlightConnections = enabled;
+  }
+
+  /**
    * Start moving the currently-focused item on workspace.
    *
    * @param workspace The workspace to move on.

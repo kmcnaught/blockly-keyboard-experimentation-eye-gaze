@@ -280,6 +280,14 @@ export class NavigationController {
   }
 
   /**
+   * Enable or disable connection highlighting during move operations.
+   * @param enabled Whether to show connection highlights when moving blocks.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.mover.setHighlightConnections(enabled);
+  }
+
+  /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {
