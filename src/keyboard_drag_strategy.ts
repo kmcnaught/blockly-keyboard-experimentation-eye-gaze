@@ -125,7 +125,18 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     this.forceShowPreview();
     this.block.addIcon(new MoveIcon(this.block));
 
-    // Connection highlighting deferred to setClickAndStickMode() for sticky mode only
+    // Show connection highlights for normal keyboard moves if enabled
+    // (Sticky mode will override this via setClickAndStickMode)
+    if (this.highlightingEnabled) {
+      // @ts-expect-error getLocalConnections is private.
+      const localConnections = this.getLocalConnections(this.block);
+
+      this.connectionHighlighter.highlightValidConnections(
+        this.block,
+        this.allConnections,
+        localConnections,
+      );
+    }
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
@@ -175,7 +186,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     this.block.removeIcon(MoveIcon.type);
 
     // Clear highlights when drag ends (unless in click-and-stick mode)
-    if (this.highlightingEnabled && !this.isClickAndStick) {
+    // Sticky mode keeps highlights visible until explicitly cleared
+    if (!this.isClickAndStick) {
       this.connectionHighlighter.clearHighlights();
     }
   }
@@ -195,7 +207,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   setClickAndStickMode(enabled: boolean): void {
     this.isClickAndStick = enabled;
 
-    if (enabled && this.highlightingEnabled) {
+    if (enabled) {
+      // ALWAYS show highlights in sticky mode, regardless of highlightingEnabled setting
       // @ts-expect-error getLocalConnections is private.
       const localConnections = this.getLocalConnections(this.block);
 
@@ -204,7 +217,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
         this.allConnections,
         localConnections,
       );
-    } else if (!enabled && this.highlightingEnabled) {
+    } else {
+      // When exiting sticky mode, clear highlights
+      // (They will be re-shown in normal mode if highlightingEnabled is true)
       this.connectionHighlighter.clearHighlights();
     }
   }
@@ -458,7 +473,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private refreshHighlightsForPreview(
     currentCandidate: ConnectionCandidate | null,
   ): void {
-    if (!this.highlightingEnabled || !this.isClickAndStick) return;
+    // Only refresh if highlights are enabled (normal mode) or in sticky mode (always enabled)
+    if (!this.isClickAndStick && !this.highlightingEnabled) return;
 
     this.lastRefreshedCandidate = currentCandidate;
     this.lastRefreshTime = Date.now();
