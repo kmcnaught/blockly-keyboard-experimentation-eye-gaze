@@ -282,15 +282,15 @@ export class StickyModeController {
       return;
     }
 
-    // Check if this click should trigger sticky mode based on trigger mode
-    const shouldTrigger = this.shouldTriggerStickyMode(event);
-    if (shouldTrigger) {
-      const target = event.target as Element;
-      const clickedBlock = this.getBlockFromEvent(event);
+    // Get the clicked block once to avoid inconsistencies
+    const clickedBlock = this.getBlockFromEvent(event);
 
-      if (clickedBlock) {
-        this.workspace.getAudioManager().preload();
-      }
+    // Check if this click should trigger sticky mode based on trigger mode
+    const shouldTrigger = this.shouldTriggerStickyMode(event, clickedBlock);
+    if (shouldTrigger && clickedBlock) {
+      const target = event.target as Element;
+
+      this.workspace.getAudioManager().preload();
 
       if (target && this.isDoubleClickOnField(target)) {
         return;
@@ -309,18 +309,18 @@ export class StickyModeController {
   /**
    * Check if the current click event should trigger sticky mode.
    * @param event The click event.
+   * @param clickedBlock The block that was clicked (or null if no block).
    * @returns True if sticky mode should be triggered.
    */
-  private shouldTriggerStickyMode(event: MouseEvent): boolean {
+  private shouldTriggerStickyMode(event: MouseEvent, clickedBlock: Blockly.BlockSvg | null): boolean {
+    if (!clickedBlock) return false;
+
     switch (this.triggerMode) {
       case TriggerMode.SHIFT_CLICK:
         return event.shiftKey;
 
-      case TriggerMode.FOCUSED_CLICK: {
-        const clickedBlock = this.getBlockFromEvent(event);
-        if (!clickedBlock) return false;
+      case TriggerMode.FOCUSED_CLICK:
         return this.isBlockFocused(clickedBlock);
-      }
 
       case TriggerMode.DOUBLE_CLICK:
       default:
@@ -335,6 +335,13 @@ export class StickyModeController {
    * @returns True if the block is focused.
    */
   private isBlockFocused(block: Blockly.BlockSvg): boolean {
+    // Only consider blocks "focused" if the workspace has focus
+    // (not the toolbox or flyout)
+    const nav = (this.navigationController as any).navigation;
+    if (nav && nav.getState() !== 'workspace') {
+      return false;
+    }
+
     const cursor = this.workspace.getCursor();
     if (!cursor) return false;
 
