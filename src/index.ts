@@ -213,6 +213,15 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Enable or disable keeping the block on the mouse cursor during sticky move.
+   *
+   * @param enabled Whether the block should follow the cursor (true) or stay at click position (false).
+   */
+  setKeepBlockOnMouse(enabled: boolean): void {
+    this.stickyModeController.setKeepBlockOnMouse(enabled);
+  }
+
+  /**
    * Registers a default toolbox implementation that doesn't handle
    * keydown events, since we now handle them in this plugin. If you
    * use the default toolbox, call this function before calling

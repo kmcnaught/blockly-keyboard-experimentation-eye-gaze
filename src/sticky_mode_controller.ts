@@ -66,10 +66,22 @@ export class StickyModeController {
   /** The block that currently has a grip attached. */
   private gripBlock: Blockly.BlockSvg | null = null;
 
+  /** Whether the block should follow the mouse cursor during sticky move (default: true). */
+  private keepBlockOnMouse: boolean = true;
+
   constructor(
     private workspace: Blockly.WorkspaceSvg,
     private navigationController: NavigationController,
   ) {}
+
+  /**
+   * Enable or disable keeping the block on the mouse during sticky move.
+   *
+   * @param enabled Whether the block should follow the cursor (true) or stay at click position (false).
+   */
+  setKeepBlockOnMouse(enabled: boolean): void {
+    this.keepBlockOnMouse = enabled;
+  }
 
   /**
    * Gets the mover from the navigation controller.
@@ -522,6 +534,9 @@ export class StickyModeController {
    */
   private handlePointerMove(event: PointerEvent) {
     if (!this.isActive()) return;
+
+    // Only update block position if keepBlockOnMouse is enabled
+    if (!this.keepBlockOnMouse) return;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const moveInfo = (this.mover as any)?.moves?.get(this.workspace);

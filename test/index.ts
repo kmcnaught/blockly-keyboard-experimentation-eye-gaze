@@ -218,6 +218,22 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('fatterConnections', String(enabled));
   });
 
+  // Wire up keep block on mouse checkbox
+  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+  // Load from localStorage, or use checkbox default
+  const savedKeepBlockOnMouse = localStorage.getItem('keepBlockOnMouse');
+  if (savedKeepBlockOnMouse !== null) {
+    keepBlockOnMouseCheckbox.checked = savedKeepBlockOnMouse === 'true';
+  }
+  if (keepBlockOnMouseCheckbox) {
+    keyboardNavigation?.setKeepBlockOnMouse(keepBlockOnMouseCheckbox.checked);
+  }
+  keepBlockOnMouseCheckbox?.addEventListener('change', () => {
+    const enabled = keepBlockOnMouseCheckbox.checked;
+    keyboardNavigation?.setKeepBlockOnMouse(enabled);
+    localStorage.setItem('keepBlockOnMouse', String(enabled));
+  });
+
   // Wire up trigger mode dropdown
   const triggerModeSelect = document.getElementById('triggerMode') as HTMLSelectElement;
   triggerModeSelect?.addEventListener('change', () => {
