@@ -52,6 +52,9 @@ export class StickyModeController {
   /** The current trigger mode for entering sticky mode. */
   private triggerMode: TriggerMode = TriggerMode.DOUBLE_CLICK;
 
+  /** The block that was focused before pointerdown (for focused-click trigger mode). */
+  private focusedBlockBeforePointerdown: Blockly.BlockSvg | null = null;
+
   constructor(
     private workspace: Blockly.WorkspaceSvg,
     private navigationController: NavigationController,
@@ -130,6 +133,13 @@ export class StickyModeController {
     this.addListener(document, 'pointermove', (event) => {
       this.handlePointerMove(event as PointerEvent);
     }, false);
+
+    // Capture pointerdown BEFORE it changes focus (capture phase)
+    // Must be on document with capture:true to catch ALL pointerdowns before focus changes
+    // Blockly uses pointerdown (not mousedown) for blocks to support touch
+    this.addListener(document, 'pointerdown', (event) => {
+      this.handlePointerDown(event as PointerEvent);
+    }, true);
 
     this.addListener(document, 'click', (event) => {
       this.handleClick(event as MouseEvent);
@@ -236,6 +246,38 @@ export class StickyModeController {
   }
 
   /**
+   * Handles pointerdown to capture which block was focused BEFORE the click changes focus.
+   */
+  private handlePointerDown(event: PointerEvent) {
+    // Only track focus state if we're in FOCUSED_CLICK mode
+    if (this.triggerMode !== TriggerMode.FOCUSED_CLICK) {
+      return;
+    }
+
+    // Capture the currently focused block before the pointerdown changes focus
+    const cursor = this.workspace.getCursor();
+    if (!cursor) {
+      this.focusedBlockBeforePointerdown = null;
+      return;
+    }
+
+    const curNode = cursor.getCurNode();
+    if (!curNode) {
+      this.focusedBlockBeforePointerdown = null;
+      return;
+    }
+
+    // Get the block that's currently focused
+    if (curNode instanceof Blockly.BlockSvg) {
+      this.focusedBlockBeforePointerdown = curNode;
+    } else if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
+      this.focusedBlockBeforePointerdown = (curNode as any).getSourceBlock();
+    } else {
+      this.focusedBlockBeforePointerdown = null;
+    }
+  }
+
+  /**
    * Handles double-click events on blocks to enter sticky mode.
    */
   private handleDoubleClick(event: MouseEvent) {
@@ -287,6 +329,7 @@ export class StickyModeController {
 
     // Check if this click should trigger sticky mode based on trigger mode
     const shouldTrigger = this.shouldTriggerStickyMode(event, clickedBlock);
+
     if (shouldTrigger && clickedBlock) {
       const target = event.target as Element;
 
@@ -320,46 +363,15 @@ export class StickyModeController {
         return event.shiftKey;
 
       case TriggerMode.FOCUSED_CLICK:
-        return this.isBlockFocused(clickedBlock);
+        // Check if the clicked block was the one that was focused BEFORE the pointerdown
+        // (clicking a block makes it focused, so we need to check the pre-click state)
+        return this.focusedBlockBeforePointerdown === clickedBlock;
 
       case TriggerMode.DOUBLE_CLICK:
       default:
         // Double-click is handled separately
         return false;
     }
-  }
-
-  /**
-   * Check if a block currently has keyboard focus.
-   * @param block The block to check.
-   * @returns True if the block is focused.
-   */
-  private isBlockFocused(block: Blockly.BlockSvg): boolean {
-    // Only consider blocks "focused" if the workspace has focus
-    // (not the toolbox or flyout)
-    const nav = (this.navigationController as any).navigation;
-    if (nav && nav.getState() !== 'workspace') {
-      return false;
-    }
-
-    const cursor = this.workspace.getCursor();
-    if (!cursor) return false;
-
-    const curNode = cursor.getCurNode();
-    if (!curNode) return false;
-
-    // Check if the cursor is directly on this block
-    if (curNode instanceof Blockly.BlockSvg) {
-      return curNode === block;
-    }
-
-    // Check if cursor is on a connection, field, or input belonging to this block
-    // These have a getSourceBlock() method
-    if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
-      return (curNode as any).getSourceBlock() === block;
-    }
-
-    return false;
   }
 
   /**
