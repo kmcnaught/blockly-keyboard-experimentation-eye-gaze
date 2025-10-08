@@ -341,15 +341,15 @@ export class StickyModeController {
     const curNode = cursor.getCurNode();
     if (!curNode) return false;
 
-    // Check if the cursor is on this block or any of its connections/fields
-    if (curNode.getType() === Blockly.ASTNode.types.BLOCK) {
-      return curNode.getLocation() === block;
+    // Check if the cursor is directly on this block
+    if (curNode instanceof Blockly.BlockSvg) {
+      return curNode === block;
     }
 
-    // Check if cursor is on a connection or field belonging to this block
-    const location = curNode.getLocation();
-    if (location && 'getSourceBlock' in location) {
-      return (location as any).getSourceBlock() === block;
+    // Check if cursor is on a connection, field, or input belonging to this block
+    // These have a getSourceBlock() method
+    if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
+      return (curNode as any).getSourceBlock() === block;
     }
 
     return false;
