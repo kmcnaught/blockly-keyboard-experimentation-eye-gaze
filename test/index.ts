@@ -188,6 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wire up connection highlighting checkbox
   const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  // Sync initial state from checkbox (in case browser restored cached form state)
+  if (highlightCheckbox) {
+    keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
+  }
   highlightCheckbox?.addEventListener('change', () => {
     keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
   });
