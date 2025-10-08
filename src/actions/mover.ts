@@ -91,6 +91,9 @@ export class Mover {
 
   /**
    * Check if we can begin moving the draggable element on the workspace.
+   *
+   * @param workspace
+   * @param draggable
    */
   canMove(workspace: WorkspaceSvg, draggable: IDraggable) {
     return !!(
@@ -103,6 +106,8 @@ export class Mover {
 
   /**
    * Check if we are currently moving an element on the workspace.
+   *
+   * @param workspace
    */
   isMoving(workspace: WorkspaceSvg) {
     return (
@@ -112,6 +117,7 @@ export class Mover {
 
   /**
    * Enable or disable connection highlighting during move operations.
+   *
    * @param enabled Whether to show connection highlights.
    */
   setHighlightConnections(enabled: boolean): void {
@@ -231,6 +237,7 @@ export class Mover {
   /**
    * Finish moving the currently-focused item on workspace.
    *
+   * @param workspace
    * @returns True if move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
@@ -252,6 +259,7 @@ export class Mover {
   /**
    * Abort moving the currently-focused item on workspace.
    *
+   * @param workspace
    * @returns True if move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
@@ -287,6 +295,8 @@ export class Mover {
 
   /**
    * Common cleanup before ending drag.
+   *
+   * @param workspace
    */
   private preDragEndCleanup(workspace: WorkspaceSvg) {
     ShortcutRegistry.registry.unregister(COMMIT_MOVE_SHORTCUT);
@@ -304,6 +314,9 @@ export class Mover {
 
   /**
    * Common cleanup after ending drag.
+   *
+   * @param workspace
+   * @param info
    */
   private postDragEndCleanup(workspace: WorkspaceSvg, info: MoveInfo) {
     this.moveIndicator?.dispose();
@@ -399,6 +412,11 @@ export class Mover {
 
   /**
    * Replace the block's drag strategy with KeyboardDragStrategy.
+   *
+   * @param block
+   * @param moveType
+   * @param startPoint
+   * @param onMoveFinished
    */
   private patchDragStrategy(
     block: BlockSvg,
@@ -430,6 +448,8 @@ export class Mover {
 
   /**
    * Restore the block's original drag strategy.
+   *
+   * @param block
    */
   private unpatchDragStrategy(block: BlockSvg) {
     try {
@@ -452,6 +472,9 @@ export class Mover {
 
   /**
    * Scrolls the current element into view.
+   *
+   * @param workspace
+   * @param padding
    */
   private scrollCurrentElementIntoView(workspace: WorkspaceSvg, padding = 0) {
     if (this.shouldDisableAutoScroll?.()) {
@@ -475,6 +498,9 @@ export class Mover {
 
   /**
    * Patch dragger to trigger delete (insert) or revert (move).
+   *
+   * @param dragger
+   * @param moveType
    */
   private patchDragger(dragger: dragging.Dragger, moveType: MoveType) {
     if (moveType === MoveType.Insert) {
@@ -514,6 +540,9 @@ export class MoveInfo {
 
   /**
    * Create a synthetic pointer event for dragging.
+   *
+   * @param type
+   * @param direction
    */
   fakePointerEvent(type: string, direction?: Direction): PointerEvent {
     const coordinates = utils.svgMath.wsToScreenCoordinates(

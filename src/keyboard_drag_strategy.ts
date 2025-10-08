@@ -47,7 +47,7 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private allConnections: RenderedConnection[] = [];
 
   /** Connection highlighter for visual feedback. */
-  public connectionHighlighter: ConnectionHighlighter;
+  connectionHighlighter: ConnectionHighlighter;
 
   /** Whether connection highlighting is enabled. */
   private highlightingEnabled: boolean;
@@ -203,6 +203,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /**
    * Set whether this drag strategy is being used for click and stick operations.
+   *
+   * @param enabled
    */
   setClickAndStickMode(enabled: boolean): void {
     this.isClickAndStick = enabled;
@@ -438,6 +440,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /**
    * Checks if we should refresh connection highlights (throttled).
+   *
+   * @param prev
+   * @param curr
    */
   private shouldRefreshHighlights(
     prev: ConnectionCandidate | null,
@@ -456,6 +461,9 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /**
    * Checks if the connection candidate has changed.
+   *
+   * @param prev
+   * @param curr
    */
   private hasConnectionChanged(
     prev: ConnectionCandidate | null,
@@ -469,6 +477,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /**
    * Refreshes connection highlights after a preview change.
    * Ensures highlights reflect current positions after stack rearrangement.
+   *
+   * @param currentCandidate
    */
   private refreshHighlightsForPreview(
     currentCandidate: ConnectionCandidate | null,
@@ -514,6 +524,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   /**
    * Handles when a user clicks on a connection highlight to complete a move.
+   *
+   * @param targetConnection
    */
   private handleConnectionClick(targetConnection: RenderedConnection) {
     // @ts-expect-error getLocalConnections is private.

@@ -52,6 +52,7 @@ export function runCode() {
 
 /**
  * Register a shortcut under Shift+R to run code in the test page.
+ *
  * @param runCallback - Optional callback to run instead of the default runCode function.
  */
 export function registerRunCodeShortcut(runCallback?: () => void) {

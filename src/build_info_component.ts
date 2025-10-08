@@ -151,7 +151,7 @@ function getFreshBuildInfo(): typeof BUILD_INFO {
  */
 export function startBuildInfoAutoRefresh(
   element: HTMLElement,
-  fallbackIntervalMs: number = 5000
+  fallbackIntervalMs = 5000
 ): () => void {
   let lastBuildTime = BUILD_INFO.buildTime;
 

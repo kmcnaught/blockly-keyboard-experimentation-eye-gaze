@@ -68,6 +68,8 @@ function getOptions() {
   window.addEventListener('load', () => {
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
+    // Reset trigger mode to default to prevent browser auto-fill mismatch
+    (document.getElementById('triggerMode') as HTMLSelectElement).value = 'double_click';
   });
 
   return {

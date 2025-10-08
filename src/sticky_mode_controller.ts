@@ -8,6 +8,7 @@ import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {Mover, MoveType} from './actions/mover';
 import {getNonShadowBlock} from './workspace_utilities';
+import {MoveGrip} from './move_grip';
 
 /**
  * Trigger modes for entering sticky mode.
@@ -19,6 +20,10 @@ export enum TriggerMode {
   SHIFT_CLICK = 'shift_click',
   /** Single click on an already-focused block to enter sticky mode. */
   FOCUSED_CLICK = 'focused_click',
+  /** Any single click enters sticky mode when singleClickToMove is enabled. */
+  MODE_TOGGLE = 'mode_toggle',
+  /** Click on the grip handle to enter sticky mode. */
+  GRIP_CLICK = 'grip_click',
 }
 
 /**
@@ -55,10 +60,22 @@ export class StickyModeController {
   /** The block that was focused before pointerdown (for focused-click trigger mode). */
   private focusedBlockBeforePointerdown: Blockly.BlockSvg | null = null;
 
+  /** Callback to check if single-click-to-move mode is enabled. */
+  private getSingleClickToMoveEnabled: () => boolean;
+
+  /** The current move grip displayed on the focused block, if any. */
+  private currentGrip: MoveGrip | null = null;
+
+  /** The block that currently has a grip attached. */
+  private gripBlock: Blockly.BlockSvg | null = null;
+
   constructor(
     private workspace: Blockly.WorkspaceSvg,
     private navigationController: NavigationController,
-  ) {}
+    getSingleClickToMoveEnabled?: () => boolean,
+  ) {
+    this.getSingleClickToMoveEnabled = getSingleClickToMoveEnabled ?? (() => false);
+  }
 
   /**
    * Gets the mover from the navigation controller.
@@ -69,6 +86,8 @@ export class StickyModeController {
 
   /**
    * Gets the drag strategy from a block.
+   *
+   * @param block
    */
   private getDragStrategy(block: Blockly.BlockSvg) {
     return (block as any).dragStrategy;
@@ -76,6 +95,9 @@ export class StickyModeController {
 
   /**
    * Sets click-and-stick mode on a block's drag strategy.
+   *
+   * @param block
+   * @param enabled
    */
   private setClickAndStickMode(block: Blockly.BlockSvg, enabled: boolean) {
     const strategy = this.getDragStrategy(block);
@@ -101,6 +123,7 @@ export class StickyModeController {
 
   /**
    * Set the trigger mode for entering sticky mode.
+   *
    * @param mode The trigger mode to use.
    */
   setTriggerMode(mode: TriggerMode): void {
@@ -109,6 +132,8 @@ export class StickyModeController {
 
   /**
    * Check if the given block can enter sticky mode.
+   *
+   * @param block
    */
   canEnter(block: Blockly.BlockSvg): boolean {
     return !!(
@@ -144,6 +169,9 @@ export class StickyModeController {
     this.addListener(document, 'click', (event) => {
       this.handleClick(event as MouseEvent);
     }, true);
+
+    // Listen for focus changes to manage grip display
+    this.workspace.addChangeListener(this.handleFocusChange.bind(this));
   }
 
   /**
@@ -154,10 +182,111 @@ export class StickyModeController {
       target.removeEventListener(type, handler, options);
     }
     this.listeners = [];
+    this.hideGrip();
+  }
+
+  /**
+   * Handles focus change events to show/hide grip on focused blocks.
+   *
+   * @param event
+   */
+  private handleFocusChange(event: Blockly.Events.Abstract): void {
+    // Only show grip in GRIP_CLICK mode
+    if (this.triggerMode !== TriggerMode.GRIP_CLICK) {
+      return;
+    }
+
+    // Don't show grip during sticky mode
+    if (this.isActive()) {
+      return;
+    }
+
+    // Get the currently focused block
+    const cursor = this.workspace.getCursor();
+    if (!cursor) {
+      this.hideGrip();
+      return;
+    }
+
+    const curNode = cursor.getCurNode();
+    if (!curNode) {
+      this.hideGrip();
+      return;
+    }
+
+    // Get the block from the cursor node
+    let block: Blockly.BlockSvg | null = null;
+    if (curNode instanceof Blockly.BlockSvg) {
+      block = curNode;
+    } else if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
+      block = (curNode as any).getSourceBlock();
+    }
+
+    if (!block) {
+      this.hideGrip();
+      return;
+    }
+
+    // If it's the same block, don't recreate the grip
+    if (this.gripBlock === block && this.currentGrip) {
+      return;
+    }
+
+    // Show grip on the new focused block
+    this.showGrip(block);
+  }
+
+  /**
+   * Shows the grip on the given block.
+   *
+   * @param block
+   */
+  private showGrip(block: Blockly.BlockSvg): void {
+    // Hide any existing grip first
+    this.hideGrip();
+
+    // Create and show new grip
+    this.currentGrip = new MoveGrip(block, (clickedBlock, event) => {
+      this.handleGripClick(clickedBlock, event);
+    });
+    this.currentGrip.show();
+    this.gripBlock = block;
+  }
+
+  /**
+   * Hides the current grip if one is showing.
+   */
+  private hideGrip(): void {
+    if (this.currentGrip) {
+      this.currentGrip.hide();
+      this.currentGrip = null;
+    }
+    this.gripBlock = null;
+  }
+
+  /**
+   * Handles click events on the grip.
+   *
+   * @param block
+   * @param event
+   */
+  private handleGripClick(block: Blockly.BlockSvg, event: MouseEvent): void {
+    const nonShadowBlock = getNonShadowBlock(block);
+    if (nonShadowBlock && nonShadowBlock.isMovable()) {
+      if (this.enter(nonShadowBlock, event.clientX, event.clientY)) {
+        // Hide grip when entering sticky mode
+        this.hideGrip();
+      }
+    }
   }
 
   /**
    * Helper to add and track event listeners.
+   *
+   * @param target
+   * @param type
+   * @param handler
+   * @param options
    */
   private addListener(
     target: EventTarget,
@@ -247,6 +376,8 @@ export class StickyModeController {
 
   /**
    * Handles pointerdown to capture which block was focused BEFORE the click changes focus.
+   *
+   * @param event
    */
   private handlePointerDown(event: PointerEvent) {
     // Only track focus state if we're in FOCUSED_CLICK mode
@@ -279,6 +410,8 @@ export class StickyModeController {
 
   /**
    * Handles double-click events on blocks to enter sticky mode.
+   *
+   * @param event
    */
   private handleDoubleClick(event: MouseEvent) {
     // Only handle double-clicks if trigger mode is set to DOUBLE_CLICK
@@ -316,6 +449,8 @@ export class StickyModeController {
 
   /**
    * Handles click events during sticky mode or to trigger sticky mode.
+   *
+   * @param event
    */
   private handleClick(event: MouseEvent) {
     // If already in sticky mode, handle the drop/connect action
@@ -351,12 +486,18 @@ export class StickyModeController {
 
   /**
    * Check if the current click event should trigger sticky mode.
+   *
    * @param event The click event.
    * @param clickedBlock The block that was clicked (or null if no block).
    * @returns True if sticky mode should be triggered.
    */
   private shouldTriggerStickyMode(event: MouseEvent, clickedBlock: Blockly.BlockSvg | null): boolean {
     if (!clickedBlock) return false;
+
+    // If single-click-to-move mode is enabled, any click on a block triggers sticky mode
+    if (this.getSingleClickToMoveEnabled()) {
+      return true;
+    }
 
     switch (this.triggerMode) {
       case TriggerMode.SHIFT_CLICK:
@@ -367,6 +508,17 @@ export class StickyModeController {
         // (clicking a block makes it focused, so we need to check the pre-click state)
         return this.focusedBlockBeforePointerdown === clickedBlock;
 
+      case TriggerMode.MODE_TOGGLE:
+        // MODE_TOGGLE is handled by singleClickToMove state above
+        return false;
+
+      case TriggerMode.GRIP_CLICK:
+        // GRIP_CLICK is handled by handleGripClick() which is invoked directly
+        // when the grip element is clicked (with stopPropagation to prevent this
+        // method from being called). Regular clicks outside the grip don't trigger
+        // sticky mode in this mode.
+        return false;
+
       case TriggerMode.DOUBLE_CLICK:
       default:
         // Double-click is handled separately
@@ -376,6 +528,8 @@ export class StickyModeController {
 
   /**
    * Handles pointer movement during sticky mode to make blocks follow the cursor.
+   *
+   * @param event
    */
   private handlePointerMove(event: PointerEvent) {
     if (!this.isActive()) return;
@@ -406,6 +560,8 @@ export class StickyModeController {
 
   /**
    * Handles clicks during sticky mode for drop/connect/delete actions.
+   *
+   * @param event
    */
   private handleStickyModeClick(event: MouseEvent | PointerEvent) {
     const info = this.stickyModes.get(this.workspace);
@@ -445,6 +601,9 @@ export class StickyModeController {
 
   /**
    * Gets a block from an event target.
+   *
+   * @param event
+   * @param event.target
    */
   private getBlockFromEvent(event: {
     target: EventTarget | null;
@@ -479,6 +638,8 @@ export class StickyModeController {
   /**
    * Checks if a double-click event is on a field element.
    * Uses Blockly's gesture system for reliable field detection.
+   *
+   * @param target
    */
   private isDoubleClickOnField(target: Element): boolean {
     const workspace = this.workspace;
@@ -539,6 +700,9 @@ export class StickyModeController {
 
   /**
    * Finds a connection point at the given screen coordinates.
+   *
+   * @param clientX
+   * @param clientY
    */
   private findConnectionAtPoint(clientX: number, clientY: number): any {
     const info = this.stickyModes.get(this.workspace);
@@ -582,6 +746,10 @@ export class StickyModeController {
 
   /**
    * Connects the sticky block to a specific connection point.
+   *
+   * @param connectionInfo
+   * @param clientX
+   * @param clientY
    */
   private connectToClickedConnection(
     connectionInfo: any,
@@ -635,6 +803,7 @@ export class StickyModeController {
 
   /**
    * Exits sticky mode by dropping the block at the specified or current position.
+   *
    * @param clientX Optional screen X coordinate where to drop the block
    * @param clientY Optional screen Y coordinate where to drop the block
    */
