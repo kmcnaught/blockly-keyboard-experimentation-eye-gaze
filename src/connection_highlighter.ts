@@ -280,24 +280,22 @@ export class ConnectionHighlighter {
 
     // Make the highlight extend further horizontally and vertically for bigger click target
     const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
-    const yPadding = 4; // Extra vertical padding above and below
+    const topPadding = 4; // Extra padding above the notch
+    const bottomPadding = 4; // Extra padding below the notch
     const pathLeft = (connectionShape as any).pathLeft;
     const notchWidth = (connectionShape as any).width;
 
-    // For the bottom edge, we need to mirror the notch shape vertically
-    // Parse the pathLeft to create a vertically mirrored version
-    const mirroredPath = this.mirrorPathVertically(pathLeft, yPadding * 2);
-
+    // Create a flat-top, notched-bottom shape
+    // Top is flat, bottom follows the notch contour
     const highlightPath = (
-      `M ${-xLen} ${-yPadding} ` +        // Start top-left
-      `h ${xLen} ` +                       // Go right to notch start
-      pathLeft +                           // Draw top notch
-      `h ${xLen} ` +                       // Go right from notch end
-      `v ${yPadding * 2} ` +              // Go down to bottom edge
-      `h ${-xLen} ` +                      // Go left
-      mirroredPath +                       // Draw bottom notch (mirrored)
-      `h ${-xLen} ` +                      // Go left back to start
-      `Z`                                  // Close path
+      `M ${-xLen} ${-topPadding} ` +           // Start top-left
+      `v ${topPadding + bottomPadding} ` +     // Go down left side
+      `h ${xLen} ` +                           // Go right to notch start (x=0)
+      pathLeft +                               // Draw notch at bottom
+      `h ${xLen} ` +                           // Go right from notch end
+      `v ${-(topPadding + bottomPadding)} ` +  // Go up right side
+      `h ${-(notchWidth + xLen * 2)} ` +       // Go left across top back to start
+      `Z`                                      // Close path
     );
 
     const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
