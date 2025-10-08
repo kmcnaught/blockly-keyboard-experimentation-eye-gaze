@@ -42,9 +42,6 @@ export class KeyboardNavigation {
   /** Controller for click-and-stick functionality. */
   private stickyModeController: StickyModeController;
 
-  /** Whether single-click-to-move mode is enabled. */
-  private singleClickToMove = false;
-
   /**
    * Used to restore monkey patch.
    */
@@ -89,7 +86,6 @@ export class KeyboardNavigation {
     this.stickyModeController = new StickyModeController(
       workspace,
       null as any, // Will be set after navigationController is created
-      () => this.singleClickToMove, // Callback to check if single-click-to-move mode is enabled
     );
 
     this.navigationController = new NavigationController({
@@ -111,7 +107,6 @@ export class KeyboardNavigation {
     workspace.addChangeListener(enableBlocksOnDrag);
 
     this.stickyModeController.install();
-    this.registerSingleClickModeShortcut();
 
     (window as any).keyboardNavigation = this;
 
@@ -145,28 +140,6 @@ export class KeyboardNavigation {
     this.resizeWorkspaceRings();
 
     registerHtmlToast();
-  }
-
-  /**
-   * Registers the Shift+M keyboard shortcut to toggle single-click-to-move mode.
-   */
-  private registerSingleClickModeShortcut(): void {
-    const shortcut: Blockly.ShortcutRegistry.KeyboardShortcut = {
-      name: 'toggle_single_click_move',
-      preconditionFn: (workspace) => {
-        // Only allow toggle when not currently dragging or in sticky mode
-        return !workspace.isDragging() && !this.stickyModeController.isActive();
-      },
-      callback: (workspace) => {
-        const newState = this.toggleSingleClickToMove();
-        // The visual indicator will automatically show/hide based on the state
-        // No need for a toast notification as the CSS indicator is clear enough
-        return true;
-      },
-      keyCodes: [createSerializedKey(KeyCodes.M, [KeyCodes.SHIFT])],
-    };
-
-    Blockly.ShortcutRegistry.registry.register(shortcut);
   }
 
   private resizeWorkspaceRings() {
@@ -228,41 +201,6 @@ export class KeyboardNavigation {
    */
   setTriggerMode(mode: TriggerMode): void {
     this.stickyModeController.setTriggerMode(mode);
-  }
-
-  /**
-   * Toggle single-click-to-move mode on or off.
-   * When enabled, any single click on a block enters sticky mode regardless of trigger mode.
-   *
-   * @returns The new state (true if enabled, false if disabled).
-   */
-  toggleSingleClickToMove(): boolean {
-    this.singleClickToMove = !this.singleClickToMove;
-    this.updateWorkspaceSingleClickModeIndicator();
-    return this.singleClickToMove;
-  }
-
-  /**
-   * Get whether single-click-to-move mode is enabled.
-   *
-   * @returns True if single-click-to-move mode is enabled.
-   */
-  getSingleClickToMove(): boolean {
-    return this.singleClickToMove;
-  }
-
-  /**
-   * Updates the workspace visual indicator for single-click-to-move mode.
-   */
-  private updateWorkspaceSingleClickModeIndicator(): void {
-    const workspace = this.workspace;
-    const injectionDiv = workspace.getInjectionDiv();
-
-    if (this.singleClickToMove) {
-      injectionDiv.classList.add('blockly-single-click-move-mode');
-    } else {
-      injectionDiv.classList.remove('blockly-single-click-move-mode');
-    }
   }
 
   /**
@@ -635,31 +573,6 @@ export class KeyboardNavigation {
 .blockly-sticky-mode > .blocklyPath {
   stroke: #00ff00 !important;
   stroke-width: 3 !important;
-}
-
-/* Visual indicator for single-click-to-move mode */
-.blockly-single-click-move-mode .injectionDiv::before {
-  content: "Single-click mode: Click any block to move";
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4CAF50;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-family: Roboto, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 10000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-}
-
-/* Border indicator for single-click-to-move mode */
-.blockly-single-click-move-mode .blocklySvg {
-  outline: 3px solid #4CAF50;
-  outline-offset: -3px;
 }
 
 /* Styling for move grip handle */

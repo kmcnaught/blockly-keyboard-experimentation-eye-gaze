@@ -60,9 +60,6 @@ export class StickyModeController {
   /** The block that was focused before pointerdown (for focused-click trigger mode). */
   private focusedBlockBeforePointerdown: Blockly.BlockSvg | null = null;
 
-  /** Callback to check if single-click-to-move mode is enabled. */
-  private getSingleClickToMoveEnabled: () => boolean;
-
   /** The current move grip displayed on the focused block, if any. */
   private currentGrip: MoveGrip | null = null;
 
@@ -72,10 +69,7 @@ export class StickyModeController {
   constructor(
     private workspace: Blockly.WorkspaceSvg,
     private navigationController: NavigationController,
-    getSingleClickToMoveEnabled?: () => boolean,
-  ) {
-    this.getSingleClickToMoveEnabled = getSingleClickToMoveEnabled ?? (() => false);
-  }
+  ) {}
 
   /**
    * Gets the mover from the navigation controller.
@@ -494,11 +488,6 @@ export class StickyModeController {
   private shouldTriggerStickyMode(event: MouseEvent, clickedBlock: Blockly.BlockSvg | null): boolean {
     if (!clickedBlock) return false;
 
-    // If single-click-to-move mode is enabled, any click on a block triggers sticky mode
-    if (this.getSingleClickToMoveEnabled()) {
-      return true;
-    }
-
     switch (this.triggerMode) {
       case TriggerMode.SHIFT_CLICK:
         return event.shiftKey;
@@ -509,7 +498,7 @@ export class StickyModeController {
         return this.focusedBlockBeforePointerdown === clickedBlock;
 
       case TriggerMode.MODE_TOGGLE:
-        // MODE_TOGGLE is handled by singleClickToMove state above
+        // MODE_TOGGLE requires explicit enablement through external state management
         return false;
 
       case TriggerMode.GRIP_CLICK:
