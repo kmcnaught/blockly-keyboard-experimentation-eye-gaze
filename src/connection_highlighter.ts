@@ -278,12 +278,26 @@ export class ConnectionHighlighter {
       throw new Error('No connection shape available');
     }
 
+    // Make the highlight extend further horizontally and vertically for bigger click target
     const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
+    const yPadding = 4; // Extra vertical padding above and below
+    const pathLeft = (connectionShape as any).pathLeft;
+    const notchWidth = (connectionShape as any).width;
+
+    // For the bottom edge, we need to mirror the notch shape vertically
+    // Parse the pathLeft to create a vertically mirrored version
+    const mirroredPath = this.mirrorPathVertically(pathLeft, yPadding * 2);
+
     const highlightPath = (
-      `M ${-xLen} 0 ` +
-      `h ${xLen} ` +
-      (connectionShape as any).pathLeft +
-      `h ${xLen}`
+      `M ${-xLen} ${-yPadding} ` +        // Start top-left
+      `h ${xLen} ` +                       // Go right to notch start
+      pathLeft +                           // Draw top notch
+      `h ${xLen} ` +                       // Go right from notch end
+      `v ${yPadding * 2} ` +              // Go down to bottom edge
+      `h ${-xLen} ` +                      // Go left
+      mirroredPath +                       // Draw bottom notch (mirrored)
+      `h ${-xLen} ` +                      // Go left back to start
+      `Z`                                  // Close path
     );
 
     const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -294,9 +308,11 @@ export class ConnectionHighlighter {
 
     highlightSvg.setAttribute('d', highlightPath);
     highlightSvg.setAttribute('transform', transformation);
-    highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
+    highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
     highlightSvg.setAttribute('stroke', '#fff200');
-    highlightSvg.setAttribute('stroke-width', '3');
+    highlightSvg.setAttribute('stroke-width', '2.5');
+    highlightSvg.setAttribute('stroke-linejoin', 'round');
+    highlightSvg.setAttribute('stroke-linecap', 'round');
     highlightSvg.setAttribute('class', 'blocklyPotentialConnection');
     highlightSvg.style.pointerEvents = 'auto';
     highlightSvg.style.cursor = 'pointer';
@@ -308,6 +324,76 @@ export class ConnectionHighlighter {
     }
 
     return highlightSvg;
+  }
+
+  /**
+   * Mirrors an SVG path vertically and reverses direction for drawing backwards.
+   * Used to create the bottom notch edge from the top notch path.
+   *
+   * @param path The original SVG path string.
+   * @param verticalOffset The vertical distance to mirror across.
+   * @returns The mirrored and reversed path string.
+   */
+  private mirrorPathVertically(path: string, verticalOffset: number): string {
+    // Parse SVG path commands
+    const commands = path.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
+    const mirrored: string[] = [];
+
+    // Process commands in reverse order and flip vertical movements
+    for (let i = commands.length - 1; i >= 0; i--) {
+      const cmd = commands[i].trim();
+      const type = cmd[0];
+      const coords = cmd.slice(1).trim();
+
+      switch (type.toLowerCase()) {
+        case 'v': // Vertical line
+          const vValue = parseFloat(coords);
+          mirrored.push(` v ${-vValue} `);
+          break;
+
+        case 'h': // Horizontal line (reverse direction)
+          const hValue = parseFloat(coords);
+          mirrored.push(` h ${-hValue} `);
+          break;
+
+        case 'l': // Line to (reverse and flip y)
+          const lCoords = coords.split(/[\s,]+/).map(parseFloat);
+          if (lCoords.length >= 2) {
+            mirrored.push(` l ${-lCoords[0]},${-lCoords[1]} `);
+          }
+          break;
+
+        case 'c': // Cubic bezier (reverse and flip y coordinates)
+          const cCoords = coords.split(/[\s,]+/).map(parseFloat);
+          if (cCoords.length >= 6) {
+            // For c x1,y1 x2,y2 x,y reversed: c -x2,-y2 -x1,-y1 -x,-y
+            mirrored.push(
+              ` c ${-cCoords[2]},${-cCoords[3]}  ${-cCoords[0]},${-cCoords[1]}  ${-cCoords[4]},${-cCoords[5]} `
+            );
+          }
+          break;
+
+        case 'a': // Arc (complex - reverse and flip)
+          const aCoords = coords.split(/[\s,]+/);
+          if (aCoords.length >= 7) {
+            const rx = aCoords[0];
+            const ry = aCoords[1];
+            const rotation = aCoords[2];
+            const largeArc = aCoords[3];
+            const sweep = aCoords[4] === '1' ? '0' : '1'; // Flip sweep direction
+            const x = parseFloat(aCoords[5]);
+            const y = parseFloat(aCoords[6]);
+            mirrored.push(`a ${rx} ${ry} ${rotation} ${largeArc} ${sweep} ${-x} ${-y}`);
+          }
+          break;
+
+        default:
+          // Pass through other commands unchanged
+          mirrored.push(cmd);
+      }
+    }
+
+    return mirrored.join('');
   }
 
   /**
@@ -346,7 +432,7 @@ export class ConnectionHighlighter {
               );
 
               if (highlightSvg) {
-                highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
+                highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
                 highlightSvg.setAttribute('stroke', '#fff200');
                 highlightSvg.setAttribute('stroke-width', '3');
                 highlightSvg.setAttribute('style', 'pointer-events: auto; cursor: pointer;');
@@ -379,7 +465,7 @@ export class ConnectionHighlighter {
 
         if (highlightSvg) {
           // Use !important to prevent core from hiding highlights
-          highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.15)');
+          highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
           highlightSvg.setAttribute('stroke', '#fff200');
           highlightSvg.setAttribute('stroke-width', '3');
           highlightSvg.setAttribute('style', 'display: block !important; pointer-events: auto !important; cursor: pointer !important;');
@@ -462,9 +548,9 @@ export class ConnectionHighlighter {
 
       highlightSvg.setAttribute('d', highlightPath);
       highlightSvg.setAttribute('transform', transformation);
-      highlightSvg.setAttribute('fill', 'rgba(53, 168, 255, 0.3)');
+      highlightSvg.setAttribute('fill', 'rgba(53, 168, 255, 0.4)');
       highlightSvg.setAttribute('stroke', '#35a8ff');
-      highlightSvg.setAttribute('stroke-width', '3');
+      highlightSvg.setAttribute('stroke-width', '8');
       highlightSvg.setAttribute('class', 'blocklyPotentialConnection');
       highlightSvg.style.pointerEvents = 'auto';
       highlightSvg.style.cursor = 'pointer';
@@ -575,9 +661,9 @@ export class ConnectionHighlighter {
     rect.setAttribute('height', scaledHeight.toString());
     rect.setAttribute('rx', cornerRadius.toString());
     rect.setAttribute('ry', cornerRadius.toString());
-    rect.setAttribute('fill', 'rgba(53, 168, 255, 0.1)');
+    rect.setAttribute('fill', 'rgba(53, 168, 255, 0.3)');
     rect.setAttribute('stroke', '#35a8ff');
-    rect.setAttribute('stroke-width', '3');
+    rect.setAttribute('stroke-width', '6');
     rect.setAttribute('stroke-dasharray', '3,3');
     rect.setAttribute(
       'style',
