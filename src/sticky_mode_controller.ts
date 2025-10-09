@@ -60,6 +60,9 @@ export class StickyModeController {
   /** The block that was focused before pointerdown (for focused-click trigger mode). */
   private focusedBlockBeforePointerdown: Blockly.BlockSvg | null = null;
 
+  /** Flag to ignore the next click event after entering sticky mode via shift+click. */
+  private ignoreNextClick: boolean = false;
+
   /** The current move grip displayed on the focused block, if any. */
   private currentGrip: MoveGrip | null = null;
 
@@ -381,12 +384,38 @@ export class StickyModeController {
   }
 
   /**
-   * Handles pointerdown to capture which block was focused BEFORE the click changes focus.
+   * Handles pointerdown to capture which block was focused BEFORE the click changes focus,
+   * and to handle shift+click trigger mode.
    *
    * @param event
    */
   private handlePointerDown(event: PointerEvent) {
-    // Only track focus state if we're in FOCUSED_CLICK mode
+    // Handle shift+click mode - enter sticky mode immediately on pointerdown
+    if (this.triggerMode === TriggerMode.SHIFT_CLICK && event.shiftKey) {
+      const clickedBlock = this.getBlockFromEvent(event);
+      if (clickedBlock) {
+        const target = event.target as Element;
+        if (target && this.isDoubleClickOnField(target)) {
+          return;
+        }
+
+        const block = getNonShadowBlock(clickedBlock);
+        if (block && block.isMovable()) {
+          // Prevent Blockly's gesture from starting
+          event.preventDefault();
+          event.stopPropagation();
+
+          // Enter sticky mode immediately
+          if (this.enter(block, event.clientX, event.clientY)) {
+            // Set flag to ignore the next click event
+            this.ignoreNextClick = true;
+          }
+        }
+      }
+      return;
+    }
+
+    // Track focus state for FOCUSED_CLICK mode
     if (this.triggerMode !== TriggerMode.FOCUSED_CLICK) {
       return;
     }
@@ -459,6 +488,14 @@ export class StickyModeController {
    * @param event
    */
   private handleClick(event: MouseEvent) {
+    // If we just entered sticky mode via shift+click, ignore this click
+    if (this.ignoreNextClick) {
+      this.ignoreNextClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     // If already in sticky mode, handle the drop/connect action
     if (this.isActive()) {
       this.handleStickyModeClick(event);
@@ -788,6 +825,7 @@ export class StickyModeController {
     }
 
     this.stickyModes.delete(this.workspace);
+    this.ignoreNextClick = false;
 
     const selection = Blockly.common.getSelected();
     if (selection) {
