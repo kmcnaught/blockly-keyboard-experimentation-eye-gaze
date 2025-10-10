@@ -8,6 +8,10 @@ import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
 import {enableBlocksOnDrag} from './disabled_blocks';
 import {registerHtmlToast} from './html_toast';
+import {StickyModeController, TriggerMode} from './sticky_mode_controller';
+
+// Re-export TriggerMode for external use
+export {TriggerMode};
 
 /** Plugin for keyboard navigation. */
 export class KeyboardNavigation {
@@ -30,12 +34,24 @@ export class KeyboardNavigation {
    */
   private workspaceSelectionRing: Element | null = null;
 
+  /** Controller for click-and-stick functionality. */
+  private stickyModeController: StickyModeController;
+
   /**
    * Used to restore monkey patch.
    */
   private oldWorkspaceResize:
     | InstanceType<typeof Blockly.WorkspaceSvg>['resize']
     | null = null;
+
+  /**
+   * Returns whether the plugin is currently in sticky mode (click-and-stick).
+   *
+   * @returns True if a block is in sticky mode, false otherwise.
+   */
+  get isInStickyMode(): boolean {
+    return this.stickyModeController.isActive();
+  }
 
   /**
    * Constructs the keyboard navigation.
@@ -46,24 +62,48 @@ export class KeyboardNavigation {
    * option to appear enabled when pasting in a different workspace
    * than was copied from. Defaults to false. Set to true if using
    * cross-tab-copy-paste plugin or similar.
+   * @param options.highlightConnections If true, will highlight all
+   * valid connection points when entering move mode. Defaults to true.
+   * Useful for improving mouse accessibility.
    */
   constructor(
     workspace: Blockly.WorkspaceSvg,
-    options: {allowCrossWorkspacePaste: boolean} = {
+    options: {
+      allowCrossWorkspacePaste?: boolean;
+      highlightConnections?: boolean;
+    } = {
       allowCrossWorkspacePaste: false,
+      highlightConnections: true,
     },
   ) {
     this.workspace = workspace;
 
-    this.navigationController = new NavigationController(options);
+    this.stickyModeController = new StickyModeController(
+      workspace,
+      null as any, // Will be set after navigationController is created
+    );
+
+    this.navigationController = new NavigationController({
+      allowCrossWorkspacePaste: options.allowCrossWorkspacePaste ?? false,
+      highlightConnections: options.highlightConnections ?? true,
+      // Disable auto-scroll during sticky mode to prevent jarring jumps at viewport edges
+      shouldDisableAutoScroll: () => this.stickyModeController.isActive(),
+    });
     this.navigationController.init();
     this.navigationController.addWorkspace(workspace);
     this.navigationController.enable(workspace);
+
+    // Now set the navigation controller on the sticky mode controller
+    (this.stickyModeController as any).navigationController = this.navigationController;
 
     this.cursor = new Blockly.LineCursor(workspace);
 
     // Add the event listener to enable disabled blocks on drag.
     workspace.addChangeListener(enableBlocksOnDrag);
+
+    this.stickyModeController.install();
+
+    (window as any).keyboardNavigation = this;
 
     // Move the flyout for logical tab order.
     const flyout = workspace.getFlyout();
@@ -129,6 +169,7 @@ export class KeyboardNavigation {
 
     // Remove the event listener that enables blocks on drag
     this.workspace.removeChangeListener(enableBlocksOnDrag);
+    this.stickyModeController.uninstall();
     this.navigationController.dispose();
   }
 
@@ -137,6 +178,42 @@ export class KeyboardNavigation {
    */
   toggleShortcutDialog(): void {
     this.navigationController.shortcutDialog.toggle(this.workspace);
+  }
+
+  /**
+   * Enable or disable connection highlighting during move operations.
+   *
+   * @param enabled Whether to show connection highlights when moving blocks.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.navigationController.setHighlightConnections(enabled);
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.navigationController.setFatterConnections(enabled);
+  }
+
+  /**
+   * Set the trigger mode for entering sticky move mode.
+   *
+   * @param mode The trigger mode to use (DOUBLE_CLICK, SHIFT_CLICK, FOCUSED_CLICK, MODE_TOGGLE, or GRIP_CLICK).
+   */
+  setTriggerMode(mode: TriggerMode): void {
+    this.stickyModeController.setTriggerMode(mode);
+  }
+
+  /**
+   * Enable or disable keeping the block on the mouse cursor during sticky move.
+   *
+   * @param enabled Whether the block should follow the cursor (true) or stay at click position (false).
+   */
+  setKeepBlockOnMouse(enabled: boolean): void {
+    this.stickyModeController.setKeepBlockOnMouse(enabled);
   }
 
   /**
@@ -336,6 +413,29 @@ export class KeyboardNavigation {
   }
 `);
 
+    // Styling for connection highlighting during move mode.
+    //
+    // This should remain in the plugin for the time being because these
+    // classes are specific to the keyboard navigation plugin's move functionality.
+    Blockly.Css.register(`
+  /* Clean highlighting for potential connection points */
+  .blocklyPotentialConnection {
+    stroke: #00ff00 !important;
+    stroke-width: 5px !important;
+    fill: rgba(0, 255, 0, 0.9) !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    display: block !important;
+  }
+
+  /* Ensure highlights are visible in keyboard navigation mode */
+  .blocklyKeyboardNavigation .blocklyPotentialConnection {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+`);
+
     // Register classes used by the shortcuts modal
     Blockly.Css.register(`
 :root {
@@ -476,8 +576,48 @@ export class KeyboardNavigation {
   text-wrap: nowrap;
 }
 
+/* Styling for blocks in sticky mode (click and stick) */
+.blockly-sticky-mode {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.8)) !important;
+  opacity: 0.9 !important;
+}
+
+/* Use child combinator (>) to only style the immediate block, not descendants */
+.blockly-sticky-mode > .blocklyPath {
+  stroke: #00ff00 !important;
+  stroke-width: 3 !important;
+}
+
+/* Styling for move grip handle */
+.blockly-move-grip {
+  cursor: grab;
+  transition: opacity 0.2s ease;
+}
+
+.blockly-move-grip:hover {
+  opacity: 0.8;
+}
+
+.blockly-move-grip:active {
+  cursor: grabbing;
+}
+
+.blockly-move-grip-background {
+  pointer-events: all;
+}
+
+.blockly-move-grip-dot {
+  pointer-events: none;
+}
+
+/* Ensure grip is visible above block elements */
+.blocklyKeyboardNavigation .blockly-move-grip {
+  z-index: 100;
+}
+
 `);
   }
+
 }
 
 // Export build info components for use by plugin consumers

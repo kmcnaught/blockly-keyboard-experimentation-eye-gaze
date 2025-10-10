@@ -15,6 +15,13 @@ import {Direction, getDirectionFromXY} from './drag_direction';
 import {showUnconstrainedMoveHint} from './hints';
 import {MoveIcon} from './move_icon';
 import {MoveType} from './actions/mover';
+import {ConnectionHighlighter} from './connection_highlighter';
+
+/** X offset for positioning block preview near connections. */
+const BLOCK_PREVIEW_OFFSET_X = 10;
+
+/** Y offset for positioning block preview near connections. */
+const BLOCK_PREVIEW_OFFSET_Y = 10;
 
 // Copied in from core because it is not exported.
 interface ConnectionCandidate {
@@ -39,12 +46,54 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   /** List of all connections available on the workspace. */
   private allConnections: RenderedConnection[] = [];
 
+  /** Connection highlighter for visual feedback. */
+  connectionHighlighter: ConnectionHighlighter;
+
+  /** Whether connection highlighting is enabled. */
+  private highlightingEnabled: boolean;
+
+  /** Callback to complete the move from outside this strategy. */
+  private onMoveComplete?: () => void;
+
+  /** Callback to exit sticky mode after move is finished. */
+  private onMoveFinished?: () => void;
+
+  /** Whether this drag is part of a click and stick operation. */
+  private isClickAndStick = false;
+
+  /** The last connection candidate we refreshed highlights for. */
+  private lastRefreshedCandidate: ConnectionCandidate | null = null;
+
+  /** Timestamp of last highlight refresh to throttle updates. */
+  private lastRefreshTime = 0;
+
+  /** Minimum time between highlight refreshes in ms. */
+  private readonly REFRESH_THROTTLE = 100;
+
+  /** The initial connection where the block started (for comparison with current preview). */
+  private initialConnectionNeighbour: RenderedConnection | null = null;
+
   constructor(
     private block: BlockSvg,
     public moveType: MoveType,
     private startPoint: RenderedConnection | null,
+    highlightingEnabled = true,
+    onMoveComplete?: () => void,
+    onMoveFinished?: () => void,
   ) {
     super(block);
+    this.highlightingEnabled = highlightingEnabled;
+    this.onMoveComplete = onMoveComplete;
+    this.onMoveFinished = onMoveFinished;
+
+    // Create connection highlighter with click handler
+    const onConnectionClick = (connection: RenderedConnection) => {
+      this.handleConnectionClick(connection);
+    };
+    this.connectionHighlighter = new ConnectionHighlighter(
+      block.workspace,
+      onConnectionClick,
+    );
   }
 
   override startDrag(e?: PointerEvent) {
@@ -72,14 +121,41 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     this.block.moveDuringDrag(this.startLoc);
     // @ts-expect-error connectionCandidate is private.
     this.connectionCandidate = this.createInitialCandidate();
+    // @ts-expect-error connectionCandidate is private.
+    const candidate = this.connectionCandidate;
+    this.initialConnectionNeighbour = candidate?.neighbour ?? null;
     this.forceShowPreview();
     this.block.addIcon(new MoveIcon(this.block));
+
+    // Show connection highlights for normal keyboard moves if enabled
+    // (Sticky mode will override this via setClickAndStickMode)
+    if (this.highlightingEnabled) {
+      // @ts-expect-error getLocalConnections is private.
+      const localConnections = this.getLocalConnections(this.block);
+
+      this.connectionHighlighter.highlightValidConnections(
+        this.block,
+        this.allConnections,
+        localConnections,
+      );
+    }
   }
 
   override drag(newLoc: utils.Coordinate, e?: PointerEvent): void {
     if (!e) return;
+
+    // @ts-expect-error connectionCandidate is private.
+    const prevCandidate = this.connectionCandidate;
+
     this.currentDragDirection = getDirectionFromXY({x: e.tiltX, y: e.tiltY});
     super.drag(newLoc);
+
+    // @ts-expect-error connectionCandidate is private.
+    const newCandidate = this.connectionCandidate;
+
+    if (this.shouldRefreshHighlights(prevCandidate, newCandidate)) {
+      this.refreshHighlightsForPreview(newCandidate);
+    }
 
     // Handle the case when an unconstrained drag found a connection candidate.
     // @ts-expect-error connectionCandidate is private.
@@ -87,18 +163,16 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       // @ts-expect-error connectionCandidate is private.
       const neighbour = (this.connectionCandidate as ConnectionCandidate)
         .neighbour;
-      // The next constrained move will resume the search from the current
-      // candidate location.
       this.searchNode = neighbour;
       if (this.isConstrainedMovement()) {
-        // Position the moving block down and slightly to the right of the
-        // target connection.
         this.block.moveDuringDrag(
-          new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+          new utils.Coordinate(
+            neighbour.x + BLOCK_PREVIEW_OFFSET_X,
+            neighbour.y + BLOCK_PREVIEW_OFFSET_Y,
+          ),
         );
       }
     } else {
-      // Handle the case when unconstrained drag was far from any candidate.
       this.searchNode = null;
 
       if (this.isConstrainedMovement()) {
@@ -113,12 +187,57 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     super.endDrag(e);
     this.allConnections = [];
     this.block.removeIcon(MoveIcon.type);
+
+    // Clear highlights when drag ends (unless in click-and-stick mode)
+    // Sticky mode keeps highlights visible until explicitly cleared
+    if (!this.isClickAndStick) {
+      this.connectionHighlighter.clearHighlights();
+    }
   }
 
   /**
-   * Returns the next compatible connection in keyboard navigation order,
-   * based on the input direction.
-   * Always resumes the search at the last valid connection that was tried.
+   * Force clear all highlights regardless of click-and-stick mode.
+   */
+  forceClearHighlights(): void {
+    if (this.highlightingEnabled) {
+      this.connectionHighlighter.clearHighlights();
+    }
+  }
+
+  /**
+   * Set whether this drag strategy is being used for click and stick operations.
+   *
+   * @param enabled
+   */
+  setClickAndStickMode(enabled: boolean): void {
+    this.isClickAndStick = enabled;
+
+    if (enabled) {
+      // ALWAYS show highlights in sticky mode, regardless of highlightingEnabled setting
+      // @ts-expect-error getLocalConnections is private.
+      const localConnections = this.getLocalConnections(this.block);
+
+      this.connectionHighlighter.highlightValidConnections(
+        this.block,
+        this.allConnections,
+        localConnections,
+      );
+    } else {
+      // When exiting sticky mode, clear highlights
+      // (They will be re-shown in normal mode if highlightingEnabled is true)
+      this.connectionHighlighter.clearHighlights();
+    }
+  }
+
+  /**
+   * Check if currently in click and stick mode.
+   */
+  isClickAndStickMode(): boolean {
+    return this.isClickAndStick;
+  }
+
+  /**
+   * Returns the next compatible connection in keyboard navigation order.
    *
    * @param draggingBlock The block where the drag started.
    * @returns A valid connection candidate, or null if none was found.
@@ -292,7 +411,10 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
     // The moving block will be positioned slightly down and to the
     // right of the connection it found.
     block.moveDuringDrag(
-      new utils.Coordinate(neighbour.x + 10, neighbour.y + 10),
+      new utils.Coordinate(
+        neighbour.x + BLOCK_PREVIEW_OFFSET_X,
+        neighbour.y + BLOCK_PREVIEW_OFFSET_Y,
+      ),
     );
   }
 
@@ -337,5 +459,158 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
 
   override shouldHealStack(e: PointerEvent | undefined): boolean {
     return Boolean(this.block.previousConnection);
+  }
+
+  /**
+   * Checks if we should refresh connection highlights (throttled).
+   *
+   * @param prev
+   * @param curr
+   */
+  private shouldRefreshHighlights(
+    prev: ConnectionCandidate | null,
+    curr: ConnectionCandidate | null,
+  ): boolean {
+    const hasChanged = this.hasConnectionChanged(prev, curr);
+    if (!hasChanged) return false;
+
+    const now = Date.now();
+    if (now - this.lastRefreshTime < this.REFRESH_THROTTLE) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Checks if the connection candidate has changed.
+   *
+   * @param prev
+   * @param curr
+   */
+  private hasConnectionChanged(
+    prev: ConnectionCandidate | null,
+    curr: ConnectionCandidate | null,
+  ): boolean {
+    if (!prev && !curr) return false;
+    if (!prev || !curr) return true;
+    return prev.neighbour !== curr.neighbour || prev.local !== curr.local;
+  }
+
+  /**
+   * Refreshes connection highlights after a preview change.
+   * Ensures highlights reflect current positions after stack rearrangement.
+   *
+   * @param currentCandidate
+   */
+  private refreshHighlightsForPreview(
+    currentCandidate: ConnectionCandidate | null,
+  ): void {
+    // Only refresh if highlights are enabled (normal mode) or in sticky mode (always enabled)
+    if (!this.isClickAndStick && !this.highlightingEnabled) return;
+
+    this.lastRefreshedCandidate = currentCandidate;
+    this.lastRefreshTime = Date.now();
+
+    // Rebuild connections list to reflect current workspace state
+    const currentConnections: RenderedConnection[] = [];
+    const topBlocks = this.block.workspace.getTopBlocks(true);
+
+    for (const topBlock of topBlocks) {
+      const descendants = topBlock.getDescendants(true);
+      const nonShadowDescendants = descendants.filter(
+        (block: BlockSvg) => !block.isShadow(),
+      );
+
+      currentConnections.push(
+        ...nonShadowDescendants
+          .flatMap((block: BlockSvg) => block.getConnections_(false))
+          .sort((a: RenderedConnection, b: RenderedConnection) => {
+            let delta = a.y - b.y;
+            if (delta === 0) {
+              delta = a.x - b.x;
+            }
+            return delta;
+          }),
+      );
+    }
+
+    // @ts-expect-error getLocalConnections is private.
+    const localConnections = this.getLocalConnections(this.block);
+
+    this.connectionHighlighter.highlightValidConnections(
+      this.block,
+      currentConnections,
+      localConnections,
+    );
+  }
+
+  /**
+   * Handles when a user clicks on a connection highlight to complete a move.
+   *
+   * @param targetConnection
+   */
+  private handleConnectionClick(targetConnection: RenderedConnection) {
+    // @ts-expect-error getLocalConnections is private.
+    const localConnections = this.getLocalConnections(this.block);
+    const connectionChecker = this.block.workspace.connectionChecker;
+
+    let localConnection: RenderedConnection | null = null;
+    for (const local of localConnections) {
+      if (
+        connectionChecker.canConnect(local, targetConnection, true, Infinity)
+      ) {
+        localConnection = local;
+        break;
+      }
+    }
+
+    if (localConnection) {
+      const candidate = {
+        local: localConnection,
+        neighbour: targetConnection,
+        distance: 0,
+      };
+
+      // @ts-expect-error connectionCandidate is private
+      this.connectionCandidate = candidate;
+
+      const targetX = targetConnection.x;
+      const targetY = targetConnection.y;
+
+      this.block.moveDuringDrag(
+        new utils.Coordinate(
+          targetX + BLOCK_PREVIEW_OFFSET_X,
+          targetY + BLOCK_PREVIEW_OFFSET_Y,
+        ),
+      );
+
+      this.forceShowPreview();
+      this.setClickAndStickMode(false);
+
+      if (this.onMoveComplete) {
+        this.onMoveComplete();
+      }
+
+      if (this.onMoveFinished) {
+        this.onMoveFinished();
+      }
+    }
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.connectionHighlighter?.setFatterConnections(enabled);
+  }
+
+  /**
+   * Gets the initial connection where the block started.
+   */
+  getInitialConnectionNeighbour(): RenderedConnection | null {
+    return this.initialConnectionNeighbour;
   }
 }
