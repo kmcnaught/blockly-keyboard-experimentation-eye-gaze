@@ -4,6 +4,7 @@
   "description": "A plugin for keyboard navigation.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
+    "prebuild": "node scripts/generate-build-info.js",
     "build": "blockly-scripts build",
     "clean": "blockly-scripts clean",
     "lint": "eslint .",
@@ -13,6 +14,7 @@
     "ghpages": "node scripts/deploy.js",
     "predeploy": "blockly-scripts predeploy",
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
+    "prestart": "node scripts/generate-build-info.js",
     "start": "blockly-scripts start",
     "test": "npm run test:mocha && npm run test:wdio",
     "test:ci": "npm run test:mocha && npm run test:wdio:ci",

@@ -4,3 +4,7 @@ build-debug.log
 node_modules/
 build/
 dist/
+
+# Auto-generated build info
+src/build_info.ts
+test/webdriverio/test/mochawesome-report
