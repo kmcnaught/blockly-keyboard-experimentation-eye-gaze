@@ -21,6 +21,7 @@ import {
 import {Direction} from '../drag_direction';
 import {Mover, MoveType} from './mover';
 import {getMenuItem} from '../shortcut_formatting';
+import {getNonShadowBlock} from '../workspace_utilities';
 
 const KeyCodes = utils.KeyCodes;
 const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
@@ -252,17 +253,16 @@ export class MoveActions {
     const node = getFocusManager().getFocusedNode();
     if (node instanceof comments.RenderedWorkspaceComment) return node;
 
-    let block = workspace.getCursor().getSourceBlock();
+    const block = workspace.getCursor().getSourceBlock();
     if (!block) return undefined;
-    while (block.isShadow()) {
-      block = block.getParent();
-      if (!block) {
-        throw new Error(
-          'Tried to drag a shadow block with no parent. ' +
-            'Shadow blocks should always have parents.',
-        );
-      }
+
+    const nonShadowBlock = getNonShadowBlock(block);
+    if (!nonShadowBlock) {
+      throw new Error(
+        'Tried to drag a shadow block with no parent. ' +
+          'Shadow blocks should always have parents.',
+      );
     }
-    return block;
+    return nonShadowBlock;
   }
 }

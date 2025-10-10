@@ -7,6 +7,27 @@
 import * as Blockly from 'blockly/core';
 
 /**
+ * Walks up the block tree from a shadow block to find the parent non-shadow block.
+ * Shadow blocks should never be moved independently.
+ *
+ * @param block The block to start from (may be a shadow block)
+ * @returns The first non-shadow block ancestor, or null if none found
+ */
+export function getNonShadowBlock(block: Blockly.BlockSvg | null): Blockly.BlockSvg | null {
+  if (!block) return null;
+
+  while (block.isShadow()) {
+    const parent = block.getParent();
+    if (!parent) {
+      return null;
+    }
+    block = parent;
+  }
+
+  return block;
+}
+
+/**
  * Scrolls the provided bounds into view.
  *
  * In the case of small workspaces/large bounds, this function prioritizes
