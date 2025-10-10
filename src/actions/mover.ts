@@ -30,6 +30,7 @@ import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 import {Navigation} from '../navigation';
 import {clearMoveHints} from '../hints';
 import {MoveIndicatorBubble} from '../move_indicator';
+import {isWorkspaceElement} from '../dom_utils';
 
 /**
  * The distance to move an item, in workspace coordinates, when
@@ -74,15 +75,28 @@ export class Mover {
    */
   protected moves: Map<WorkspaceSvg, MoveInfo> = new Map();
 
-  /**
-   * The element's base drag strategy, which will be overridden during
-   * keyboard drags and reset at the end of the drag.
-   */
-  private oldDragStrategy: IDragStrategy | null = null;
+  /** Original drag strategies per-block (WeakMap for automatic garbage collection). */
+  private oldDragStrategies: WeakMap<BlockSvg, IDragStrategy> = new WeakMap();
 
   private moveIndicator?: MoveIndicatorBubble;
 
-  constructor(protected navigation: Navigation) {}
+  /** Whether connection highlighting is enabled for moves. */
+  private highlightConnections: boolean;
+
+  /** Whether to use fatter connection highlights with larger click targets. */
+  private fatterConnections: boolean = true;
+
+  /** Optional callback to check if auto-scrolling should be disabled. */
+  private shouldDisableAutoScroll?: () => boolean;
+
+  constructor(
+    protected navigation: Navigation,
+    highlightConnections = true,
+    shouldDisableAutoScroll?: () => boolean,
+  ) {
+    this.highlightConnections = highlightConnections;
+    this.shouldDisableAutoScroll = shouldDisableAutoScroll;
+  }
 
   /**
    * Returns true iff we are able to begin moving the draggable element which
@@ -115,6 +129,31 @@ export class Mover {
   }
 
   /**
+   * Enable or disable connection highlighting during move operations.
+   *
+   * @param enabled Whether to show connection highlights.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.highlightConnections = enabled;
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.fatterConnections = enabled;
+    // Update any active drag strategies
+    for (const [_workspace, moveInfo] of this.moves) {
+      const dragStrategy = (moveInfo.draggable as any).dragStrategy;
+      if (dragStrategy instanceof KeyboardDragStrategy) {
+        dragStrategy.setFatterConnections(enabled);
+      }
+    }
+  }
+
+  /**
    * Start moving the currently-focused item on workspace, if
    * possible.
    *
@@ -126,15 +165,17 @@ export class Mover {
    * @param startPoint Where to start the move, or null to use the current
    *     location if any.
    * @returns True iff a move has successfully begun.
+   * @param onMoveFinished Optional callback when move finishes.
    */
   startMove(
     workspace: WorkspaceSvg,
     draggable: IDraggable & IFocusableNode & IBoundedElement & ISelectable,
     moveType: MoveType,
     startPoint: RenderedConnection | null,
+    onMoveFinished?: () => void,
   ) {
     if (draggable instanceof BlockSvg) {
-      this.patchDragStrategy(draggable, moveType, startPoint);
+      this.patchDragStrategy(draggable, moveType, startPoint, onMoveFinished);
     } else if (draggable instanceof comments.RenderedWorkspaceComment) {
       this.moveIndicator = new MoveIndicatorBubble(draggable);
     }
@@ -146,13 +187,34 @@ export class Mover {
     );
     if (!DraggerClass) throw new Error('no Dragger registered');
     const dragger = new DraggerClass(draggable, workspace);
+
     // Set up a blur listener to end the move if the user clicks away
-    const blurListener = () => {
-      this.finishMove(workspace);
+      const blurListener = (evt: Event) => {
+      const event = evt as FocusEvent;
+
+      const dragStrategy = (draggable as any).dragStrategy;
+      const isClickAndStick = dragStrategy?.isClickAndStickMode?.();
+
+      if (!isClickAndStick) {
+        this.finishMove(workspace);
+        return;
+      }
+
+      // In click-and-stick mode: only auto-finish if focus moved to meaningful UI    
+      const newFocusTarget = event.relatedTarget as any;
+      const activeElement = document.activeElement;
+
+      const isWorkspaceBackground =
+        isWorkspaceElement(newFocusTarget) ||
+        isWorkspaceElement(activeElement);
+
+      if (!isWorkspaceBackground) {
+        this.finishMove(workspace);
+      }
     };
     // Record that a move is in progress and start dragging.
     workspace.setKeyboardMoveInProgress(true);
-    const info = new MoveInfo(workspace, draggable, dragger, blurListener);
+    const info = new MoveInfo(workspace, draggable, dragger, blurListener, onMoveFinished);
     this.moves.set(workspace, info);
     // Begin drag.
     dragger.onDragStart(info.fakePointerEvent('pointerdown'));
@@ -217,6 +279,10 @@ export class Mover {
    * @returns True iff move successfully finished.
    */
   finishMove(workspace: WorkspaceSvg) {
+    if (!this.moves.has(workspace)) {
+      return false;
+    }
+
     const info = this.preDragEndCleanup(workspace);
 
     info.dragger.onDragEnd(
@@ -237,6 +303,10 @@ export class Mover {
    * @returns True iff move successfully aborted.
    */
   abortMove(workspace: WorkspaceSvg) {
+    if (!this.moves.has(workspace)) {
+      return false;
+    }
+
     const info = this.preDragEndCleanup(workspace);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -300,10 +370,32 @@ export class Mover {
     }
     this.moves.delete(workspace);
     workspace.setKeyboardMoveInProgress(false);
-    // Delay scroll until after element has finished moving.
-    setTimeout(() => this.scrollCurrentElementIntoView(workspace), 0);
-    // If a block gets reattached, ensure it retains focus.
-    getFocusManager().focusNode(info.draggable);
+
+    if (info.onMoveFinished) {
+      info.onMoveFinished();
+    }
+
+    // Render on next frame for proper block positioning
+    requestAnimationFrame(() => {
+      if (info.draggable instanceof BlockSvg) {
+        let rootBlock = info.draggable;
+        let parent = info.draggable.getParent();
+        while (parent instanceof BlockSvg) {
+          rootBlock = parent;
+          parent = parent.getParent() as BlockSvg;
+        }
+
+        rootBlock.render();
+
+        if (rootBlock !== info.draggable) {
+          info.draggable.render();
+        }
+      }
+
+      workspace.render();
+      this.scrollCurrentElementIntoView(workspace);
+      getFocusManager().focusNode(info.draggable);
+    });
   }
 
   /**
@@ -369,17 +461,34 @@ export class Mover {
    * @param moveType Whether this is an insert or a move.
    * @param startPoint Where to start the move, or null to use the current
    *     location if any.
+   * @param onMoveFinished
    */
   private patchDragStrategy(
     block: BlockSvg,
     moveType: MoveType,
     startPoint: RenderedConnection | null,
+    onMoveFinished?: () => void,
   ) {
     // @ts-expect-error block.dragStrategy is private.
-    this.oldDragStrategy = block.dragStrategy;
-    block.setDragStrategy(
-      new KeyboardDragStrategy(block, moveType, startPoint),
+    const currentStrategy = block.dragStrategy;
+
+    this.oldDragStrategies.set(block, currentStrategy);
+
+    const onMoveComplete = () => {
+      const workspace = block.workspace as WorkspaceSvg;
+      this.finishMove(workspace);
+    };
+
+    const keyboardDragStrategy = new KeyboardDragStrategy(
+      block,
+      moveType,
+      startPoint,
+      this.highlightConnections,
+      onMoveComplete,
+      onMoveFinished,
     );
+    keyboardDragStrategy.setFatterConnections(this.fatterConnections);
+    block.setDragStrategy(keyboardDragStrategy);
   }
 
   /**
@@ -388,9 +497,21 @@ export class Mover {
    * @param block The block to patch.
    */
   private unpatchDragStrategy(block: BlockSvg) {
-    if (this.oldDragStrategy) {
-      block.setDragStrategy(this.oldDragStrategy);
-      this.oldDragStrategy = null;
+    try {
+      // @ts-expect-error block.dragStrategy is private
+      const currentStrategy = block.dragStrategy;
+      if (currentStrategy instanceof KeyboardDragStrategy) {
+        currentStrategy.setClickAndStickMode(false);
+        currentStrategy.connectionHighlighter.clearHighlights();
+      }
+
+      const oldStrategy = this.oldDragStrategies.get(block);
+      if (oldStrategy) {
+        block.setDragStrategy(oldStrategy);
+        this.oldDragStrategies.delete(block);
+      }
+    } catch (error) {
+      // Silently fail during cleanup
     }
   }
 
@@ -402,6 +523,10 @@ export class Mover {
    *     the workspace's viewport.
    */
   private scrollCurrentElementIntoView(workspace: WorkspaceSvg, padding = 0) {
+    if (this.shouldDisableAutoScroll?.()) {
+      return;
+    }
+
     const draggable = this.moves.get(workspace)?.draggable;
     if (draggable) {
       const bounds = (
@@ -448,18 +573,21 @@ export class MoveInfo {
   readonly parentNext: Connection | null = null;
   readonly parentInput: Connection | null = null;
   readonly startLocation: utils.Coordinate;
+  readonly onMoveFinished?: () => void;
 
   constructor(
     readonly workspace: WorkspaceSvg,
     readonly draggable: IDraggable & IFocusableNode & IBoundedElement,
     readonly dragger: IDragger,
     readonly blurListener: EventListener,
+    onMoveFinished?: () => void,
   ) {
     if (draggable instanceof BlockSvg) {
       this.parentNext = draggable.previousConnection?.targetConnection ?? null;
       this.parentInput = draggable.outputConnection?.targetConnection ?? null;
     }
     this.startLocation = draggable.getRelativeToSurfaceXY();
+    this.onMoveFinished = onMoveFinished;
   }
 
   /**
