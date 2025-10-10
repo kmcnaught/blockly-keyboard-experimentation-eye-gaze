@@ -8,7 +8,7 @@ import * as Blockly from 'blockly';
 // Import the default blocks.
 import 'blockly/blocks';
 import {installAllBlocks as installColourBlocks} from '@blockly/field-colour';
-import {KeyboardNavigation} from '../src/index';
+import {KeyboardNavigation, TriggerMode} from '../src/index';
 import {registerFlyoutCursor} from '../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../src/navigation_deferring_toolbox';
 // @ts-expect-error No types in js file
@@ -19,6 +19,8 @@ import {blocks} from './blocks/p5_blocks';
 import {toolbox as toolboxFlyout} from './blocks/toolbox.js';
 // @ts-expect-error No types in js file
 import toolboxCategories from './toolboxCategories.js';
+// @ts-expect-error No types in js file
+import toolboxCustom from './toolboxCustom.js';
 
 import {javascriptGenerator} from 'blockly/javascript';
 // @ts-expect-error No types in js file
@@ -27,6 +29,9 @@ import {runCode, registerRunCodeShortcut} from './runCode';
 import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRefresh} from '../src/build_info_component';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
+
+let autoRunTimer: number | null = null;
+let keyboardNavigation: KeyboardNavigation | null = null;
 
 /**
  * Parse query params for inject and navigation options and update
@@ -38,7 +43,7 @@ function getOptions() {
   const params = new URLSearchParams(window.location.search);
 
   const scenarioParam = params.get('scenario');
-  const scenario = scenarioParam ?? 'simpleCircle';
+  const scenario = scenarioParam ?? 'blank';
 
   const rendererParam = params.get('renderer');
   let renderer = 'zelos';
@@ -54,8 +59,14 @@ function getOptions() {
 
   const toolboxParam = params.get('toolbox');
   const toolbox = toolboxParam ?? 'toolbox';
-  const toolboxObject =
-    toolbox === 'flyout' ? toolboxFlyout : toolboxCategories;
+  let toolboxObject;
+  if (toolbox === 'flyout') {
+    toolboxObject = toolboxFlyout;
+  } else if (toolbox === 'custom') {
+    toolboxObject = toolboxCustom;
+  } else {
+    toolboxObject = toolboxCategories;
+  }
 
   // Update form inputs to match params, but only after the page is
   // fully loaded as Chrome (at least) tries to restore previous form
@@ -63,9 +74,10 @@ function getOptions() {
   // result in the form inputs being out-of-sync with the actual
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
-    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
+    // Reset trigger mode to default to prevent browser auto-fill mismatch
+    (document.getElementById('triggerMode') as HTMLSelectElement).value = 'double_click';
   });
 
   return {
@@ -100,11 +112,59 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
   Blockly.ContextMenuItems.registerCommentOptions();
-  new KeyboardNavigation(workspace);
-  registerRunCodeShortcut();
+  const kbNav = new KeyboardNavigation(workspace);
+  keyboardNavigation = kbNav;
+  // Expose keyboard navigation instance for debugging
+  (window as any).kbNav = kbNav;
+  registerRunCodeShortcut(runCode);
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);
+
+  // Track code changes and auto-run with debounce
+  workspace.addChangeListener((event: Blockly.Events.Abstract) => {
+    // Only auto-run for events that actually change the generated code (AST changes)
+    let shouldAutoRun = false;
+
+    if (event.type === Blockly.Events.BLOCK_MOVE) {
+      // Only trigger if the block's connections changed, not just position
+      const moveEvent = event as Blockly.Events.BlockMove;
+      // Check if parent changed (connection change) or if oldCoordinate is undefined
+      // (which indicates a connection change rather than just a drag)
+      if (moveEvent.oldParentId !== moveEvent.newParentId ||
+          moveEvent.oldInputName !== moveEvent.newInputName) {
+        shouldAutoRun = true;
+      }
+    } else if (
+      event.type === Blockly.Events.BLOCK_CREATE ||
+      event.type === Blockly.Events.BLOCK_DELETE ||
+      event.type === Blockly.Events.BLOCK_CHANGE
+    ) {
+      // These always affect the generated code
+      shouldAutoRun = true;
+    }
+
+    if (shouldAutoRun) {
+      // Clear any existing timer
+      if (autoRunTimer !== null) {
+        window.clearTimeout(autoRunTimer);
+      }
+
+      // Set new timer to run code after 300ms delay
+      const tryRunCode = () => {
+        // Check if a block is currently being dragged before auto-running
+        const isDragging = workspace.isDragging();
+        if (!isDragging) {
+          runCode();
+          autoRunTimer = null;
+        } else {
+          // Still dragging, retry in another 100ms
+          autoRunTimer = window.setTimeout(tryRunCode, 100);
+        }
+      };
+      autoRunTimer = window.setTimeout(tryRunCode, 300);
+    }
+  });
 
   load(workspace, scenario);
   runCode();
@@ -132,6 +192,62 @@ document.addEventListener('DOMContentLoaded', () => {
   addP5();
   createWorkspace();
   document.getElementById('run')?.addEventListener('click', runCode);
+  document.getElementById('rerunButton')?.addEventListener('click', runCode);
+
+  // Wire up connection highlighting checkbox
+  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  // Load from localStorage, or use checkbox default
+  const savedHighlightConnections = localStorage.getItem('highlightConnections');
+  if (savedHighlightConnections !== null) {
+    highlightCheckbox.checked = savedHighlightConnections === 'true';
+  }
+  if (highlightCheckbox) {
+    keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
+  }
+  highlightCheckbox?.addEventListener('change', () => {
+    const enabled = highlightCheckbox.checked;
+    keyboardNavigation?.setHighlightConnections(enabled);
+    localStorage.setItem('highlightConnections', String(enabled));
+  });
+
+  // Wire up fatter connections checkbox
+  const fatterConnectionsCheckbox = document.getElementById('fatterConnections') as HTMLInputElement;
+  // Load from localStorage, or use checkbox default
+  const savedFatterConnections = localStorage.getItem('fatterConnections');
+  if (savedFatterConnections !== null) {
+    fatterConnectionsCheckbox.checked = savedFatterConnections === 'true';
+  }
+  if (fatterConnectionsCheckbox) {
+    keyboardNavigation?.setFatterConnections(fatterConnectionsCheckbox.checked);
+  }
+  fatterConnectionsCheckbox?.addEventListener('change', () => {
+    const enabled = fatterConnectionsCheckbox.checked;
+    keyboardNavigation?.setFatterConnections(enabled);
+    localStorage.setItem('fatterConnections', String(enabled));
+  });
+
+  // Wire up keep block on mouse checkbox
+  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+  // Load from localStorage, or use checkbox default
+  const savedKeepBlockOnMouse = localStorage.getItem('keepBlockOnMouse');
+  if (savedKeepBlockOnMouse !== null) {
+    keepBlockOnMouseCheckbox.checked = savedKeepBlockOnMouse === 'true';
+  }
+  if (keepBlockOnMouseCheckbox) {
+    keyboardNavigation?.setKeepBlockOnMouse(keepBlockOnMouseCheckbox.checked);
+  }
+  keepBlockOnMouseCheckbox?.addEventListener('change', () => {
+    const enabled = keepBlockOnMouseCheckbox.checked;
+    keyboardNavigation?.setKeepBlockOnMouse(enabled);
+    localStorage.setItem('keepBlockOnMouse', String(enabled));
+  });
+
+  // Wire up trigger mode dropdown
+  const triggerModeSelect = document.getElementById('triggerMode') as HTMLSelectElement;
+  triggerModeSelect?.addEventListener('change', () => {
+    const mode = triggerModeSelect.value as TriggerMode;
+    keyboardNavigation?.setTriggerMode(mode);
+  });
 
   // Add build info component to the page
   const buildInfoElement = createBuildInfoComponent();
@@ -146,4 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   window.Blockly = Blockly;
+
+  // Global error handler for media (audio/video) elements
+  document.addEventListener('error', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'AUDIO' || target.tagName === 'VIDEO') {
+      console.error('Media error detected:');
+      console.error('  Element:', target.tagName);
+      console.error('  Source:', (target as HTMLMediaElement).src || (target as HTMLMediaElement).currentSrc);
+      console.error('  Error:', e);
+      console.trace('Stack trace:');
+    }
+  }, true); // Use capture phase to catch errors before they bubble
 });
