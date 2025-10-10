@@ -54,6 +54,15 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Get the block currently in sticky mode, if any.
+   *
+   * @returns The block in sticky mode, or null if not in sticky mode.
+   */
+  get stickyBlock(): Blockly.BlockSvg | null {
+    return this.stickyModeController.getActiveBlock();
+  }
+
+  /**
    * Constructs the keyboard navigation.
    *
    * @param workspace The workspace that the plugin will be added to.
