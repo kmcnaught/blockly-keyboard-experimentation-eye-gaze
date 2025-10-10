@@ -9,4 +9,13 @@
 module.exports = {
   ui: 'tdd',
   require: __dirname + '/test/dist/hooks.js',
+  reporter: 'mochawesome',
+  reporterOptions: {
+    reportDir: 'test-results',
+    reportFilename: 'test-report',
+    html: true,
+    json: false,
+    quiet: false,
+    consoleReporter: 'spec',
+  },
 };

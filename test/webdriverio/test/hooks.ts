@@ -11,6 +11,10 @@
  */
 import {RootHookObject} from 'mocha';
 import {driverSetup, driverTeardown} from './test_setup.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import {fileURLToPath} from 'url';
+import {execSync} from 'child_process';
 
 export const mochaHooks: RootHookObject = {
   async beforeAll(this: Mocha.Context) {
@@ -19,6 +23,32 @@ export const mochaHooks: RootHookObject = {
     return await driverSetup(this.timeout());
   },
   async afterAll() {
-    return await driverTeardown();
+    await driverTeardown();
+
+    // Copy the mochawesome report to include the git commit SHA and timestamp
+    try {
+      const commitSha = execSync('git rev-parse --short HEAD', {
+        encoding: 'utf8',
+      }).trim();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+      // Navigate from dist directory up to test directory where report is saved
+      const dirname = path.dirname(fileURLToPath(import.meta.url));
+      const reportDir = path.join(dirname, '..', 'mochawesome-report');
+      const oldPath = path.join(reportDir, 'mochawesome.html');
+      const newPath = path.join(
+        reportDir,
+        `mochawesome-${commitSha}-${timestamp}.html`,
+      );
+
+      if (fs.existsSync(oldPath)) {
+        fs.copyFileSync(oldPath, newPath);
+        console.log(`\nReport copied to: ${newPath}`);
+      } else {
+        console.warn(`\nReport file not found at: ${oldPath}`);
+      }
+    } catch (err) {
+      console.warn('Failed to copy report with commit SHA:', err);
+    }
   },
 };
