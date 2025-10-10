@@ -1,4 +1,13 @@
-# @blockly/keyboard-navigation
+# Blockly keyboard navigation - eye gaze edition!
+
+This is a testing ground for UX which will help improve usability for
+anyone using eye gaze as their primary modality. 
+
+This may include changes to cursor-based workflows and/or helper functions
+for people using grid-based access with keyboard controls, via eye gaze or 
+switch access. 
+
+## Original plugin repo
 
 This plugin for Blockly enables keyboard navigation. It includes
 different actions that might help visually impaired and motor
