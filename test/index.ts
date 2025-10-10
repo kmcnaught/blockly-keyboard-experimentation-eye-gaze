@@ -33,6 +33,24 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 let autoRunTimer: number | null = null;
 let keyboardNavigation: KeyboardNavigation | null = null;
 
+// Define which scenarios are valid for each toolbox type
+const TOOLBOX_SCENARIOS: Record<string, string[]> = {
+  'toolbox': ['blank', 'sun'], // Default toolbox - general programming blocks
+  'custom': ['blank', 'face', 'landscape', 'effects'], // Custom toolbox - creative p5.js blocks
+  'flyout': ['blank'], // Flyout toolbox - minimal
+};
+
+/**
+ * Check if a scenario is valid for the given toolbox.
+ * @param scenario The scenario to check.
+ * @param toolbox The toolbox type.
+ * @returns True if the scenario is valid for the toolbox.
+ */
+function isScenarioValidForToolbox(scenario: string, toolbox: string): boolean {
+  const validScenarios = TOOLBOX_SCENARIOS[toolbox] || ['blank'];
+  return validScenarios.includes(scenario);
+}
+
 /**
  * Parse query params for inject and navigation options and update
  * the fields on the options form to match.
@@ -41,9 +59,6 @@ let keyboardNavigation: KeyboardNavigation | null = null;
  */
 function getOptions() {
   const params = new URLSearchParams(window.location.search);
-
-  const scenarioParam = params.get('scenario');
-  const scenario = scenarioParam ?? 'blank';
 
   const rendererParam = params.get('renderer');
   let renderer = 'zelos';
@@ -64,8 +79,18 @@ function getOptions() {
     toolboxObject = toolboxFlyout;
   } else if (toolbox === 'custom') {
     toolboxObject = toolboxCustom;
+    // Apply custom toolbox styling
+    document.body.classList.add('custom-toolbox');
   } else {
     toolboxObject = toolboxCategories;
+  }
+
+  // Validate scenario for the selected toolbox
+  const scenarioParam = params.get('scenario');
+  let scenario = scenarioParam ?? 'blank';
+  if (!isScenarioValidForToolbox(scenario, toolbox)) {
+    console.warn(`Scenario "${scenario}" is not valid for toolbox "${toolbox}". Defaulting to "blank".`);
+    scenario = 'blank';
   }
 
   // Update form inputs to match params, but only after the page is
@@ -75,6 +100,8 @@ function getOptions() {
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
+    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
+    // Use the validated scenario (may differ from URL param if invalid)
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
     // Reset trigger mode to default to prevent browser auto-fill mismatch
     (document.getElementById('triggerMode') as HTMLSelectElement).value = 'double_click';
