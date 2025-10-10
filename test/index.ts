@@ -33,6 +33,42 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 let autoRunTimer: number | null = null;
 let keyboardNavigation: KeyboardNavigation | null = null;
 
+// Define which scenarios are valid for each toolbox type
+const TOOLBOX_SCENARIOS: Record<string, string[]> = {
+  'toolbox': [
+    'blank', 'sun', 'nestedConnections', 'comments', 'simpleCircle',
+    'moreBlocks', 'navigationTestBlocks', 'moveStartTestBlocks',
+    'moveStatementTestBlocks', 'moveValueTestBlocks', 'emptyWorkspace'
+  ], // Default toolbox - general programming blocks (original scenarios)
+  'custom': ['blank', 'face', 'landscape', 'effects'], // Custom toolbox - creative p5.js blocks
+  'flyout': ['blank'], // Flyout toolbox - minimal
+};
+
+/**
+ * Check if a scenario is valid for the given toolbox.
+ * @param scenario The scenario to check.
+ * @param toolbox The toolbox type.
+ * @returns True if the scenario is valid for the toolbox.
+ */
+function isScenarioValidForToolbox(scenario: string, toolbox: string): boolean {
+  const validScenarios = TOOLBOX_SCENARIOS[toolbox] || ['blank'];
+  return validScenarios.includes(scenario);
+}
+
+/**
+ * Find which toolbox supports the given scenario.
+ * @param scenario The scenario to find a toolbox for.
+ * @returns The toolbox type, or 'toolbox' as default.
+ */
+function getToolboxForScenario(scenario: string): string {
+  for (const [toolbox, scenarios] of Object.entries(TOOLBOX_SCENARIOS)) {
+    if (scenarios.includes(scenario)) {
+      return toolbox;
+    }
+  }
+  return 'toolbox'; // Default fallback
+}
+
 /**
  * Parse query params for inject and navigation options and update
  * the fields on the options form to match.
@@ -41,9 +77,6 @@ let keyboardNavigation: KeyboardNavigation | null = null;
  */
 function getOptions() {
   const params = new URLSearchParams(window.location.search);
-
-  const scenarioParam = params.get('scenario');
-  const scenario = scenarioParam ?? 'blank';
 
   const rendererParam = params.get('renderer');
   let renderer = 'zelos';
@@ -57,13 +90,37 @@ function getOptions() {
     renderer = 'thrasos';
   }
 
+  // Get scenario param first
+  const scenarioParam = params.get('scenario');
+  let scenario = scenarioParam ?? 'blank';
+
+  // Get or auto-select toolbox
   const toolboxParam = params.get('toolbox');
-  const toolbox = toolboxParam ?? 'toolbox';
+  let toolbox: string;
+
+  if (toolboxParam) {
+    // Toolbox param provided - use it
+    toolbox = toolboxParam;
+  } else {
+    // No toolbox param - auto-select based on scenario
+    toolbox = getToolboxForScenario(scenario);
+    console.log(`Auto-selected toolbox "${toolbox}" for scenario "${scenario}"`);
+  }
+
+  // Validate scenario/toolbox combination and fix if needed
+  if (!isScenarioValidForToolbox(scenario, toolbox)) {
+    console.warn(`Scenario "${scenario}" is not valid for toolbox "${toolbox}". Auto-selecting correct toolbox.`);
+    toolbox = getToolboxForScenario(scenario);
+  }
+
+  // Select the appropriate toolbox object
   let toolboxObject;
   if (toolbox === 'flyout') {
     toolboxObject = toolboxFlyout;
   } else if (toolbox === 'custom') {
     toolboxObject = toolboxCustom;
+    // Apply custom toolbox styling
+    document.body.classList.add('custom-toolbox');
   } else {
     toolboxObject = toolboxCategories;
   }
@@ -75,6 +132,7 @@ function getOptions() {
   // options when doing browswer page navigation.
   window.addEventListener('load', () => {
     (document.getElementById('renderer') as HTMLSelectElement).value = renderer;
+    (document.getElementById('toolbox') as HTMLSelectElement).value = toolbox;
     (document.getElementById('scenario') as HTMLSelectElement).value = scenario;
     // Reset trigger mode to default to prevent browser auto-fill mismatch
     (document.getElementById('triggerMode') as HTMLSelectElement).value = 'double_click';
@@ -247,6 +305,24 @@ document.addEventListener('DOMContentLoaded', () => {
   triggerModeSelect?.addEventListener('change', () => {
     const mode = triggerModeSelect.value as TriggerMode;
     keyboardNavigation?.setTriggerMode(mode);
+  });
+
+  // Wire up scenario dropdown to automatically select correct toolbox
+  const scenarioSelect = document.getElementById('scenario') as HTMLSelectElement;
+  const toolboxSelect = document.getElementById('toolbox') as HTMLSelectElement;
+  const optionsForm = document.getElementById('options') as HTMLFormElement;
+  scenarioSelect?.addEventListener('change', () => {
+    const scenario = scenarioSelect.value;
+    const currentToolbox = toolboxSelect.value;
+
+    // If current toolbox doesn't support the scenario, switch to one that does
+    if (!isScenarioValidForToolbox(scenario, currentToolbox)) {
+      const correctToolbox = getToolboxForScenario(scenario);
+      toolboxSelect.value = correctToolbox;
+    }
+
+    // Submit the form to reload with new params (after toolbox is updated)
+    optionsForm?.submit();
   });
 
   // Add build info component to the page

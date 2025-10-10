@@ -22,8 +22,9 @@ forBlock['p5_setup'] = function (block, generator) {
   const code = `sketch.setup = function() {
   ${statements}
   // Call drawOnce after setup if it exists
+  // Use setTimeout to ensure canvas is fully initialized before drawing
   if (typeof sketch.drawOnce === 'function') {
-    sketch.drawOnce();
+    setTimeout(() => sketch.drawOnce(), 0);
   }
 };
 `;
