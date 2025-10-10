@@ -87,7 +87,12 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   const workspace = Blockly.inject(blocklyDiv, injectOptions);
 
   Blockly.ContextMenuItems.registerCommentOptions();
-  new KeyboardNavigation(workspace);
+  const keyboardNavigation = new KeyboardNavigation(workspace);
+
+  // Make keyboard navigation available globally for testing
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  window.keyboardNavigation = keyboardNavigation;
 
   // Disable blocks that aren't inside the setup or draw loops.
   workspace.addChangeListener(Blockly.Events.disableOrphans);

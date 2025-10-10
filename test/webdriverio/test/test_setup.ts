@@ -725,13 +725,11 @@ export async function clickBlock(
     blockId,
     findableId,
   );
-  await browser.pause(PAUSE_TIME);
 
   // In the test context, get the WebdriverIO Element that we've identified.
   const elem = await browser.$(`#${findableId}`);
 
   await elem.click(clickOptions);
-  await browser.pause(PAUSE_TIME);
 
   // In the browser context, remove the ID.
   await browser.execute((elemId) => {
@@ -752,4 +750,67 @@ export async function rightClickOnFlyoutBlockType(
   const elem = await browser.$(`.blocklyFlyout .${blockType}`);
   await elem.click({button: 'right'});
   await browser.pause(PAUSE_TIME);
+}
+
+/**
+ * Checks for JavaScript errors in the browser console and asserts none occurred.
+ * This helps catch runtime errors that don't cause test failures but break user experience.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param testDescription Optional description for better error messages.
+ * @throws AssertionError if JavaScript errors are detected.
+ */
+export async function assertNoJavaScriptErrors(
+  browser: WebdriverIO.Browser,
+  testDescription?: string,
+): Promise<void> {
+  const logs = await browser.getLogs('browser');
+  const jsErrors = logs.filter((log: any) =>
+    log.level === 'SEVERE' &&
+    log.message &&
+    (log.message.includes('ERROR') ||
+     log.message.includes('Error') ||
+     log.message.includes('Uncaught') ||
+     log.message.includes('TypeError') ||
+     log.message.includes('ReferenceError'))
+  );
+
+  if (jsErrors.length > 0) {
+    const errorMessages = jsErrors.map((e: any) => e.message || e).join('; ');
+    const context = testDescription ? ` during ${testDescription}` : '';
+    throw new Error(`JavaScript errors detected${context}: ${errorMessages}`);
+  }
+}
+
+/**
+ * Clears the browser console logs to start fresh for error checking.
+ * Useful when you want to check for errors from a specific point onwards.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ */
+export async function clearBrowserLogs(browser: WebdriverIO.Browser): Promise<void> {
+  // Clear logs by fetching and discarding them
+  await browser.getLogs('browser');
+}
+
+/**
+ * Feature flag to enable JavaScript error checking in tests.
+ * Set CHECK_JS_ERRORS=1 environment variable to enable.
+ */
+export const CHECK_JS_ERRORS = process.env.CHECK_JS_ERRORS === '1';
+
+/**
+ * Conditionally checks for JavaScript errors based on the CHECK_JS_ERRORS flag.
+ * Only performs the check if CHECK_JS_ERRORS environment variable is set to '1'.
+ *
+ * @param browser The active WebdriverIO Browser object.
+ * @param testDescription Optional description for better error messages.
+ */
+export async function maybeAssertNoJavaScriptErrors(
+  browser: WebdriverIO.Browser,
+  testDescription?: string,
+): Promise<void> {
+  if (CHECK_JS_ERRORS) {
+    await assertNoJavaScriptErrors(browser, testDescription);
+  }
 }
