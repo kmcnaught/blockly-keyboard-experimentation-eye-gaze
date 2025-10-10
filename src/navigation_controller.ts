@@ -44,7 +44,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
 export class NavigationController {
   private navigation: Navigation = new Navigation();
 
-  private mover = new Mover(this.navigation);
+  private mover: Mover;
 
   shortcutDialog: ShortcutDialog = new ShortcutDialog();
 
@@ -68,19 +68,31 @@ export class NavigationController {
 
   exitAction: ExitAction = new ExitAction(this.navigation);
 
-  enterAction: EnterAction = new EnterAction(this.mover, this.navigation);
+  enterAction: EnterAction;
 
   actionMenu: ActionMenu = new ActionMenu(this.navigation);
 
-  moveActions = new MoveActions(this.mover);
+  moveActions: MoveActions;
 
   stackNavigationAction: StackNavigationAction = new StackNavigationAction();
 
   constructor(
-    private options: {allowCrossWorkspacePaste: boolean} = {
+    private options: {
+      allowCrossWorkspacePaste: boolean;
+      highlightConnections?: boolean;
+      shouldDisableAutoScroll?: () => boolean;
+    } = {
       allowCrossWorkspacePaste: false,
+      highlightConnections: true,
     },
   ) {
+    this.mover = new Mover(
+      this.navigation,
+      options.highlightConnections ?? true,
+      options.shouldDisableAutoScroll
+    );
+    this.enterAction = new EnterAction(this.mover, this.navigation);
+    this.moveActions = new MoveActions(this.mover);
     this.clipboard = new Clipboard(this.navigation, options);
   }
 
@@ -265,6 +277,24 @@ export class NavigationController {
     // to be done separately rather at construction, as many shortcuts
     // are not registered at that point.
     this.shortcutDialog.createModalContent();
+  }
+
+  /**
+   * Enable or disable connection highlighting during move operations.
+   *
+   * @param enabled Whether to show connection highlights when moving blocks.
+   */
+  setHighlightConnections(enabled: boolean): void {
+    this.mover.setHighlightConnections(enabled);
+  }
+
+  /**
+   * Enable or disable fatter connection highlights.
+   *
+   * @param enabled Whether to use fatter connections with larger click targets.
+   */
+  setFatterConnections(enabled: boolean): void {
+    this.mover.setFatterConnections(enabled);
   }
 
   /**
