@@ -8,3 +8,4 @@ dist/
 # Auto-generated build info
 src/build_info.ts
 test/webdriverio/test/mochawesome-report
+test/webdriverio/mochawesome-report
