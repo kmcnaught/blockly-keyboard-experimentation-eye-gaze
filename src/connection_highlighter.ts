@@ -348,174 +348,6 @@ export class ConnectionHighlighter {
   }
 
   /**
-   * Mirrors an SVG path vertically and reverses direction for drawing backwards.
-   * Used to create the bottom notch edge from the top notch path.
-   *
-   * @param path The original SVG path string.
-   * @param verticalOffset The vertical distance to mirror across.
-   * @returns The mirrored and reversed path string.
-   */
-  private mirrorPathVertically(path: string, verticalOffset: number): string {
-    // Parse SVG path commands
-    const commands = path.match(/[a-zA-Z][^a-zA-Z]*/g) || [];
-    const mirrored: string[] = [];
-
-    // Process commands in reverse order and flip vertical movements
-    for (let i = commands.length - 1; i >= 0; i--) {
-      const cmd = commands[i].trim();
-      const type = cmd[0];
-      const coords = cmd.slice(1).trim();
-
-      switch (type.toLowerCase()) {
-        case 'v': // Vertical line
-          const vValue = parseFloat(coords);
-          mirrored.push(` v ${-vValue} `);
-          break;
-
-        case 'h': // Horizontal line (reverse direction)
-          const hValue = parseFloat(coords);
-          mirrored.push(` h ${-hValue} `);
-          break;
-
-        case 'l': // Line to (reverse and flip y)
-          const lCoords = coords.split(/[\s,]+/).map(parseFloat);
-          if (lCoords.length >= 2) {
-            mirrored.push(` l ${-lCoords[0]},${-lCoords[1]} `);
-          }
-          break;
-
-        case 'c': // Cubic bezier (reverse and flip y coordinates)
-          const cCoords = coords.split(/[\s,]+/).map(parseFloat);
-          if (cCoords.length >= 6) {
-            // For c x1,y1 x2,y2 x,y reversed: c -x2,-y2 -x1,-y1 -x,-y
-            mirrored.push(
-              ` c ${-cCoords[2]},${-cCoords[3]}  ${-cCoords[0]},${-cCoords[1]}  ${-cCoords[4]},${-cCoords[5]} `
-            );
-          }
-          break;
-
-        case 'a': // Arc (complex - reverse and flip)
-          const aCoords = coords.split(/[\s,]+/);
-          if (aCoords.length >= 7) {
-            const rx = aCoords[0];
-            const ry = aCoords[1];
-            const rotation = aCoords[2];
-            const largeArc = aCoords[3];
-            const sweep = aCoords[4] === '1' ? '0' : '1'; // Flip sweep direction
-            const x = parseFloat(aCoords[5]);
-            const y = parseFloat(aCoords[6]);
-            mirrored.push(`a ${rx} ${ry} ${rotation} ${largeArc} ${sweep} ${-x} ${-y}`);
-          }
-          break;
-
-        default:
-          // Pass through other commands unchanged
-          mirrored.push(cmd);
-      }
-    }
-
-    return mirrored.join('');
-  }
-
-  /**
-   * Creates a notch highlight using Blockly's core highlighting (unused in current implementation).
-   * Kept for reference - falls back to createStatementNotch for reliability.
-   *
-   * @param connection The statement connection to highlight.
-   * @param sourceBlock The block containing the connection.
-   * @returns The SVG element created by core Blockly, or null if unsuccessful.
-   */
-  private createCoreBasedNotchHighlight(
-    connection: RenderedConnection,
-    sourceBlock: BlockSvg,
-  ): SVGElement | null {
-    try {
-      const renderer = sourceBlock.workspace.getRenderer();
-      const renderInfo = (sourceBlock as any).renderInfo_;
-
-      if (renderInfo) {
-        const DrawerClass = (renderer as any).constructor.Drawer ||
-                           (renderer as any).drawer?.constructor;
-
-        if (DrawerClass) {
-          const drawer = new DrawerClass(sourceBlock, renderInfo);
-          const connectionMeasurable = this.findConnectionMeasurable(connection, renderInfo);
-
-          if (connectionMeasurable && drawer.getStatementConnectionHighlightPath) {
-            const highlightPath = drawer.getStatementConnectionHighlightPath(connectionMeasurable);
-
-            if (highlightPath) {
-              const highlightSvg = sourceBlock.pathObject.addConnectionHighlight?.(
-                connection,
-                highlightPath,
-                connection.getOffsetInBlock(),
-                sourceBlock.RTL
-              );
-
-              if (highlightSvg) {
-                highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
-                highlightSvg.setAttribute('stroke', '#fff200');
-                highlightSvg.setAttribute('stroke-width', '3');
-                highlightSvg.setAttribute('style', 'pointer-events: auto; cursor: pointer;');
-
-                return highlightSvg;
-              }
-            }
-          }
-        }
-      }
-
-      const constants = renderer.getConstants();
-      const connectionShape = constants.shapeFor(connection);
-
-      if (connectionShape && (connectionShape as any).pathLeft) {
-        const xLen = constants.NOTCH_OFFSET_LEFT - constants.CORNER_RADIUS;
-        const highlightPath = (
-          `M ${-xLen} 0 ` +
-          `h ${xLen} ` +
-          (connectionShape as any).pathLeft +
-          `h ${xLen}`
-        );
-
-        const highlightSvg = sourceBlock.pathObject.addConnectionHighlight?.(
-          connection,
-          highlightPath,
-          connection.getOffsetInBlock(),
-          sourceBlock.RTL
-        );
-
-        if (highlightSvg) {
-          // Use !important to prevent core from hiding highlights
-          highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
-          highlightSvg.setAttribute('stroke', '#fff200');
-          highlightSvg.setAttribute('stroke-width', '3');
-          highlightSvg.setAttribute('style', 'display: block !important; pointer-events: auto !important; cursor: pointer !important;');
-
-          if (this.onConnectionClick) {
-            const clickHandler = (event: Event) => {
-              event.stopPropagation();
-              this.onConnectionClick!(connection);
-            };
-            highlightSvg.addEventListener('click', clickHandler);
-            highlightSvg.addEventListener('pointerdown', clickHandler);
-          }
-
-          highlightSvg.setAttribute('data-core-managed', 'true');
-          this.highlightedElements.add(highlightSvg);
-          this.elementToConnection.set(highlightSvg, connection);
-
-          return highlightSvg;
-        }
-      }
-
-    } catch (error) {
-      console.debug('Failed to create core-based notch highlight, using fallback:', error);
-    }
-
-    return null;
-  }
-
-  /**
    * Creates a value connection highlight using the renderer's puzzle tab shape.
    * Manages SVG independently to avoid core rendering lifecycle interference.
    *
@@ -537,9 +369,9 @@ export class ConnectionHighlighter {
       }
 
       let connPath = '';
-      if ((connectionShape as any).isDynamic) {
-        let measurableHeight = constants.TAB_HEIGHT;
+      let measurableHeight = constants.TAB_HEIGHT;
 
+      if ((connectionShape as any).isDynamic) {
         const renderInfo = (sourceBlock as any).renderInfo_;
         if (renderInfo) {
           const connectionMeasurable = this.findConnectionMeasurable(connection, renderInfo);
@@ -556,12 +388,34 @@ export class ConnectionHighlighter {
       }
 
       const yLen = constants.TAB_OFFSET_FROM_TOP;
-      const highlightPath = (
-        `M 0 ${-yLen} ` +
-        `v ${yLen} ` +
-        connPath +
-        `v ${yLen}`
-      );
+
+      let highlightPath: string;
+      if (this.useFatterConnections) {
+        // Fatter connection: puzzle tab on left, rectangular extension to right
+        // Size to fit within an empty connection socket (similar to puzzle tab width)
+        const tabWidth = (connectionShape as any).width || constants.TAB_WIDTH || 8;
+        const rightPadding = tabWidth;
+        const totalHeight = yLen * 2 + measurableHeight;
+
+        highlightPath = (
+          `M 0 ${-yLen} ` +              // Start above connection
+          `v ${yLen} ` +                  // Down to connection point
+          connPath +                      // Draw the puzzle tab (left side)
+          `v ${yLen} ` +                  // Down to bottom-left
+          `h ${rightPadding} ` +          // Right to bottom-right (fits empty socket)
+          `v ${-totalHeight} ` +          // Up to top-right
+          `h ${-rightPadding} ` +         // Left back to top-left
+          `Z`                             // Close the shape
+        );
+      } else {
+        // Standard thin outline
+        highlightPath = (
+          `M 0 ${-yLen} ` +
+          `v ${yLen} ` +
+          connPath +
+          `v ${yLen}`
+        );
+      }
 
       const highlightSvg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       const offset = connection.getOffsetInBlock();
@@ -569,8 +423,16 @@ export class ConnectionHighlighter {
 
       highlightSvg.setAttribute('d', highlightPath);
       highlightSvg.setAttribute('transform', transformation);
-      highlightSvg.setAttribute('fill', 'rgba(53, 168, 255, 0.4)');
-      highlightSvg.setAttribute('stroke', '#35a8ff');
+
+      // Use yellow fill (matching statement connections) when in fatter mode
+      if (this.useFatterConnections) {
+        highlightSvg.setAttribute('fill', 'rgba(255, 242, 0, 0.3)');
+        highlightSvg.setAttribute('stroke', '#fff200');
+      } else {
+        highlightSvg.setAttribute('fill', 'rgba(53, 168, 255, 0.4)');
+        highlightSvg.setAttribute('stroke', '#35a8ff');
+      }
+
       highlightSvg.setAttribute('stroke-width', '8');
       highlightSvg.setAttribute('class', 'blocklyPotentialConnection');
       highlightSvg.style.pointerEvents = 'auto';
