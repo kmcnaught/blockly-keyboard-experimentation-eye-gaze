@@ -136,28 +136,39 @@ export class ConnectionHighlighter {
 
     for (const localConn of localConnections) {
       for (const potentialNeighbour of allConnections) {
-        const filterReason = this.getFilterReason(potentialNeighbour, movingBlock);
-        if (filterReason) {
+        // Skip connections on the moving block itself or its descendants
+        if (this.getFilterReason(potentialNeighbour, movingBlock)) {
           continue;
         }
 
-        // Check compatibility without requiring disconnect (show all potential targets)
-        if (
-          connectionChecker.canConnect(
-            localConn,
-            potentialNeighbour,
-            false,
-            Infinity,
-          )
-        ) {
-          const distance = this.calculateDistance(
-            localConn,
-            potentialNeighbour,
-          );
+        // Skip connections already occupied by the moving block
+        // (e.g., a color value block already in the moving block's color input)
+        if (potentialNeighbour.targetConnection &&
+            localConnections.includes(potentialNeighbour.targetConnection as RenderedConnection)) {
+          continue;
+        }
+
+        // Only highlight where the moving block can attach TO other blocks,
+        // not where other blocks would insert INTO the moving block's inputs.
+        // Valid: OUTPUT→INPUT, PREVIOUS→NEXT, NEXT→PREVIOUS
+        const isValidDirection =
+          (localConn.type === ConnectionType.OUTPUT_VALUE &&
+           potentialNeighbour.type === ConnectionType.INPUT_VALUE) ||
+          (localConn.type === ConnectionType.PREVIOUS_STATEMENT &&
+           potentialNeighbour.type === ConnectionType.NEXT_STATEMENT) ||
+          (localConn.type === ConnectionType.NEXT_STATEMENT &&
+           potentialNeighbour.type === ConnectionType.PREVIOUS_STATEMENT);
+
+        if (!isValidDirection) {
+          continue;
+        }
+
+        // Check type compatibility and add to results
+        if (connectionChecker.canConnect(localConn, potentialNeighbour, false, Infinity)) {
           validConnections.push({
             local: localConn,
             neighbour: potentialNeighbour,
-            distance: distance,
+            distance: this.calculateDistance(localConn, potentialNeighbour),
           });
         }
       }
@@ -747,7 +758,9 @@ export class ConnectionHighlighter {
 
     if (sourceBlock === movingBlock) return 'moving-block';
 
-    const movingDescendants = movingBlock.getDescendants(false);
+    // Include all descendants including input value blocks (true parameter)
+    // This prevents highlighting connections on blocks inside the moving block's inputs
+    const movingDescendants = movingBlock.getDescendants(true);
     if (movingDescendants.includes(sourceBlock as BlockSvg)) {
       return 'moving-block-descendant';
     }
