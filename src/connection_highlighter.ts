@@ -60,6 +60,12 @@ export class ConnectionHighlighter {
   /** Whether to use fatter connection highlights for larger click targets. */
   private useFatterConnections: boolean = true;
 
+  /**
+   * Whether ancestor connections visually overlap descendant connections in this renderer.
+   * True for Zelos (connections overlap), false for Geras/Thrasos (connections don't overlap).
+   */
+  private ancestorConnectionsOverlap: boolean;
+
   /** Separate SVG group layer for all highlights, rendered on top of blocks. */
   private highlightLayer: SVGGElement | null = null;
 
@@ -72,6 +78,11 @@ export class ConnectionHighlighter {
   ) {
     this.workspace = workspace;
     this.onConnectionClick = onConnectionClick;
+
+    // Zelos: ancestor connections visually overlap descendants
+    // Geras/Thrasos: connections render side-by-side without overlapping
+    const rendererName = workspace.getRenderer().constructor.name.toLowerCase();
+    this.ancestorConnectionsOverlap = rendererName.includes('zelos');
 
     this.scrollListener = () => {
       this.updateHighlights();
@@ -369,11 +380,10 @@ export class ConnectionHighlighter {
     highlightSvg.setAttribute('d', highlightPath);
     highlightSvg.setAttribute('transform', transformation);
 
-    // Fully transparent when nested (to see inner connections), 0.85 transparency otherwise
-    if (isOverlapping) {
-      highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0)');  // Fully transparent when nested
+    if (isOverlapping && this.ancestorConnectionsOverlap) {
+      highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0)');
     } else {
-      highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0.15)');  // Green with 0.85 transparency (0.15 opacity)
+      highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0.7)');
     }
 
     highlightSvg.setAttribute('stroke-width', '2.5');
@@ -475,13 +485,10 @@ export class ConnectionHighlighter {
       highlightSvg.setAttribute('d', highlightPath);
       highlightSvg.setAttribute('transform', transformation);
 
-      // Fully transparent when nested (to see inner connections), 0.85 transparency otherwise
-      if (isOverlapping) {
-        highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0)');  // Fully transparent when nested
-      } else if (this.useFatterConnections) {
-        highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0.15)');  // Green with 0.85 transparency (0.15 opacity)
+      if (isOverlapping && this.ancestorConnectionsOverlap) {
+        highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0)');
       } else {
-        highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0.15)');  // Green with 0.85 transparency for thin connections
+        highlightSvg.setAttribute('fill', 'rgba(0, 255, 0, 0.7)');
       }
 
       highlightSvg.setAttribute('stroke-width', '8');
@@ -593,11 +600,10 @@ export class ConnectionHighlighter {
       rect.setAttribute('rx', cornerRadius.toString());
       rect.setAttribute('ry', cornerRadius.toString());
 
-      // Fully transparent when nested (to see inner connections), 0.85 transparency otherwise
-      if (isOverlapping) {
-        rect.setAttribute('fill', 'rgba(0, 255, 0, 0)');  // Fully transparent when nested
+      if (isOverlapping && this.ancestorConnectionsOverlap) {
+        rect.setAttribute('fill', 'rgba(0, 255, 0, 0)');
       } else {
-        rect.setAttribute('fill', 'rgba(0, 255, 0, 0.15)');  // Green with 0.85 transparency (0.15 opacity)
+        rect.setAttribute('fill', 'rgba(0, 255, 0, 0.7)');
       }
 
       rect.setAttribute('stroke-width', '6');
@@ -891,19 +897,39 @@ export class ConnectionHighlighter {
 
   /**
    * Checks if any ancestor block has a highlight.
+   * Only follows OUTPUT→INPUT value connection chains, not statement chains.
    * Used to make descendant highlights transparent to avoid visual clutter.
    *
    * @param block The block to check.
-   * @returns True if any ancestor has a highlight.
+   * @returns True if any value parent has a highlight.
    */
   private hasAncestorWithHighlight(block: BlockSvg): boolean {
-    let current = block.getParent();
+    let current = block;
+
+    // Only follow value parent chain (blocks connected via OUTPUT/INPUT)
     while (current) {
-      if (this.highlightedBlocks.has(current as BlockSvg)) {
+      const outputConnection = current.outputConnection;
+      if (!outputConnection || !outputConnection.isConnected()) {
+        // No output connection or not connected, stop searching
+        break;
+      }
+
+      // Get the parent block this output is connected to
+      const targetConnection = outputConnection.targetConnection;
+      if (!targetConnection) break;
+
+      const parent = targetConnection.getSourceBlock();
+      if (!parent || !(parent instanceof BlockSvg)) break;
+
+      // Check if this parent has a highlight
+      if (this.highlightedBlocks.has(parent)) {
         return true;
       }
-      current = current.getParent();
+
+      // Continue up the value parent chain
+      current = parent;
     }
+
     return false;
   }
 
