@@ -99,18 +99,18 @@ function getOptions() {
   let toolbox: string;
 
   if (toolboxParam) {
-    // Toolbox param provided - use it
+    // Toolbox param provided - use it and adjust scenario if needed
     toolbox = toolboxParam;
+
+    // If scenario doesn't fit the selected toolbox, default to 'blank'
+    if (!isScenarioValidForToolbox(scenario, toolbox)) {
+      console.log(`Scenario "${scenario}" is not valid for toolbox "${toolbox}". Defaulting to blank scenario.`);
+      scenario = 'blank';
+    }
   } else {
     // No toolbox param - auto-select based on scenario
     toolbox = getToolboxForScenario(scenario);
     console.log(`Auto-selected toolbox "${toolbox}" for scenario "${scenario}"`);
-  }
-
-  // Validate scenario/toolbox combination and fix if needed
-  if (!isScenarioValidForToolbox(scenario, toolbox)) {
-    console.warn(`Scenario "${scenario}" is not valid for toolbox "${toolbox}". Auto-selecting correct toolbox.`);
-    toolbox = getToolboxForScenario(scenario);
   }
 
   // Select the appropriate toolbox object
@@ -311,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const scenarioSelect = document.getElementById('scenario') as HTMLSelectElement;
   const toolboxSelect = document.getElementById('toolbox') as HTMLSelectElement;
   const optionsForm = document.getElementById('options') as HTMLFormElement;
+
   scenarioSelect?.addEventListener('change', () => {
     const scenario = scenarioSelect.value;
     const currentToolbox = toolboxSelect.value;
@@ -322,6 +323,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Submit the form to reload with new params (after toolbox is updated)
+    optionsForm?.submit();
+  });
+
+  // Wire up toolbox dropdown to adjust scenario if needed
+  toolboxSelect?.addEventListener('change', () => {
+    const selectedToolbox = toolboxSelect.value;
+    const currentScenario = scenarioSelect.value;
+
+    // If current scenario doesn't fit the selected toolbox, default to 'blank'
+    if (!isScenarioValidForToolbox(currentScenario, selectedToolbox)) {
+      scenarioSelect.value = 'blank';
+    }
+
+    // Submit the form to reload with new params (after scenario is updated)
     optionsForm?.submit();
   });
 
