@@ -225,6 +225,10 @@ function createWorkspace(): Blockly.WorkspaceSvg {
   });
 
   load(workspace, scenario);
+
+  // Add padding by scrolling the workspace view slightly to the right
+  workspace.scroll(30, 0);
+
   runCode();
 
   return workspace;
