@@ -196,11 +196,24 @@ export class Mover {
       const isClickAndStick = dragStrategy?.isClickAndStickMode?.();
 
       if (!isClickAndStick) {
-        this.finishMove(workspace);
+        // In normal move mode: check if we're clicking on a connection highlight
+        const newFocusTarget = event.relatedTarget as any;
+        const activeElement = document.activeElement;
+
+        // Check if the click target is a connection highlight or its descendant
+        const isConnectionHighlight =
+          (newFocusTarget && this.isConnectionHighlightElement(newFocusTarget)) ||
+          (activeElement && this.isConnectionHighlightElement(activeElement));
+
+        // Don't auto-finish if clicking on a connection highlight
+        // The connection click handler will finish the move
+        if (!isConnectionHighlight) {
+          this.finishMove(workspace);
+        }
         return;
       }
 
-      // In click-and-stick mode: only auto-finish if focus moved to meaningful UI    
+      // In click-and-stick mode: only auto-finish if focus moved to meaningful UI
       const newFocusTarget = event.relatedTarget as any;
       const activeElement = document.activeElement;
 
@@ -540,6 +553,29 @@ export class Mover {
       bounds.right += padding;
       workspace.scrollBoundsIntoView(bounds);
     }
+  }
+
+  /**
+   * Checks if an element is a connection highlight or is contained within one.
+   *
+   * @param element The element to check.
+   * @returns True if the element is or is inside a connection highlight.
+   */
+  private isConnectionHighlightElement(element: any): boolean {
+    if (!element || !element.classList) return false;
+
+    // Check if this element or any ancestor has the connection highlight class
+    let current = element;
+    while (current) {
+      if (
+        current.classList?.contains('blocklyPotentialConnection') ||
+        current.classList?.contains('blocklyConnectionHighlightLayer')
+      ) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
   }
 
   /**

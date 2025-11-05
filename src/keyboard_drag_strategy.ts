@@ -551,11 +551,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
    * @param targetConnection
    */
   private handleConnectionClick(targetConnection: RenderedConnection) {
-    // Prevent double-handling if sticky mode is already exiting
-    if (!this.isClickAndStick) {
-      return;
-    }
-
     // @ts-expect-error getLocalConnections is private.
     const localConnections = this.getLocalConnections(this.block);
     const connectionChecker = this.block.workspace.connectionChecker;
@@ -581,8 +576,10 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       // @ts-expect-error connectionCandidate is private
       this.connectionCandidate = candidate;
 
-      // Exit sticky mode first (before finishing the move)
-      this.setClickAndStickMode(false);
+      // Exit sticky mode first (before finishing the move) if we're in sticky mode
+      if (this.isClickAndStick) {
+        this.setClickAndStickMode(false);
+      }
 
       // Finish the move, which will finalize the connection
       if (this.onMoveComplete) {
@@ -594,9 +591,11 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       }
     } else {
       // No compatible connection found. This shouldn't happen since we use consistent
-      // validation when creating highlights, but if it does we must exit sticky mode
-      // gracefully to avoid leaving the UI in a broken state.
-      this.setClickAndStickMode(false);
+      // validation when creating highlights, but if it does we must exit gracefully
+      // to avoid leaving the UI in a broken state.
+      if (this.isClickAndStick) {
+        this.setClickAndStickMode(false);
+      }
 
       if (this.onMoveComplete) {
         this.onMoveComplete();
