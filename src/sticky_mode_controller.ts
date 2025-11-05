@@ -637,7 +637,8 @@ export class StickyModeController {
       }
     }
 
-    this.exitStickyModeAndDrop(clientX, clientY);
+    // Exit sticky mode without moving the block - just drop it where it is
+    this.exitStickyModeAndDrop();
   }
 
   /**
