@@ -11,8 +11,9 @@ import * as Blockly from 'blockly/core';
 
 const p5SetupJson = {
   'type': 'p5_setup',
-  'message0': 'setup %1',
-  'args0': [
+  'message0': 'setup',
+  'message1': '%1',
+  'args1': [
     {
       'type': 'input_statement',
       'name': 'STATEMENTS',
@@ -33,8 +34,9 @@ const p5Setup = {
 
 const p5DrawOnceJson = {
   'type': 'p5_draw_once',
-  'message0': 'draw once %1',
-  'args0': [
+  'message0': 'draw once',
+  'message1': '%1',
+  'args1': [
     {
       'type': 'input_statement',
       'name': 'STATEMENTS',
@@ -56,8 +58,9 @@ const p5DrawOnce = {
 
 const p5AnimateJson = {
   'type': 'p5_animate',
-  'message0': 'animate %1',
-  'args0': [
+  'message0': 'animate',
+  'message1': '%1',
+  'args1': [
     {
       'type': 'input_statement',
       'name': 'STATEMENTS',
@@ -80,8 +83,9 @@ const p5Animate = {
 // Legacy p5_draw block for backwards compatibility
 const p5DrawJson = {
   'type': 'p5_draw',
-  'message0': 'draw %1',
-  'args0': [
+  'message0': 'draw',
+  'message1': '%1',
+  'args1': [
     {
       'type': 'input_statement',
       'name': 'STATEMENTS',
