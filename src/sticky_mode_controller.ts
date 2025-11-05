@@ -625,19 +625,14 @@ export class StickyModeController {
       return;
     }
 
-    // Accept preview if it has changed from original (allows immediate drops)
+    // Accept any valid connection preview (whether original location or new)
     const dragStrategy = this.getDragStrategy(info.block);
     if (dragStrategy && dragStrategy.connectionCandidate) {
-      const initialNeighbour = dragStrategy.getInitialConnectionNeighbour();
-      const currentNeighbour = dragStrategy.connectionCandidate.neighbour;
-
-      if (currentNeighbour !== initialNeighbour) {
-        this.acceptConnectionCandidate();
-        return;
-      }
+      this.acceptConnectionCandidate();
+      return;
     }
 
-    // Exit sticky mode without moving the block - just drop it where it is
+    // No connection preview - exit sticky mode and drop the block where it is
     this.exitStickyModeAndDrop();
   }
 
