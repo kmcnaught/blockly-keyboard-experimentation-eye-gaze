@@ -420,6 +420,13 @@ export class StickyModeController {
       return;
     }
 
+    // Don't trigger sticky mode if clicking on a field
+    const target = event.target as Element;
+    if (target && this.isClickOnField(target)) {
+      this.focusedBlockBeforePointerdown = null;
+      return;
+    }
+
     // Capture the currently focused block before the pointerdown changes focus
     const cursor = this.workspace.getCursor();
     if (!cursor) {
@@ -544,6 +551,7 @@ export class StickyModeController {
       case TriggerMode.FOCUSED_CLICK:
         // Check if the clicked block was the one that was focused BEFORE the pointerdown
         // (clicking a block makes it focused, so we need to check the pre-click state)
+        // Note: Field detection happens earlier in handlePointerDown to set focusedBlockBeforePointerdown
         return this.focusedBlockBeforePointerdown === clickedBlock;
 
       case TriggerMode.MODE_TOGGLE:
@@ -673,6 +681,51 @@ export class StickyModeController {
   }
 
   /**
+   * Checks if a click is on a field element by inspecting the DOM tree.
+   * More reliable than gesture-based detection for events that fire after gesture disposal.
+   * Only detects truly interactive/editable fields, not static text labels.
+   *
+   * @param target The event target element.
+   */
+  private isClickOnField(target: Element): boolean {
+    // Walk up the DOM tree looking for interactive field elements
+    let currentElement: Element | null = target;
+
+    while (currentElement) {
+      const classList = currentElement.classList;
+
+      if (classList) {
+        // Only check for EDITABLE/INTERACTIVE field CSS classes
+        // Do NOT include blocklyText or blocklyNonEditableText - those are static labels
+        if (classList.contains('blocklyEditableText') ||
+            classList.contains('blocklyDropdownText') ||
+            classList.contains('blocklyDropDownDiv')) {
+          return true;
+        }
+
+        // Check for specific interactive field types
+        if (classList.contains('blocklyFieldTextInput') ||
+            classList.contains('blocklyFieldNumber') ||
+            classList.contains('blocklyFieldColour') ||
+            classList.contains('blocklyFieldDropdown') ||
+            classList.contains('blocklyFieldCheckbox') ||
+            classList.contains('blocklyFieldAngle')) {
+          return true;
+        }
+      }
+
+      // Stop at block boundary - don't search beyond the block
+      if (classList && classList.contains('blocklyBlock')) {
+        break;
+      }
+
+      currentElement = currentElement.parentElement;
+    }
+
+    return false;
+  }
+
+  /**
    * Checks if a double-click event is on a field element.
    * Uses Blockly's gesture system for reliable field detection.
    *
@@ -686,7 +739,8 @@ export class StickyModeController {
       return true;
     }
 
-    return false;
+    // Fall back to DOM-based detection
+    return this.isClickOnField(target);
   }
 
   /**
