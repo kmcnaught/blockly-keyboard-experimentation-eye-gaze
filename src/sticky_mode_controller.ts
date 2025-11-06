@@ -422,7 +422,15 @@ export class StickyModeController {
 
     // Don't trigger sticky mode if clicking on a field
     const target = event.target as Element;
-    if (target && this.isClickOnField(target)) {
+    const isField = this.isClickOnField(target);
+    console.log('[STICKY] handlePointerDown - field check:', {
+      isField,
+      target,
+      triggerMode: this.triggerMode
+    });
+
+    if (target && isField) {
+      console.log('[STICKY] Clicking on field - clearing focusedBlockBeforePointerdown');
       this.focusedBlockBeforePointerdown = null;
       return;
     }
@@ -495,8 +503,15 @@ export class StickyModeController {
    * @param event
    */
   private handleClick(event: MouseEvent) {
+    console.log('[STICKY] handleClick called', {
+      isActive: this.isActive(),
+      ignoreNextClick: this.ignoreNextClick,
+      target: event.target
+    });
+
     // If we just entered sticky mode via shift+click, ignore this click
     if (this.ignoreNextClick) {
+      console.log('[STICKY] Ignoring click due to ignoreNextClick flag');
       this.ignoreNextClick = false;
       event.preventDefault();
       event.stopPropagation();
@@ -505,6 +520,7 @@ export class StickyModeController {
 
     // If already in sticky mode, handle the drop/connect action
     if (this.isActive()) {
+      console.log('[STICKY] Sticky mode active - delegating to handleStickyModeClick');
       this.handleStickyModeClick(event);
       return;
     }
@@ -613,8 +629,17 @@ export class StickyModeController {
    * @param event
    */
   private handleStickyModeClick(event: MouseEvent | PointerEvent) {
+    console.log('[STICKY] handleStickyModeClick called', {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      target: event.target
+    });
+
     const info = this.stickyModes.get(this.workspace);
-    if (!info) return;
+    if (!info) {
+      console.log('[STICKY] No sticky mode info found');
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
@@ -623,25 +648,48 @@ export class StickyModeController {
     const clientY = event.clientY;
 
     if (this.isClickOnBin(clientX, clientY)) {
+      console.log('[STICKY] Click on bin detected - deleting block');
       this.deleteBlockOnBin();
       return;
     }
 
     const connectionInfo = this.findConnectionAtPoint(clientX, clientY);
     if (connectionInfo) {
+      console.log('[STICKY] Connection found at point - connecting', connectionInfo);
       this.connectToClickedConnection(connectionInfo, clientX, clientY);
       return;
     }
 
-    // Accept any valid connection preview (whether original location or new)
+    // Check if there's a connection preview
     const dragStrategy = this.getDragStrategy(info.block);
-    if (dragStrategy && dragStrategy.connectionCandidate) {
-      this.acceptConnectionCandidate();
-      return;
+    console.log('[STICKY] dragStrategy.connectionCandidate:', dragStrategy?.connectionCandidate);
+    console.log('[STICKY] keepBlockOnMouse:', this.keepBlockOnMouse);
+
+    if (this.keepBlockOnMouse) {
+      // Block is following mouse - preview changes as you move
+      // Accept any connection preview at current position
+      if (dragStrategy && dragStrategy.connectionCandidate) {
+        console.log('[STICKY] keepBlockOnMouse=true - accepting connection candidate at current location');
+        this.acceptConnectionCandidate();
+        return;
+      }
+    } else {
+      // Block is NOT following mouse - preview is static at original location
+      // Only accept preview if clicking on the source block itself
+      const clickedBlock = this.getBlockFromEvent(event);
+      const isClickOnSourceBlock = clickedBlock === info.block;
+      console.log('[STICKY] keepBlockOnMouse=false, isClickOnSourceBlock:', isClickOnSourceBlock);
+
+      if (isClickOnSourceBlock && dragStrategy && dragStrategy.connectionCandidate) {
+        console.log('[STICKY] Click on source block - accepting connection preview');
+        this.acceptConnectionCandidate();
+        return;
+      }
     }
 
-    // No connection preview - exit sticky mode and drop the block where it is
-    this.exitStickyModeAndDrop();
+    // No connection preview to accept - drop at click location
+    console.log('[STICKY] Dropping block at click location', clientX, clientY);
+    this.exitStickyModeAndDrop(clientX, clientY);
   }
 
   /**
@@ -688,13 +736,29 @@ export class StickyModeController {
    * @param target The event target element.
    */
   private isClickOnField(target: Element): boolean {
+    if (!target) return false;
+
     // Walk up the DOM tree looking for interactive field elements
     let currentElement: Element | null = target;
+    let depth = 0;
+    const maxDepth = 10; // Prevent infinite loops
 
-    while (currentElement) {
+    while (currentElement && depth < maxDepth) {
       const classList = currentElement.classList;
 
       if (classList) {
+        // Stop early if we hit the workspace - no fields beyond here
+        if (classList.contains('blocklyWorkspace') ||
+            classList.contains('blocklyMainBackground') ||
+            classList.contains('blocklySvg')) {
+          return false;
+        }
+
+        // Stop at block boundary - don't search beyond the block
+        if (classList.contains('blocklyBlock')) {
+          return false;
+        }
+
         // Only check for EDITABLE/INTERACTIVE field CSS classes
         // Do NOT include blocklyText or blocklyNonEditableText - those are static labels
         if (classList.contains('blocklyEditableText') ||
@@ -714,12 +778,8 @@ export class StickyModeController {
         }
       }
 
-      // Stop at block boundary - don't search beyond the block
-      if (classList && classList.contains('blocklyBlock')) {
-        break;
-      }
-
       currentElement = currentElement.parentElement;
+      depth++;
     }
 
     return false;
@@ -900,8 +960,13 @@ export class StickyModeController {
    * @param clientY Optional screen Y coordinate where to drop the block
    */
   private exitStickyModeAndDrop(clientX?: number, clientY?: number) {
+    console.log('[STICKY] exitStickyModeAndDrop called', {clientX, clientY});
+
     const info = this.stickyModes.get(this.workspace);
-    if (!info) return;
+    if (!info) {
+      console.log('[STICKY] No sticky mode info in exitStickyModeAndDrop');
+      return;
+    }
 
     // Clear connection candidate - Blockly will recalculate from final position
     const dragStrategy = this.getDragStrategy(info.block);
@@ -911,6 +976,7 @@ export class StickyModeController {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const moveInfo = (this.mover as any)?.moves?.get(this.workspace);
+    console.log('[STICKY] moveInfo:', moveInfo);
 
     // Update position if coordinates provided
     if (
@@ -919,25 +985,34 @@ export class StickyModeController {
       info.block &&
       !info.block.isDisposed()
     ) {
+      console.log('[STICKY] Coordinates provided - moving block to click location');
       const targetWorkspaceCoords =
         Blockly.utils.svgMath.screenToWsCoordinates(
           this.workspace,
           new Blockly.utils.Coordinate(clientX, clientY),
         );
+      console.log('[STICKY] targetWorkspaceCoords:', targetWorkspaceCoords);
 
       if (moveInfo) {
         const currentX = moveInfo.startLocation.x + moveInfo.totalDelta.x;
         const currentY = moveInfo.startLocation.y + moveInfo.totalDelta.y;
+        console.log('[STICKY] currentX:', currentX, 'currentY:', currentY);
 
         const additionalDeltaX = targetWorkspaceCoords.x - currentX;
         const additionalDeltaY = targetWorkspaceCoords.y - currentY;
+        console.log('[STICKY] additionalDelta:', {additionalDeltaX, additionalDeltaY});
 
         moveInfo.totalDelta.x += additionalDeltaX;
         moveInfo.totalDelta.y += additionalDeltaY;
 
         // Move block directly to ensure positioning is correct
         info.block.moveBy(additionalDeltaX, additionalDeltaY);
+        console.log('[STICKY] Block moved by delta');
+      } else {
+        console.log('[STICKY] No moveInfo - cannot move block');
       }
+    } else {
+      console.log('[STICKY] No coordinates provided or block disposed - not moving block');
     }
 
     this.setClickAndStickMode(info.block, false);
