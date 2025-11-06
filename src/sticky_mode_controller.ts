@@ -423,39 +423,41 @@ export class StickyModeController {
     // Don't trigger sticky mode if clicking on a field
     const target = event.target as Element;
     const isField = this.isClickOnField(target);
-    console.log('[STICKY] handlePointerDown - field check:', {
-      isField,
-      target,
-      triggerMode: this.triggerMode
-    });
 
     if (target && isField) {
-      console.log('[STICKY] Clicking on field - clearing focusedBlockBeforePointerdown');
       this.focusedBlockBeforePointerdown = null;
       return;
     }
 
-    // Capture the currently focused block before the pointerdown changes focus
+    // Capture the currently focused/selected block before the pointerdown changes focus
+    // We need to check both:
+    // 1. Cursor position (if keyboard navigation is active)
+    // 2. Selected blocks (if using mouse-only workflow)
+
+    let focusedBlock: Blockly.BlockSvg | null = null;
+
+    // Try to get from cursor first (keyboard navigation)
     const cursor = this.workspace.getCursor();
-    if (!cursor) {
-      this.focusedBlockBeforePointerdown = null;
-      return;
+    if (cursor) {
+      const curNode = cursor.getCurNode();
+      if (curNode) {
+        if (curNode instanceof Blockly.BlockSvg) {
+          focusedBlock = curNode;
+        } else if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
+          focusedBlock = (curNode as any).getSourceBlock();
+        }
+      }
     }
 
-    const curNode = cursor.getCurNode();
-    if (!curNode) {
-      this.focusedBlockBeforePointerdown = null;
-      return;
+    // If no cursor-based focus, check for selected blocks (mouse workflow)
+    if (!focusedBlock) {
+      const selected = Blockly.common.getSelected();
+      if (selected && selected instanceof Blockly.BlockSvg && selected.workspace === this.workspace) {
+        focusedBlock = selected;
+      }
     }
 
-    // Get the block that's currently focused
-    if (curNode instanceof Blockly.BlockSvg) {
-      this.focusedBlockBeforePointerdown = curNode;
-    } else if ('getSourceBlock' in curNode && typeof (curNode as any).getSourceBlock === 'function') {
-      this.focusedBlockBeforePointerdown = (curNode as any).getSourceBlock();
-    } else {
-      this.focusedBlockBeforePointerdown = null;
-    }
+    this.focusedBlockBeforePointerdown = focusedBlock;
   }
 
   /**
@@ -503,15 +505,8 @@ export class StickyModeController {
    * @param event
    */
   private handleClick(event: MouseEvent) {
-    console.log('[STICKY] handleClick called', {
-      isActive: this.isActive(),
-      ignoreNextClick: this.ignoreNextClick,
-      target: event.target
-    });
-
     // If we just entered sticky mode via shift+click, ignore this click
     if (this.ignoreNextClick) {
-      console.log('[STICKY] Ignoring click due to ignoreNextClick flag');
       this.ignoreNextClick = false;
       event.preventDefault();
       event.stopPropagation();
@@ -520,7 +515,6 @@ export class StickyModeController {
 
     // If already in sticky mode, handle the drop/connect action
     if (this.isActive()) {
-      console.log('[STICKY] Sticky mode active - delegating to handleStickyModeClick');
       this.handleStickyModeClick(event);
       return;
     }
@@ -568,7 +562,38 @@ export class StickyModeController {
         // Check if the clicked block was the one that was focused BEFORE the pointerdown
         // (clicking a block makes it focused, so we need to check the pre-click state)
         // Note: Field detection happens earlier in handlePointerDown to set focusedBlockBeforePointerdown
-        return this.focusedBlockBeforePointerdown === clickedBlock;
+        if (this.focusedBlockBeforePointerdown !== clickedBlock) {
+          return false;
+        }
+
+        // Trigger if the block has a VISIBLE highlight
+        // A block has a visible highlight based on CSS class combinations:
+        // 1. blocklySelected class (core Blockly selection - always visible)
+        // 2. blocklyActiveFocus OR blocklyPassiveFocus (keyboard nav - only visible when keyboard mode active)
+        //
+        // The visual highlight is determined by CSS rules, not by semantic focus state.
+        // We check the classes that control the CSS rules that make highlights visible.
+        const pathElement = clickedBlock.pathObject.svgPath;
+        const blockSvgGroup = clickedBlock.getSvgRoot();
+
+        // Core Blockly selection (always creates visible highlight)
+        // Note: blocklySelected class is on the parent <g> element, not the path
+        // The CSS rule is: .blocklySelected > .blocklyPath { stroke: #fc3; }
+        const hasSelectedClass = blockSvgGroup?.classList.contains('blocklySelected') ?? false;
+
+        // Keyboard navigation highlights (only visible when keyboard mode is active)
+        const bodyHasKeyboardNav = document.body.classList.contains('blocklyKeyboardNavigation');
+        const hasActiveFocus = pathElement?.classList.contains('blocklyActiveFocus') ?? false;
+        const hasPassiveFocus = pathElement?.classList.contains('blocklyPassiveFocus') ?? false;
+
+        // Boolean logic: visible highlight exists if:
+        // - Block has blocklySelected class (core selection), OR
+        // - Keyboard nav is active AND block has active/passive focus
+        const hasVisibleHighlight = hasSelectedClass ||
+          (bodyHasKeyboardNav && (hasActiveFocus || hasPassiveFocus));
+
+        // Block should trigger sticky mode if it has a visible highlight
+        return hasVisibleHighlight;
 
       case TriggerMode.MODE_TOGGLE:
         // MODE_TOGGLE requires explicit enablement through external state management
@@ -629,15 +654,8 @@ export class StickyModeController {
    * @param event
    */
   private handleStickyModeClick(event: MouseEvent | PointerEvent) {
-    console.log('[STICKY] handleStickyModeClick called', {
-      clientX: event.clientX,
-      clientY: event.clientY,
-      target: event.target
-    });
-
     const info = this.stickyModes.get(this.workspace);
     if (!info) {
-      console.log('[STICKY] No sticky mode info found');
       return;
     }
 
@@ -648,28 +666,23 @@ export class StickyModeController {
     const clientY = event.clientY;
 
     if (this.isClickOnBin(clientX, clientY)) {
-      console.log('[STICKY] Click on bin detected - deleting block');
       this.deleteBlockOnBin();
       return;
     }
 
     const connectionInfo = this.findConnectionAtPoint(clientX, clientY);
     if (connectionInfo) {
-      console.log('[STICKY] Connection found at point - connecting', connectionInfo);
       this.connectToClickedConnection(connectionInfo, clientX, clientY);
       return;
     }
 
     // Check if there's a connection preview
     const dragStrategy = this.getDragStrategy(info.block);
-    console.log('[STICKY] dragStrategy.connectionCandidate:', dragStrategy?.connectionCandidate);
-    console.log('[STICKY] keepBlockOnMouse:', this.keepBlockOnMouse);
 
     if (this.keepBlockOnMouse) {
       // Block is following mouse - preview changes as you move
       // Accept any connection preview at current position
       if (dragStrategy && dragStrategy.connectionCandidate) {
-        console.log('[STICKY] keepBlockOnMouse=true - accepting connection candidate at current location');
         this.acceptConnectionCandidate();
         return;
       }
@@ -678,17 +691,14 @@ export class StickyModeController {
       // Only accept preview if clicking on the source block itself
       const clickedBlock = this.getBlockFromEvent(event);
       const isClickOnSourceBlock = clickedBlock === info.block;
-      console.log('[STICKY] keepBlockOnMouse=false, isClickOnSourceBlock:', isClickOnSourceBlock);
 
       if (isClickOnSourceBlock && dragStrategy && dragStrategy.connectionCandidate) {
-        console.log('[STICKY] Click on source block - accepting connection preview');
         this.acceptConnectionCandidate();
         return;
       }
     }
 
     // No connection preview to accept - drop at click location
-    console.log('[STICKY] Dropping block at click location', clientX, clientY);
     this.exitStickyModeAndDrop(clientX, clientY);
   }
 
@@ -937,10 +947,10 @@ export class StickyModeController {
     this.stickyModes.delete(this.workspace);
     this.ignoreNextClick = false;
 
-    const selection = Blockly.common.getSelected();
-    if (selection) {
-      selection.unselect();
-    }
+    // Focus the workspace root to properly blur the block
+    // This ensures subsequent clicks can re-focus and select the block correctly
+    const focusManager = Blockly.getFocusManager();
+    focusManager.focusNode(this.workspace);
 
     // Clear touch identifier to prevent stuck gestures
     try {
@@ -960,11 +970,8 @@ export class StickyModeController {
    * @param clientY Optional screen Y coordinate where to drop the block
    */
   private exitStickyModeAndDrop(clientX?: number, clientY?: number) {
-    console.log('[STICKY] exitStickyModeAndDrop called', {clientX, clientY});
-
     const info = this.stickyModes.get(this.workspace);
     if (!info) {
-      console.log('[STICKY] No sticky mode info in exitStickyModeAndDrop');
       return;
     }
 
@@ -976,7 +983,6 @@ export class StickyModeController {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const moveInfo = (this.mover as any)?.moves?.get(this.workspace);
-    console.log('[STICKY] moveInfo:', moveInfo);
 
     // Update position if coordinates provided
     if (
@@ -985,34 +991,25 @@ export class StickyModeController {
       info.block &&
       !info.block.isDisposed()
     ) {
-      console.log('[STICKY] Coordinates provided - moving block to click location');
       const targetWorkspaceCoords =
         Blockly.utils.svgMath.screenToWsCoordinates(
           this.workspace,
           new Blockly.utils.Coordinate(clientX, clientY),
         );
-      console.log('[STICKY] targetWorkspaceCoords:', targetWorkspaceCoords);
 
       if (moveInfo) {
         const currentX = moveInfo.startLocation.x + moveInfo.totalDelta.x;
         const currentY = moveInfo.startLocation.y + moveInfo.totalDelta.y;
-        console.log('[STICKY] currentX:', currentX, 'currentY:', currentY);
 
         const additionalDeltaX = targetWorkspaceCoords.x - currentX;
         const additionalDeltaY = targetWorkspaceCoords.y - currentY;
-        console.log('[STICKY] additionalDelta:', {additionalDeltaX, additionalDeltaY});
 
         moveInfo.totalDelta.x += additionalDeltaX;
         moveInfo.totalDelta.y += additionalDeltaY;
 
         // Move block directly to ensure positioning is correct
         info.block.moveBy(additionalDeltaX, additionalDeltaY);
-        console.log('[STICKY] Block moved by delta');
-      } else {
-        console.log('[STICKY] No moveInfo - cannot move block');
       }
-    } else {
-      console.log('[STICKY] No coordinates provided or block disposed - not moving block');
     }
 
     this.setClickAndStickMode(info.block, false);
