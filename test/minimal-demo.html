@@ -43,15 +43,61 @@
         color: #333;
       }
 
-      #presetButtons {
+      #topBar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      #controls {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .control-row fieldset {
+        border: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .control-row legend {
+        font-weight: 500;
+        padding: 0;
+        margin-bottom: 0;
+        min-width: 140px;
+        float: left;
+      }
+
+      .radio-group {
         display: flex;
         gap: 8px;
-        margin-bottom: 12px;
         flex-wrap: wrap;
       }
 
-      .preset-btn {
-        padding: 10px 20px;
+      .radio-option {
+        position: relative;
+      }
+
+      .radio-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .radio-option label {
+        padding: 8px 16px;
         font-size: 14px;
         font-weight: 500;
         border: 2px solid #4285f4;
@@ -60,78 +106,43 @@
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.2s;
+        display: inline-block;
+        user-select: none;
       }
 
-      .preset-btn:hover {
+      .radio-option label:hover {
         background: #e8f0fe;
       }
 
-      .preset-btn.active {
+      .radio-option input[type="radio"]:checked + label {
         background: #4285f4;
         color: white;
       }
 
-      #advancedToggle {
-        padding: 8px 16px;
-        font-size: 14px;
-        border: 1px solid #999;
-        background: #f5f5f5;
-        color: #333;
-        cursor: pointer;
-        border-radius: 4px;
-        transition: all 0.2s;
-      }
-
-      #advancedToggle:hover {
-        background: #e0e0e0;
-      }
-
-      #advancedToggle::after {
-        content: ' ▼';
-        font-size: 10px;
-      }
-
-      #advancedToggle.expanded::after {
-        content: ' ▲';
-      }
-
-      #advancedOptions {
-        display: none;
-        margin-top: 12px;
-        padding: 12px;
-        background: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        gap: 12px;
-        flex-direction: column;
-      }
-
-      #advancedOptions.visible {
-        display: flex;
-      }
-
-      .control-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .control-row label {
-        min-width: 140px;
-        font-weight: 500;
+      .radio-option input[type="radio"]:focus + label {
+        outline: 2px solid #4285f4;
+        outline-offset: 2px;
       }
 
       .control-row select {
-        padding: 6px 10px;
+        padding: 8px 12px;
         font-size: 14px;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        flex: 1;
-        max-width: 250px;
+        border: 2px solid #4285f4;
+        border-radius: 4px;
+        background: white;
+        color: #333;
+        cursor: pointer;
+        min-width: 150px;
       }
 
-      .control-row input[type="checkbox"] {
-        margin-right: 6px;
+      .control-row select:focus {
+        outline: 2px solid #4285f4;
+        outline-offset: 2px;
+      }
+
+      .control-label {
+        font-weight: 500;
+        min-width: 140px;
       }
 
       #resetButton {
@@ -151,17 +162,46 @@
         background: #fce8e6;
       }
 
-      #blocklyDiv {
+      #workspaceContainer {
         flex: 1;
-        width: 100%;
-        position: relative;
+        display: flex;
+        gap: 0;
+        overflow: hidden;
       }
 
-      .preset-description {
-        font-size: 12px;
+      #instructionsPane {
+        width: 300px;
+        background: white;
+        border-right: 2px solid #ddd;
+        padding: 20px;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+
+      #instructionsPane h2 {
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      #instructionsPane img {
+        width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      #instructionsPane p {
+        margin: 12px 0 0 0;
+        font-size: 14px;
+        line-height: 1.5;
         color: #666;
-        margin-top: 4px;
-        font-style: italic;
+      }
+
+      #blocklyDiv {
+        flex: 1;
+        position: relative;
       }
     </style>
   </head>
@@ -169,51 +209,74 @@
   <body>
     <div id="root">
       <div id="controlPanel">
-        <h1>Click-Stick UX Testing Demo</h1>
-
-        <div id="presetButtons">
-          <button class="preset-btn" data-preset="1">Preset 1: Motor Impaired</button>
-          <button class="preset-btn" data-preset="2">Preset 2: Touch Device</button>
-          <button class="preset-btn" data-preset="3">Preset 3: Precision Mode</button>
-          <button id="advancedToggle">Advanced</button>
+        <div id="topBar">
+          <h1>Click-Stick UX Testing Demo</h1>
           <button id="resetButton">Reset Workspace</button>
         </div>
 
-        <div id="advancedOptions">
+        <div id="controls">
+          <!-- Row 1: Mode Selection -->
           <div class="control-row">
-            <label for="triggerMode">Trigger Mode:</label>
-            <select id="triggerMode">
-              <option value="double_click">Double click</option>
-              <option value="shift_click">Shift + click</option>
-              <option value="focused_click">Click focused block</option>
-              <option value="grip_click">Grip handle</option>
+            <fieldset>
+              <legend>Mode:</legend>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="modeSticky" name="mode" value="sticky">
+                  <label for="modeSticky">Sticky drag</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="modeClick" name="mode" value="click" checked>
+                  <label for="modeClick">Click destination</label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Row 2: Trigger Selection -->
+          <div class="control-row">
+            <fieldset>
+              <legend>Trigger:</legend>
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input type="radio" id="triggerFocused" name="trigger" value="focused_click">
+                  <label for="triggerFocused">Single click</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="triggerDouble" name="trigger" value="double_click" checked>
+                  <label for="triggerDouble">Double click</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="triggerShift" name="trigger" value="shift_click">
+                  <label for="triggerShift">Shift + click</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="triggerGrip" name="trigger" value="grip_click">
+                  <label for="triggerGrip">Grip handle</label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Row 3: Connection Highlight Size -->
+          <div class="control-row">
+            <label class="control-label" for="highlightSize">Connection size:</label>
+            <select id="highlightSize">
+              <option value="minimal">Minimal</option>
+              <option value="medium" selected>Medium</option>
+              <option value="large">Large</option>
             </select>
-          </div>
-
-          <div class="control-row">
-            <label>
-              <input type="checkbox" id="fatterConnections" checked>
-              Use larger connection highlights
-            </label>
-          </div>
-
-          <div class="control-row">
-            <label>
-              <input type="checkbox" id="highlightConnections">
-              Show connection highlights in normal mode
-            </label>
-          </div>
-
-          <div class="control-row">
-            <label>
-              <input type="checkbox" id="keepBlockOnMouse">
-              Keep block on mouse during sticky move
-            </label>
           </div>
         </div>
       </div>
 
-      <div id="blocklyDiv"></div>
+      <div id="workspaceContainer">
+        <div id="instructionsPane">
+          <h2>Goal</h2>
+          <p>Assemble the blocks to create the complete song "Head, shoulders knees and toes".</p>
+          <img src="../head_shoulders_knees_toes.png" alt="Goal: Complete song structure">
+        </div>
+        <div id="blocklyDiv"></div>
+      </div>
       <div id="shortcuts"></div>
     </div>
     <script src="../build/minimal_demo_bundle.js"></script>

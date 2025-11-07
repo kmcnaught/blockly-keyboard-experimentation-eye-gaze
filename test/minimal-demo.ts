@@ -13,32 +13,10 @@ import {registerNavigationDeferringToolbox} from '../src/navigation_deferring_to
 
 let workspace: Blockly.WorkspaceSvg | null = null;
 let keyboardNavigation: KeyboardNavigation | null = null;
-let currentPreset: string | null = null;
 
-// Preset configurations
-const PRESETS = {
-  '1': {
-    name: 'Motor Impaired',
-    triggerMode: 'grip_click' as TriggerMode,
-    fatterConnections: true,
-    highlightConnections: false,
-    keepBlockOnMouse: false,
-  },
-  '2': {
-    name: 'Touch Device',
-    triggerMode: 'double_click' as TriggerMode,
-    fatterConnections: true,
-    highlightConnections: true,
-    keepBlockOnMouse: true,
-  },
-  '3': {
-    name: 'Precision Mode',
-    triggerMode: 'shift_click' as TriggerMode,
-    fatterConnections: true,
-    highlightConnections: true,
-    keepBlockOnMouse: true,
-  },
-};
+// Mode types
+type Mode = 'sticky' | 'click';
+type HighlightSize = 'minimal' | 'medium' | 'large';
 
 /**
  * Define custom blocks for the "Head, Shoulders, Knees and Toes" scenario.
@@ -96,7 +74,7 @@ function defineCustomBlocks() {
     },
   };
 
-  // Statement with value input: "knees ___ toes"
+  // Statement with value input: "knees _ toes" (smaller gap)
   Blockly.Blocks['lyric_knees_toes'] = {
     init: function () {
       this.jsonInit({
@@ -107,6 +85,7 @@ function defineCustomBlocks() {
             type: 'input_value',
             name: 'CONNECTOR',
             check: 'String',
+            align: 'CENTRE',
           },
         ],
         previousStatement: null,
@@ -114,16 +93,17 @@ function defineCustomBlocks() {
         colour: 230,
         tooltip: 'Knees and toes',
         helpUrl: '',
+        inputsInline: true,
       });
     },
   };
 
-  // Value block: "and"
+  // Value block: "... and ..."
   Blockly.Blocks['connector_and'] = {
     init: function () {
       this.jsonInit({
         type: 'connector_and',
-        message0: 'and',
+        message0: '... and ...',
         output: 'String',
         colour: 290,
         tooltip: 'Connector word',
@@ -133,39 +113,10 @@ function defineCustomBlocks() {
   };
 }
 
-/**
- * Create the minimal toolbox with just our custom blocks.
- */
-function createToolbox() {
-  return {
-    kind: 'flyoutToolbox',
-    contents: [
-      {
-        kind: 'block',
-        type: 'song_container',
-      },
-      {
-        kind: 'block',
-        type: 'lyric_heads',
-      },
-      {
-        kind: 'block',
-        type: 'lyric_shoulders',
-      },
-      {
-        kind: 'block',
-        type: 'lyric_knees_toes',
-      },
-      {
-        kind: 'block',
-        type: 'connector_and',
-      },
-    ],
-  };
-}
+// No toolbox needed - all blocks are pre-placed on the workspace
 
 /**
- * Load the initial scenario: 7 disconnected blocks.
+ * Load the initial scenario: 7 disconnected blocks arranged in a clear layout.
  */
 function loadScenario() {
   if (!workspace) return;
@@ -173,79 +124,81 @@ function loadScenario() {
   workspace.clear();
 
   // Create blocks at specific positions (all disconnected)
+  // Container block at top
   const containerBlock = workspace.newBlock('song_container');
-  containerBlock.moveBy(100, 50);
+  containerBlock.moveBy(50, 30);
   containerBlock.initSvg();
   containerBlock.render();
 
+  // Lyric blocks in left column
   const headsBlock = workspace.newBlock('lyric_heads');
-  headsBlock.moveBy(100, 180);
+  headsBlock.moveBy(50, 150);
   headsBlock.initSvg();
   headsBlock.render();
 
   const shouldersBlock = workspace.newBlock('lyric_shoulders');
-  shouldersBlock.moveBy(100, 240);
+  shouldersBlock.moveBy(150, 220);
   shouldersBlock.initSvg();
   shouldersBlock.render();
 
+  // Knees_toes blocks in middle column
   const knees1Block = workspace.newBlock('lyric_knees_toes');
-  knees1Block.moveBy(100, 300);
+  knees1Block.moveBy(250, 150);
   knees1Block.initSvg();
   knees1Block.render();
 
   const knees2Block = workspace.newBlock('lyric_knees_toes');
-  knees2Block.moveBy(100, 360);
+  knees2Block.moveBy(250, 50);
   knees2Block.initSvg();
   knees2Block.render();
 
+  // 'And' connector blocks in right column
   const and1Block = workspace.newBlock('connector_and');
-  and1Block.moveBy(300, 300);
+  and1Block.moveBy(250, 220);
   and1Block.initSvg();
   and1Block.render();
 
   const and2Block = workspace.newBlock('connector_and');
-  and2Block.moveBy(300, 360);
+  and2Block.moveBy(250, 110);
   and2Block.initSvg();
   and2Block.render();
 }
 
 /**
- * Apply a preset configuration.
+ * Apply mode settings (sticky drag vs click destination).
  */
-function applyPreset(presetId: string) {
-  const preset = PRESETS[presetId as keyof typeof PRESETS];
-  if (!preset || !keyboardNavigation) return;
+function applyMode(mode: Mode) {
+  if (!keyboardNavigation) return;
 
-  currentPreset = presetId;
+  if (mode === 'sticky') {
+    // Sticky drag: block sticks to mouse, no highlights
+    keyboardNavigation.setKeepBlockOnMouse(true);
+    keyboardNavigation.setHighlightConnections(false);
+  } else {
+    // Click destination: click to place, with highlights
+    keyboardNavigation.setKeepBlockOnMouse(false);
+    keyboardNavigation.setHighlightConnections(true);
+  }
 
-  // Update keyboard navigation settings
-  keyboardNavigation.setTriggerMode(preset.triggerMode);
-  keyboardNavigation.setFatterConnections(preset.fatterConnections);
-  keyboardNavigation.setHighlightConnections(preset.highlightConnections);
-  keyboardNavigation.setKeepBlockOnMouse(preset.keepBlockOnMouse);
+  localStorage.setItem('mode', mode);
+}
 
-  // Update UI controls (in case advanced is open)
-  const triggerModeSelect = document.getElementById('triggerMode') as HTMLSelectElement;
-  const fatterConnectionsCheckbox = document.getElementById('fatterConnections') as HTMLInputElement;
-  const highlightConnectionsCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
-  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+/**
+ * Apply trigger mode setting.
+ */
+function applyTrigger(trigger: TriggerMode) {
+  if (!keyboardNavigation) return;
+  keyboardNavigation.setTriggerMode(trigger);
+  localStorage.setItem('trigger', trigger);
+}
 
-  if (triggerModeSelect) triggerModeSelect.value = preset.triggerMode;
-  if (fatterConnectionsCheckbox) fatterConnectionsCheckbox.checked = preset.fatterConnections;
-  if (highlightConnectionsCheckbox) highlightConnectionsCheckbox.checked = preset.highlightConnections;
-  if (keepBlockOnMouseCheckbox) keepBlockOnMouseCheckbox.checked = preset.keepBlockOnMouse;
-
-  // Update active button state
-  document.querySelectorAll('.preset-btn').forEach((btn) => {
-    btn.classList.remove('active');
-  });
-  document.querySelector(`[data-preset="${presetId}"]`)?.classList.add('active');
-
-  // Save to localStorage
-  localStorage.setItem('currentPreset', presetId);
-
-  // Reset workspace to initial state
-  loadScenario();
+/**
+ * Apply connection highlight size setting.
+ */
+function applyHighlightSize(size: HighlightSize) {
+  if (!keyboardNavigation) return;
+  keyboardNavigation.setConnectionSize(size);
+  localStorage.setItem('highlightSize', size);
 }
 
 /**
@@ -260,7 +213,6 @@ function createWorkspace() {
   defineCustomBlocks();
 
   const injectOptions = {
-    toolbox: createToolbox(),
     renderer: 'zelos',
     move: {
       scrollbars: true,
@@ -280,7 +232,6 @@ function createWorkspace() {
   // Must be called before injection
   KeyboardNavigation.registerKeyboardNavigationStyles();
   registerFlyoutCursor();
-  registerNavigationDeferringToolbox();
 
   workspace = Blockly.inject(blocklyDiv, injectOptions);
 
@@ -299,23 +250,32 @@ function createWorkspace() {
  * Wire up all UI controls and event handlers.
  */
 function setupEventHandlers() {
-  // Preset buttons
-  document.querySelectorAll('.preset-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      const presetId = target.getAttribute('data-preset');
-      if (presetId) {
-        applyPreset(presetId);
+  // Mode radio buttons (sticky vs click)
+  const modeRadios = document.getElementsByName('mode');
+  modeRadios.forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.checked) {
+        applyMode(target.value as Mode);
       }
     });
   });
 
-  // Advanced toggle
-  const advancedToggle = document.getElementById('advancedToggle');
-  const advancedOptions = document.getElementById('advancedOptions');
-  advancedToggle?.addEventListener('click', () => {
-    advancedToggle.classList.toggle('expanded');
-    advancedOptions?.classList.toggle('visible');
+  // Trigger radio buttons
+  const triggerRadios = document.getElementsByName('trigger');
+  triggerRadios.forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.checked) {
+        applyTrigger(target.value as TriggerMode);
+      }
+    });
+  });
+
+  // Highlight size dropdown
+  const highlightSizeSelect = document.getElementById('highlightSize') as HTMLSelectElement;
+  highlightSizeSelect?.addEventListener('change', () => {
+    applyHighlightSize(highlightSizeSelect.value as HighlightSize);
   });
 
   // Reset button
@@ -323,39 +283,35 @@ function setupEventHandlers() {
   resetButton?.addEventListener('click', () => {
     loadScenario();
   });
+}
 
-  // Trigger mode dropdown
-  const triggerModeSelect = document.getElementById('triggerMode') as HTMLSelectElement;
-  triggerModeSelect?.addEventListener('change', () => {
-    const mode = triggerModeSelect.value as TriggerMode;
-    keyboardNavigation?.setTriggerMode(mode);
-    currentPreset = null; // Clear preset selection when manually changing
-    document.querySelectorAll('.preset-btn').forEach((btn) => btn.classList.remove('active'));
-  });
+/**
+ * Load saved settings or apply defaults.
+ */
+function loadSettings() {
+  // Load mode (default: click destination)
+  const savedMode = (localStorage.getItem('mode') as Mode) || 'click';
+  const modeRadio = document.querySelector(`input[name="mode"][value="${savedMode}"]`) as HTMLInputElement;
+  if (modeRadio) {
+    modeRadio.checked = true;
+    applyMode(savedMode);
+  }
 
-  // Fatter connections checkbox
-  const fatterConnectionsCheckbox = document.getElementById('fatterConnections') as HTMLInputElement;
-  fatterConnectionsCheckbox?.addEventListener('change', () => {
-    keyboardNavigation?.setFatterConnections(fatterConnectionsCheckbox.checked);
-    currentPreset = null;
-    document.querySelectorAll('.preset-btn').forEach((btn) => btn.classList.remove('active'));
-  });
+  // Load trigger (default: double_click)
+  const savedTrigger = (localStorage.getItem('trigger') as TriggerMode) || 'double_click';
+  const triggerRadio = document.querySelector(`input[name="trigger"][value="${savedTrigger}"]`) as HTMLInputElement;
+  if (triggerRadio) {
+    triggerRadio.checked = true;
+    applyTrigger(savedTrigger);
+  }
 
-  // Highlight connections checkbox
-  const highlightConnectionsCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
-  highlightConnectionsCheckbox?.addEventListener('change', () => {
-    keyboardNavigation?.setHighlightConnections(highlightConnectionsCheckbox.checked);
-    currentPreset = null;
-    document.querySelectorAll('.preset-btn').forEach((btn) => btn.classList.remove('active'));
-  });
-
-  // Keep block on mouse checkbox
-  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
-  keepBlockOnMouseCheckbox?.addEventListener('change', () => {
-    keyboardNavigation?.setKeepBlockOnMouse(keepBlockOnMouseCheckbox.checked);
-    currentPreset = null;
-    document.querySelectorAll('.preset-btn').forEach((btn) => btn.classList.remove('active'));
-  });
+  // Load highlight size (default: medium)
+  const savedSize = (localStorage.getItem('highlightSize') as HighlightSize) || 'medium';
+  const sizeSelect = document.getElementById('highlightSize') as HTMLSelectElement;
+  if (sizeSelect) {
+    sizeSelect.value = savedSize;
+    applyHighlightSize(savedSize);
+  }
 }
 
 /**
@@ -364,13 +320,5 @@ function setupEventHandlers() {
 document.addEventListener('DOMContentLoaded', () => {
   createWorkspace();
   setupEventHandlers();
-
-  // Check for saved preset
-  const savedPreset = localStorage.getItem('currentPreset');
-  if (savedPreset && PRESETS[savedPreset as keyof typeof PRESETS]) {
-    applyPreset(savedPreset);
-  } else {
-    // Default to Preset 1
-    applyPreset('1');
-  }
+  loadSettings();
 });
