@@ -212,8 +212,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   setClickAndStickMode(enabled: boolean): void {
     this.isClickAndStick = enabled;
 
-    if (enabled) {
-      // ALWAYS show highlights in sticky mode, regardless of highlightingEnabled setting
+    if (enabled && this.highlightingEnabled) {
+      // Show highlights in sticky mode if highlighting is enabled
       // @ts-expect-error getLocalConnections is private.
       const localConnections = this.getLocalConnections(this.block);
 
@@ -506,8 +506,8 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   private refreshHighlightsForPreview(
     currentCandidate: ConnectionCandidate | null,
   ): void {
-    // Only refresh if highlights are enabled (normal mode) or in sticky mode (always enabled)
-    if (!this.isClickAndStick && !this.highlightingEnabled) return;
+    // Only refresh if highlights are enabled
+    if (!this.highlightingEnabled) return;
 
     this.lastRefreshedCandidate = currentCandidate;
     this.lastRefreshTime = Date.now();

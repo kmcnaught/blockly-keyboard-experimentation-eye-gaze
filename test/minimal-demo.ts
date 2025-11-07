@@ -8,6 +8,7 @@ import * as Blockly from 'blockly';
 import {KeyboardNavigation, TriggerMode} from '../src/index';
 import {registerFlyoutCursor} from '../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../src/navigation_deferring_toolbox';
+import { CONTROLS_WHILEUNTIL_OPERATOR_WHILE } from 'blockly/msg/msg';
 
 (window as unknown as {Blockly: typeof Blockly}).Blockly = Blockly;
 
@@ -17,6 +18,13 @@ let keyboardNavigation: KeyboardNavigation | null = null;
 // Mode types
 type Mode = 'sticky' | 'click';
 type HighlightSize = 'minimal' | 'medium' | 'large';
+
+// Timer state
+let startTime: number | null = null;
+let isTaskComplete: boolean = false;
+let hasStartedTimer: boolean = false;
+let originalInstructionsHTML: string = '';
+let dragStartListener: ((e: Blockly.Events.Abstract) => void) | null = null;
 
 /**
  * Define custom blocks for the "Head, Shoulders, Knees and Toes" scenario.
@@ -116,10 +124,107 @@ function defineCustomBlocks() {
 // No toolbox needed - all blocks are pre-placed on the workspace
 
 /**
+ * Check if the puzzle is solved correctly.
+ * Expected structure:
+ * - Container with exactly 4 statement children
+ * - Child 1: lyric_heads
+ * - Child 2: lyric_shoulders
+ * - Children 3-4: Both lyric_knees_toes (order doesn't matter)
+ * - Each lyric_knees_toes has a connector_and in its value input
+ */
+function checkIfComplete(): boolean {
+  if (!workspace || isTaskComplete) return false;
+
+  const blocks = workspace.getAllBlocks(false);
+  const container = blocks.find((b) => b.type === 'song_container');
+  if (!container) return false;
+
+  // Get the statement input
+  const lyricsInput = container.getInput('LYRICS');
+  if (!lyricsInput || !lyricsInput.connection) return false;
+
+  // Walk the chain of connected blocks
+  const chain: Blockly.Block[] = [];
+  let currentBlock = lyricsInput.connection.targetBlock();
+  while (currentBlock) {
+    chain.push(currentBlock);
+    const nextConnection = currentBlock.nextConnection;
+    currentBlock = nextConnection?.targetBlock() || null;
+  }
+
+  // Should have exactly 4 blocks
+  if (chain.length !== 4) return false;
+
+  // Check first two are heads and shoulders in order
+  if (chain[0].type !== 'lyric_heads') return false;
+  if (chain[1].type !== 'lyric_shoulders') return false;
+
+  // Check last two are both knees_toes (order doesn't matter)
+  if (chain[2].type !== 'lyric_knees_toes') return false;
+  if (chain[3].type !== 'lyric_knees_toes') return false;
+
+  // Check each knees_toes has a connector_and
+  for (let i = 2; i < 4; i++) {
+    const connectorInput = chain[i].getInput('CONNECTOR');
+    if (!connectorInput || !connectorInput.connection) return false;
+    const connectorBlock = connectorInput.connection.targetBlock();
+    if (!connectorBlock || connectorBlock.type !== 'connector_and') return false;
+  }
+
+  return true;
+}
+
+/**
+ * Display success message with completion time.
+ */
+function showSuccess() {
+  if (!startTime) return;
+
+  const elapsedMs = Date.now() - startTime;
+  const mins = Math.floor(elapsedMs / 60000);
+  const secs = Math.floor((elapsedMs % 60000) / 1000);
+
+  const timeText = mins === 0
+    ? `${secs} second${secs !== 1 ? 's' : ''}`
+    : `${mins} min${mins !== 1 ? 's' : ''} ${secs} second${secs !== 1 ? 's' : ''}`;
+
+  const instructionsPane = document.getElementById('instructionsPane');
+  if (instructionsPane) {
+    instructionsPane.innerHTML = `
+      <h2>🚀 Success! 🚀</h2>
+      <p style="font-size: 18px; font-weight: 500; color: #4285f4;">
+        Song completed in ${timeText}
+      </p>
+      <p style="margin-top: 24px; color: #666;">
+        Great job assembling the blocks! 🎉
+      </p>
+    `;
+  }
+
+  isTaskComplete = true;
+}
+
+/**
+ * Restore the original instructions pane content.
+ */
+function restoreInstructions() {
+  const instructionsPane = document.getElementById('instructionsPane');
+  if (instructionsPane && originalInstructionsHTML) {
+    instructionsPane.innerHTML = originalInstructionsHTML;
+  }
+}
+
+/**
  * Load the initial scenario: 7 disconnected blocks arranged in a clear layout.
  */
 function loadScenario() {
   if (!workspace) return;
+
+  // Reset timer state
+  startTime = null;
+  hasStartedTimer = false;
+  isTaskComplete = false;
+  restoreInstructions();
 
   workspace.clear();
 
@@ -169,12 +274,14 @@ function loadScenario() {
  */
 function applyMode(mode: Mode) {
   if (!keyboardNavigation) return;
-
+console.log('Applying mode:', mode);
   if (mode === 'sticky') {
+    console.log('Setting sticky mode');
     // Sticky drag: block sticks to mouse, no highlights
     keyboardNavigation.setKeepBlockOnMouse(true);
     keyboardNavigation.setHighlightConnections(false);
   } else {
+    console.log('Setting click mode');
     // Click destination: click to place, with highlights
     keyboardNavigation.setKeepBlockOnMouse(false);
     keyboardNavigation.setHighlightConnections(true);
@@ -241,6 +348,39 @@ function createWorkspace() {
   // Expose for debugging
   (window as any).kbNav = kbNav;
   (window as any).workspace = workspace;
+
+  // Set up event listener for drag events
+  dragStartListener = (event: Blockly.Events.Abstract) => {
+    if (isTaskComplete) return;
+
+    // Start timer on first block drag (sticky move mode)
+    if (
+      event.type === Blockly.Events.BLOCK_DRAG &&
+      (event as any).isStart
+    ) {
+      if (!hasStartedTimer) {
+        startTime = Date.now();
+        hasStartedTimer = true;
+        console.log('Timer started!');
+      }
+    }
+
+    // Check completion after blocks are moved/connected
+    if (
+      event.type === Blockly.Events.BLOCK_MOVE ||
+      event.type === Blockly.Events.BLOCK_DRAG
+    ) {
+      // Use setTimeout to allow the UI to update first
+      setTimeout(() => {
+        if (checkIfComplete()) {
+          console.log('Puzzle complete!');
+          showSuccess();
+        }
+      }, 100);
+    }
+  };
+
+  workspace.addChangeListener(dragStartListener);
 
   // Load the initial scenario
   loadScenario();
@@ -318,6 +458,12 @@ function loadSettings() {
  * Initialize the demo on page load.
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Store original instructions HTML for restoration after reset
+  const instructionsPane = document.getElementById('instructionsPane');
+  if (instructionsPane) {
+    originalInstructionsHTML = instructionsPane.innerHTML;
+  }
+
   createWorkspace();
   setupEventHandlers();
   loadSettings();

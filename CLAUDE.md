@@ -26,11 +26,6 @@ npm start
 # Clean build artifacts
 npm run clean
 
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
 ```
 
 ### Testing

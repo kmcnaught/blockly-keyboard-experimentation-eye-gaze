@@ -16,6 +16,8 @@
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
     "prestart": "node scripts/generate-build-info.js",
     "start": "blockly-scripts start",
+    "start:minimal": "npm run build:minimal && python3 -m http.server 8000",
+    "build:minimal": "cd test && webpack --config webpack.minimal.config.js",
     "test": "npm run test:mocha && npm run test:wdio",
     "test:ci": "npm run test:mocha && npm run test:wdio:ci",
     "test:mocha": "blockly-scripts test",

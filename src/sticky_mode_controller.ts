@@ -522,6 +522,29 @@ export class StickyModeController {
     // Get the clicked block once to avoid inconsistencies
     const clickedBlock = this.getBlockFromEvent(event);
 
+    // Check if this is a flyout block - handle it specially
+    if (clickedBlock && this.isBlockFromFlyout(clickedBlock)) {
+      // Check if this click should trigger sticky mode based on trigger mode
+      const shouldTrigger = this.shouldTriggerStickyMode(event, clickedBlock);
+
+      if (shouldTrigger) {
+        const target = event.target as Element;
+
+        this.workspace.getAudioManager().preload();
+
+        if (target && this.isDoubleClickOnField(target)) {
+          return;
+        }
+
+        // Create block from flyout and enter sticky mode
+        this.insertFlyoutBlockIntoStickyMode(clickedBlock, event);
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      return;
+    }
+
+    // Handle workspace blocks (existing logic)
     // Check if this click should trigger sticky mode based on trigger mode
     const shouldTrigger = this.shouldTriggerStickyMode(event, clickedBlock);
 
@@ -559,7 +582,13 @@ export class StickyModeController {
         return event.shiftKey;
 
       case TriggerMode.FOCUSED_CLICK:
-        // Check if the clicked block was the one that was focused BEFORE the pointerdown
+        // For flyout blocks, skip the focus check - any click triggers sticky mode
+        // This provides a simpler interaction model for flyout blocks
+        if (this.isBlockFromFlyout(clickedBlock)) {
+          return true;
+        }
+
+        // For workspace blocks, check if the clicked block was the one that was focused BEFORE the pointerdown
         // (clicking a block makes it focused, so we need to check the pre-click state)
         // Note: Field detection happens earlier in handlePointerDown to set focusedBlockBeforePointerdown
         if (this.focusedBlockBeforePointerdown !== clickedBlock) {
@@ -717,6 +746,7 @@ export class StickyModeController {
 
   /**
    * Gets a block from an event target.
+   * Searches both main workspace and flyout workspace blocks.
    *
    * @param event
    * @param event.target
@@ -727,7 +757,15 @@ export class StickyModeController {
     const target = event.target as Element;
     if (!target) return null;
 
-    const blocks = this.workspace.getAllBlocks();
+    // Get blocks from both main workspace and flyout
+    let blocks = this.workspace.getAllBlocks();
+    const flyout = this.workspace.getFlyout();
+    if (flyout && flyout.isVisible()) {
+      const flyoutWorkspace = flyout.getWorkspace();
+      if (flyoutWorkspace) {
+        blocks = blocks.concat(flyoutWorkspace.getAllBlocks());
+      }
+    }
 
     const allBlockElements: Element[] = [];
     let currentElement: Element | null = target;
@@ -749,6 +787,63 @@ export class StickyModeController {
     }
 
     return null;
+  }
+
+  /**
+   * Checks if a block is from the flyout.
+   *
+   * @param block The block to check.
+   * @returns True if the block is from the flyout workspace.
+   */
+  private isBlockFromFlyout(block: Blockly.BlockSvg): boolean {
+    return block.workspace.isFlyout === true;
+  }
+
+  /**
+   * Creates a new block from a flyout template and immediately enters sticky mode.
+   * Used when clicking on flyout blocks with sticky mode triggers enabled.
+   *
+   * @param flyoutBlock The flyout block template to create from.
+   * @param event The click event.
+   */
+  private insertFlyoutBlockIntoStickyMode(
+    flyoutBlock: Blockly.BlockSvg,
+    event: MouseEvent,
+  ): void {
+    const flyout = this.workspace.getFlyout();
+    if (!flyout) return;
+
+    // Create a new event group for this operation
+    const existingGroup = Blockly.Events.getGroup();
+    if (!existingGroup) {
+      Blockly.Events.setGroup(true);
+    }
+
+    try {
+      // Create the block on the main workspace from the flyout template
+      const newBlock = flyout.createBlock(flyoutBlock);
+
+      // Render to get the sizing right
+      newBlock.render();
+
+      // Enable connection tracking (normally happens during drag, but we need it immediately)
+      newBlock.setConnectionTracking(true);
+
+      // Position the block at the click location
+      const workspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
+        this.workspace,
+        new Blockly.utils.Coordinate(event.clientX, event.clientY),
+      );
+      newBlock.moveTo(workspaceCoords);
+
+      // Enter sticky mode with the newly created block
+      this.enter(newBlock, event.clientX, event.clientY);
+    } finally {
+      // Clean up event group if we created one
+      if (!existingGroup) {
+        Blockly.Events.setGroup(false);
+      }
+    }
   }
 
   /**
