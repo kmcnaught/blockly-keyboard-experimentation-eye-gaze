@@ -145,21 +145,35 @@
         min-width: 140px;
       }
 
+      #toggleOptionsButton,
       #resetButton {
         padding: 8px 20px;
         font-size: 14px;
         font-weight: 500;
-        border: 2px solid #ea4335;
+        border: 2px solid #4285f4;
         background: white;
-        color: #ea4335;
+        color: #4285f4;
         cursor: pointer;
         border-radius: 4px;
         transition: all 0.2s;
         margin-left: 8px;
       }
 
+      #resetButton {
+        border-color: #ea4335;
+        color: #ea4335;
+      }
+
+      #toggleOptionsButton:hover {
+        background: #e8f0fe;
+      }
+
       #resetButton:hover {
         background: #fce8e6;
+      }
+
+      #controls.hidden {
+        display: none;
       }
 
       #workspaceContainer {
@@ -211,7 +225,10 @@
       <div id="controlPanel">
         <div id="topBar">
           <h1>Click-Stick UX Testing Demo</h1>
-          <button id="resetButton">Reset Workspace</button>
+          <div>
+            <button id="toggleOptionsButton">Hide Options</button>
+            <button id="resetButton">Reset Workspace</button>
+          </div>
         </div>
 
         <div id="controls">
@@ -258,7 +275,7 @@
           </div>
 
           <!-- Row 3: Connection Highlight Size -->
-          <div class="control-row">
+          <div class="control-row" id="highlightSizeRow">
             <label class="control-label" for="highlightSize">Connection size:</label>
             <select id="highlightSize">
               <option value="minimal">Minimal</option>

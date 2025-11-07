@@ -280,11 +280,23 @@ console.log('Applying mode:', mode);
     // Sticky drag: block sticks to mouse, no highlights
     keyboardNavigation.setKeepBlockOnMouse(true);
     keyboardNavigation.setHighlightConnections(false);
+
+    // Hide connection size option since highlights are disabled
+    const highlightSizeRow = document.getElementById('highlightSizeRow');
+    if (highlightSizeRow) {
+      highlightSizeRow.style.display = 'none';
+    }
   } else {
     console.log('Setting click mode');
     // Click destination: click to place, with highlights
     keyboardNavigation.setKeepBlockOnMouse(false);
     keyboardNavigation.setHighlightConnections(true);
+
+    // Show connection size option since highlights are enabled
+    const highlightSizeRow = document.getElementById('highlightSizeRow');
+    if (highlightSizeRow) {
+      highlightSizeRow.style.display = 'flex';
+    }
   }
 
   localStorage.setItem('mode', mode);
@@ -416,6 +428,26 @@ function setupEventHandlers() {
   const highlightSizeSelect = document.getElementById('highlightSize') as HTMLSelectElement;
   highlightSizeSelect?.addEventListener('change', () => {
     applyHighlightSize(highlightSizeSelect.value as HighlightSize);
+  });
+
+  // Toggle options button
+  const toggleOptionsButton = document.getElementById('toggleOptionsButton');
+  const controlsDiv = document.getElementById('controls');
+  toggleOptionsButton?.addEventListener('click', () => {
+    if (controlsDiv?.classList.contains('hidden')) {
+      controlsDiv.classList.remove('hidden');
+      toggleOptionsButton.textContent = 'Hide Options';
+    } else {
+      controlsDiv?.classList.add('hidden');
+      toggleOptionsButton.textContent = 'Show Options';
+    }
+
+    // Resize workspace to fit the new available space
+    if (workspace) {
+      setTimeout(() => {
+        Blockly.svgResize(workspace!);
+      }, 0);
+    }
   });
 
   // Reset button
