@@ -57,8 +57,8 @@ export class ConnectionHighlighter {
   /** Scroll event listener for updating highlight positions. */
   private scrollListener?: () => void;
 
-  /** Whether to use fatter connection highlights for larger click targets. */
-  private useFatterConnections: boolean = true;
+  /** Connection highlight size: minimal, medium, or large. */
+  private connectionSize: 'minimal' | 'medium' | 'large' = 'medium';
 
   /**
    * Whether ancestor connections visually overlap descendant connections in this renderer.
@@ -107,11 +107,21 @@ export class ConnectionHighlighter {
 
   /**
    * Enable or disable fatter connection highlights.
+   * Kept for backwards compatibility.
    *
    * @param enabled Whether to use fatter connections with larger click targets.
    */
   setFatterConnections(enabled: boolean): void {
-    this.useFatterConnections = enabled;
+    this.connectionSize = enabled ? 'medium' : 'minimal';
+  }
+
+  /**
+   * Set the connection highlight size.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.connectionSize = size;
   }
 
   /**
@@ -344,10 +354,18 @@ export class ConnectionHighlighter {
 
     let highlightPath: string;
 
-    if (this.useFatterConnections) {
-      // Fatter connection: flat-top, notched-bottom shape for larger click target
-      const topPadding = 4; // Extra padding above the notch
-      const bottomPadding = 4; // Extra padding below the notch
+    if (this.connectionSize === 'minimal') {
+      // Minimal: simple notch outline
+      highlightPath = (
+        `M ${-xLen} 0 ` +
+        `h ${xLen} ` +
+        pathLeft +
+        `h ${xLen}`
+      );
+    } else {
+      // Medium/Large: flat-top, notched-bottom shape for larger click target
+      const topPadding = this.connectionSize === 'large' ? 6 : 4;
+      const bottomPadding = this.connectionSize === 'large' ? 6 : 4;
 
       highlightPath = (
         `M ${-xLen} ${-topPadding} ` +           // Start top-left
@@ -358,14 +376,6 @@ export class ConnectionHighlighter {
         `v ${-(topPadding + bottomPadding)} ` +  // Go up right side
         `h ${-(notchWidth + xLen * 2)} ` +       // Go left across top back to start
         `Z`                                      // Close path
-      );
-    } else {
-      // Standard connection: simple notch outline
-      highlightPath = (
-        `M ${-xLen} 0 ` +
-        `h ${xLen} ` +
-        pathLeft +
-        `h ${xLen}`
       );
     }
 
@@ -447,11 +457,19 @@ export class ConnectionHighlighter {
       const yLen = constants.TAB_OFFSET_FROM_TOP;
 
       let highlightPath: string;
-      if (this.useFatterConnections) {
-        // Fatter connection: puzzle tab on left, rectangular extension to right
+      if (this.connectionSize === 'minimal') {
+        // Minimal: standard thin outline
+        highlightPath = (
+          `M 0 ${-yLen} ` +
+          `v ${yLen} ` +
+          connPath +
+          `v ${yLen}`
+        );
+      } else {
+        // Medium/Large: puzzle tab on left, rectangular extension to right
         // Size to fit within an empty connection socket (similar to puzzle tab width)
         const tabWidth = (connectionShape as any).width || constants.TAB_WIDTH || 8;
-        const rightPadding = tabWidth;
+        const rightPadding = this.connectionSize === 'large' ? tabWidth * 1.5 : tabWidth;
         const totalHeight = yLen * 2 + measurableHeight;
 
         highlightPath = (
@@ -463,14 +481,6 @@ export class ConnectionHighlighter {
           `v ${-totalHeight} ` +          // Up to top-right
           `h ${-rightPadding} ` +         // Left back to top-left
           `Z`                             // Close the shape
-        );
-      } else {
-        // Standard thin outline
-        highlightPath = (
-          `M 0 ${-yLen} ` +
-          `v ${yLen} ` +
-          connPath +
-          `v ${yLen}`
         );
       }
 

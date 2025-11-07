@@ -298,6 +298,15 @@ export class NavigationController {
   }
 
   /**
+   * Set the connection highlight size.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.mover.setConnectionSize(size);
+  }
+
+  /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {

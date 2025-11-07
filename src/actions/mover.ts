@@ -86,6 +86,9 @@ export class Mover {
   /** Whether to use fatter connection highlights with larger click targets. */
   private fatterConnections: boolean = true;
 
+  /** Connection highlight size: minimal, medium, or large. */
+  private connectionSize: 'minimal' | 'medium' | 'large' = 'medium';
+
   /** Optional callback to check if auto-scrolling should be disabled. */
   private shouldDisableAutoScroll?: () => boolean;
 
@@ -144,11 +147,29 @@ export class Mover {
    */
   setFatterConnections(enabled: boolean): void {
     this.fatterConnections = enabled;
+    this.connectionSize = enabled ? 'medium' : 'minimal';
     // Update any active drag strategies
     for (const [_workspace, moveInfo] of this.moves) {
       const dragStrategy = (moveInfo.draggable as any).dragStrategy;
       if (dragStrategy instanceof KeyboardDragStrategy) {
         dragStrategy.setFatterConnections(enabled);
+      }
+    }
+  }
+
+  /**
+   * Set the connection highlight size.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.connectionSize = size;
+    this.fatterConnections = size !== 'minimal';
+    // Update any active drag strategies
+    for (const [_workspace, moveInfo] of this.moves) {
+      const dragStrategy = (moveInfo.draggable as any).dragStrategy;
+      if (dragStrategy instanceof KeyboardDragStrategy) {
+        dragStrategy.setConnectionSize(size);
       }
     }
   }
@@ -501,6 +522,7 @@ export class Mover {
       onMoveFinished,
     );
     keyboardDragStrategy.setFatterConnections(this.fatterConnections);
+    keyboardDragStrategy.setConnectionSize(this.connectionSize);
     block.setDragStrategy(keyboardDragStrategy);
   }
 

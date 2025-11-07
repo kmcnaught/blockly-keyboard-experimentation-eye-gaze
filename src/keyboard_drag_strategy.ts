@@ -617,6 +617,15 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
   }
 
   /**
+   * Set the connection highlight size.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.connectionHighlighter?.setConnectionSize(size);
+  }
+
+  /**
    * Gets the initial connection where the block started.
    */
   getInitialConnectionNeighbour(): RenderedConnection | null {

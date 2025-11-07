@@ -208,6 +208,15 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Set the connection highlight size.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.navigationController.setConnectionSize(size);
+  }
+
+  /**
    * Set the trigger mode for entering sticky move mode.
    *
    * @param mode The trigger mode to use (DOUBLE_CLICK, SHIFT_CLICK, FOCUSED_CLICK, MODE_TOGGLE, or GRIP_CLICK).
