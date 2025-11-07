@@ -9,7 +9,9 @@ const fs = require('fs');
 
 console.log(`Preparing test page for gh-pages deployment.`);
 
-execSync(`npm run build && npm run predeploy`, {stdio: 'pipe'});
+execSync(`npm run build && npm run predeploy && npm run build:minimal`, {
+  stdio: 'pipe',
+});
 
 // Copy test/index.html to build/ directory.
 // Update the path at which the test_bundle can be found.
