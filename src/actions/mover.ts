@@ -30,7 +30,7 @@ import {KeyboardDragStrategy} from '../keyboard_drag_strategy';
 import {Navigation} from '../navigation';
 import {clearMoveHints} from '../hints';
 import {MoveIndicatorBubble} from '../move_indicator';
-import {isWorkspaceElement} from '../dom_utils';
+import {isWorkspaceElement, isBlocklyUIElement} from '../dom_utils';
 
 /**
  * The distance to move an item, in workspace coordinates, when
@@ -216,11 +216,32 @@ export class Mover {
       const dragStrategy = (draggable as any).dragStrategy;
       const isClickAndStick = dragStrategy?.isClickAndStickMode?.();
 
+      const newFocusTarget = event.relatedTarget as any;
+      const activeElement = document.activeElement;
+
+      // Special case: if newFocusTarget is null and activeElement is body,
+      // it means we clicked on a non-focusable element (like divs in options panel).
+      // This is most likely clicking outside Blockly UI, so abort the move.
+      const blurredToBody = !newFocusTarget && activeElement?.tagName === 'BODY';
+
+      if (blurredToBody) {
+        this.abortMove(workspace);
+        return;
+      }
+
+      // Check if we explicitly clicked on a Blockly UI element
+      const newTargetIsBlockly = newFocusTarget ? isBlocklyUIElement(newFocusTarget) : false;
+      const activeIsBlockly = activeElement && activeElement.tagName !== 'BODY' ? isBlocklyUIElement(activeElement) : false;
+      const clickedOutsideBlockly = newFocusTarget && !newTargetIsBlockly && !activeIsBlockly;
+
+      if (clickedOutsideBlockly) {
+        // Abort the move if clicking outside the Blockly UI entirely
+        this.abortMove(workspace);
+        return;
+      }
+
       if (!isClickAndStick) {
         // In normal move mode: check if we're clicking on a connection highlight
-        const newFocusTarget = event.relatedTarget as any;
-        const activeElement = document.activeElement;
-
         // Check if the click target is a connection highlight or its descendant
         const isConnectionHighlight =
           (newFocusTarget && this.isConnectionHighlightElement(newFocusTarget)) ||
@@ -235,9 +256,6 @@ export class Mover {
       }
 
       // In click-and-stick mode: only auto-finish if focus moved to meaningful UI
-      const newFocusTarget = event.relatedTarget as any;
-      const activeElement = document.activeElement;
-
       const isWorkspaceBackground =
         isWorkspaceElement(newFocusTarget) ||
         isWorkspaceElement(activeElement);
