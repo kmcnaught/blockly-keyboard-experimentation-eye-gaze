@@ -698,8 +698,21 @@ export class StickyModeController {
       }
     }
 
-    // No connection preview to accept - drop at click location
-    this.exitStickyModeAndDrop(clientX, clientY);
+    // No connection preview to accept
+    // Check if click is inside the source block - if so, drop in place
+    const blockBounds = info.block.getBoundingRectangle();
+    const clickWorkspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
+      this.workspace,
+      new Blockly.utils.Coordinate(clientX, clientY),
+    );
+
+    if (blockBounds.contains(clickWorkspaceCoords.x, clickWorkspaceCoords.y)) {
+      // Click is inside the source block - don't move it
+      this.exitStickyModeAndDrop();
+    } else {
+      // Click is outside the source block - move to click location
+      this.exitStickyModeAndDrop(clientX, clientY);
+    }
   }
 
   /**
