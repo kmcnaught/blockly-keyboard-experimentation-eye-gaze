@@ -16,6 +16,26 @@ execSync(`npm run build && npm run predeploy`, {stdio: 'pipe'});
 let testPage = fs.readFileSync('./test/index.html').toString();
 testPage = testPage.replace('../build/test_bundle.js', 'test_bundle.js');
 fs.writeFileSync('build/index.html', testPage, 'utf-8');
+
+// Copy test/minimal-demo.html to build/ directory.
+// Update the paths for the bundle and image.
+let minimalDemo = fs.readFileSync('./test/minimal-demo.html').toString();
+minimalDemo = minimalDemo.replace(
+  '../build/minimal_demo_bundle.js',
+  'minimal_demo_bundle.js',
+);
+minimalDemo = minimalDemo.replace(
+  '../head_shoulders_knees_toes.png',
+  'head_shoulders_knees_toes.png',
+);
+fs.writeFileSync('build/minimal-demo.html', minimalDemo, 'utf-8');
+
+// Copy the image used by minimal demo.
+fs.copyFileSync(
+  './head_shoulders_knees_toes.png',
+  'build/head_shoulders_knees_toes.png',
+);
+
 console.log(
-  `Open 'build/index.html' in a browser to see results, or upload the 'build' directory to ghpages.`,
+  `Open 'build/index.html' or 'build/minimal-demo.html' in a browser to see results, or upload the 'build' directory to ghpages.`,
 );
