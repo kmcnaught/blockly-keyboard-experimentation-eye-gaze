@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Click-Stick UX Testing Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Roboto, sans-serif;
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: rgb(228, 228, 228);
+      }
+
+      #root {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      #controlPanel {
+        background: white;
+        border-bottom: 2px solid #ddd;
+        padding: 12px 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 100;
+      }
+
+      #controlPanel h1 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      #presetButtons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 2px solid #4285f4;
+        background: white;
+        color: #4285f4;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      .preset-btn:hover {
+        background: #e8f0fe;
+      }
+
+      .preset-btn.active {
+        background: #4285f4;
+        color: white;
+      }
+
+      #advancedToggle {
+        padding: 8px 16px;
+        font-size: 14px;
+        border: 1px solid #999;
+        background: #f5f5f5;
+        color: #333;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      #advancedToggle:hover {
+        background: #e0e0e0;
+      }
+
+      #advancedToggle::after {
+        content: ' ▼';
+        font-size: 10px;
+      }
+
+      #advancedToggle.expanded::after {
+        content: ' ▲';
+      }
+
+      #advancedOptions {
+        display: none;
+        margin-top: 12px;
+        padding: 12px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        gap: 12px;
+        flex-direction: column;
+      }
+
+      #advancedOptions.visible {
+        display: flex;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .control-row label {
+        min-width: 140px;
+        font-weight: 500;
+      }
+
+      .control-row select {
+        padding: 6px 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        flex: 1;
+        max-width: 250px;
+      }
+
+      .control-row input[type="checkbox"] {
+        margin-right: 6px;
+      }
+
+      #resetButton {
+        padding: 8px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 2px solid #ea4335;
+        background: white;
+        color: #ea4335;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+        margin-left: 8px;
+      }
+
+      #resetButton:hover {
+        background: #fce8e6;
+      }
+
+      #blocklyDiv {
+        flex: 1;
+        width: 100%;
+        position: relative;
+      }
+
+      .preset-description {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root">
+      <div id="controlPanel">
+        <h1>Click-Stick UX Testing Demo</h1>
+
+        <div id="presetButtons">
+          <button class="preset-btn" data-preset="1">Preset 1: Motor Impaired</button>
+          <button class="preset-btn" data-preset="2">Preset 2: Touch Device</button>
+          <button class="preset-btn" data-preset="3">Preset 3: Precision Mode</button>
+          <button id="advancedToggle">Advanced</button>
+          <button id="resetButton">Reset Workspace</button>
+        </div>
+
+        <div id="advancedOptions">
+          <div class="control-row">
+            <label for="triggerMode">Trigger Mode:</label>
+            <select id="triggerMode">
+              <option value="double_click">Double click</option>
+              <option value="shift_click">Shift + click</option>
+              <option value="focused_click">Click focused block</option>
+              <option value="grip_click">Grip handle</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="fatterConnections" checked>
+              Use larger connection highlights
+            </label>
+          </div>
+
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="highlightConnections">
+              Show connection highlights in normal mode
+            </label>
+          </div>
+
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="keepBlockOnMouse">
+              Keep block on mouse during sticky move
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="blocklyDiv"></div>
+      <div id="shortcuts"></div>
+    </div>
+    <script src="../build/minimal_demo_bundle.js"></script>
+  </body>
+</html>
