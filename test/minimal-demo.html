@@ -145,6 +145,7 @@
         min-width: 140px;
       }
 
+      #shareUrlButton,
       #toggleOptionsButton,
       #resetButton {
         padding: 8px 20px;
@@ -159,9 +160,18 @@
         margin-left: 8px;
       }
 
+      #shareUrlButton {
+        border-color: #34a853;
+        color: #34a853;
+      }
+
       #resetButton {
         border-color: #ea4335;
         color: #ea4335;
+      }
+
+      #shareUrlButton:hover {
+        background: #e6f4ea;
       }
 
       #toggleOptionsButton:hover {
@@ -226,6 +236,7 @@
         <div id="topBar">
           <h1>Click-Stick UX Testing Demo</h1>
           <div>
+            <button id="shareUrlButton">Share URL</button>
             <button id="toggleOptionsButton">Hide Options</button>
             <button id="resetButton">Reset Workspace</button>
           </div>
@@ -255,11 +266,11 @@
               <legend>Trigger:</legend>
               <div class="radio-group">
                 <div class="radio-option">
-                  <input type="radio" id="triggerFocused" name="trigger" value="focused_click">
+                  <input type="radio" id="triggerFocused" name="trigger" value="focused_click" checked>
                   <label for="triggerFocused">Single click</label>
                 </div>
                 <div class="radio-option">
-                  <input type="radio" id="triggerDouble" name="trigger" value="double_click" checked>
+                  <input type="radio" id="triggerDouble" name="trigger" value="double_click">
                   <label for="triggerDouble">Double click</label>
                 </div>
                 <div class="radio-option">

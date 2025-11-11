@@ -19,6 +19,14 @@ let keyboardNavigation: KeyboardNavigation | null = null;
 type Mode = 'sticky' | 'click';
 type HighlightSize = 'minimal' | 'medium' | 'large';
 
+// URL parameter interface
+interface URLParams {
+  mode?: Mode;
+  trigger?: TriggerMode;
+  highlightSize?: HighlightSize;
+  optionsVisible?: boolean;
+}
+
 // Timer state
 let startTime: number | null = null;
 let isTaskComplete: boolean = false;
@@ -122,6 +130,58 @@ function defineCustomBlocks() {
 }
 
 // No toolbox needed - all blocks are pre-placed on the workspace
+
+/**
+ * Parse URL parameters for settings.
+ */
+function parseUrlParams(): URLParams {
+  const params = new URLSearchParams(window.location.search);
+  const result: URLParams = {};
+
+  const mode = params.get('mode');
+  if (mode === 'sticky' || mode === 'click') {
+    result.mode = mode;
+  }
+
+  const trigger = params.get('trigger');
+  if (trigger === 'focused_click' || trigger === 'double_click' ||
+      trigger === 'shift_click' || trigger === 'grip_click') {
+    result.trigger = trigger as TriggerMode;
+  }
+
+  const highlightSize = params.get('highlightSize');
+  if (highlightSize === 'minimal' || highlightSize === 'medium' || highlightSize === 'large') {
+    result.highlightSize = highlightSize;
+  }
+
+  const optionsVisible = params.get('optionsVisible');
+  if (optionsVisible === 'true' || optionsVisible === 'false') {
+    result.optionsVisible = optionsVisible === 'true';
+  }
+
+  return result;
+}
+
+/**
+ * Update URL with current settings without page reload.
+ */
+function updateUrl() {
+  const params = new URLSearchParams();
+
+  // Get current settings from localStorage
+  const mode = localStorage.getItem('mode');
+  const trigger = localStorage.getItem('trigger');
+  const highlightSize = localStorage.getItem('highlightSize');
+  const optionsVisible = localStorage.getItem('optionsVisible');
+
+  if (mode) params.set('mode', mode);
+  if (trigger) params.set('trigger', trigger);
+  if (highlightSize) params.set('highlightSize', highlightSize);
+  if (optionsVisible) params.set('optionsVisible', optionsVisible);
+
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+}
 
 /**
  * Check if the puzzle is solved correctly.
@@ -300,6 +360,7 @@ console.log('Applying mode:', mode);
   }
 
   localStorage.setItem('mode', mode);
+  updateUrl();
 }
 
 /**
@@ -309,6 +370,7 @@ function applyTrigger(trigger: TriggerMode) {
   if (!keyboardNavigation) return;
   keyboardNavigation.setTriggerMode(trigger);
   localStorage.setItem('trigger', trigger);
+  updateUrl();
 }
 
 /**
@@ -318,6 +380,64 @@ function applyHighlightSize(size: HighlightSize) {
   if (!keyboardNavigation) return;
   keyboardNavigation.setConnectionSize(size);
   localStorage.setItem('highlightSize', size);
+  updateUrl();
+}
+
+/**
+ * Apply options panel visibility setting.
+ */
+function applyOptionsVisibility(visible: boolean) {
+  const controlsDiv = document.getElementById('controls');
+  const toggleOptionsButton = document.getElementById('toggleOptionsButton');
+
+  if (visible) {
+    controlsDiv?.classList.remove('hidden');
+    if (toggleOptionsButton) toggleOptionsButton.textContent = 'Hide Options';
+  } else {
+    controlsDiv?.classList.add('hidden');
+    if (toggleOptionsButton) toggleOptionsButton.textContent = 'Show Options';
+  }
+
+  localStorage.setItem('optionsVisible', visible.toString());
+  updateUrl();
+
+  // Resize workspace to fit the new available space
+  if (workspace) {
+    setTimeout(() => {
+      Blockly.svgResize(workspace!);
+    }, 0);
+  }
+}
+
+/**
+ * Copy the current URL (with all settings) to clipboard.
+ */
+async function copyUrlToClipboard() {
+  const shareButton = document.getElementById('shareUrlButton');
+  if (!shareButton) return;
+
+  const originalText = shareButton.textContent;
+
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    shareButton.textContent = '✓ Copied!';
+    shareButton.style.borderColor = '#34a853';
+    shareButton.style.color = '#34a853';
+    shareButton.style.background = '#e6f4ea';
+
+    setTimeout(() => {
+      shareButton.textContent = originalText;
+      shareButton.style.borderColor = '';
+      shareButton.style.color = '';
+      shareButton.style.background = '';
+    }, 2000);
+  } catch (err) {
+    console.error('Failed to copy URL:', err);
+    shareButton.textContent = '✗ Failed';
+    setTimeout(() => {
+      shareButton.textContent = originalText;
+    }, 2000);
+  }
 }
 
 /**
@@ -341,7 +461,7 @@ function createWorkspace() {
     zoom: {
       controls: true,
       wheel: true,
-      startScale: 1.0,
+      startScale: 1.15,
       maxScale: 3,
       minScale: 0.3,
       scaleSpeed: 1.2,
@@ -430,24 +550,18 @@ function setupEventHandlers() {
     applyHighlightSize(highlightSizeSelect.value as HighlightSize);
   });
 
+  // Share URL button
+  const shareUrlButton = document.getElementById('shareUrlButton');
+  shareUrlButton?.addEventListener('click', () => {
+    copyUrlToClipboard();
+  });
+
   // Toggle options button
   const toggleOptionsButton = document.getElementById('toggleOptionsButton');
   const controlsDiv = document.getElementById('controls');
   toggleOptionsButton?.addEventListener('click', () => {
-    if (controlsDiv?.classList.contains('hidden')) {
-      controlsDiv.classList.remove('hidden');
-      toggleOptionsButton.textContent = 'Hide Options';
-    } else {
-      controlsDiv?.classList.add('hidden');
-      toggleOptionsButton.textContent = 'Show Options';
-    }
-
-    // Resize workspace to fit the new available space
-    if (workspace) {
-      setTimeout(() => {
-        Blockly.svgResize(workspace!);
-      }, 0);
-    }
+    const isCurrentlyVisible = !controlsDiv?.classList.contains('hidden');
+    applyOptionsVisibility(!isCurrentlyVisible);
   });
 
   // Reset button
@@ -459,18 +573,21 @@ function setupEventHandlers() {
 
 /**
  * Load saved settings or apply defaults.
+ * Priority: URL params > localStorage > defaults
  */
 function loadSettings() {
+  const urlParams = parseUrlParams();
+
   // Load mode (default: click destination)
-  const savedMode = (localStorage.getItem('mode') as Mode) || 'click';
+  const savedMode = urlParams.mode || (localStorage.getItem('mode') as Mode) || 'click';
   const modeRadio = document.querySelector(`input[name="mode"][value="${savedMode}"]`) as HTMLInputElement;
   if (modeRadio) {
     modeRadio.checked = true;
     applyMode(savedMode);
   }
 
-  // Load trigger (default: double_click)
-  const savedTrigger = (localStorage.getItem('trigger') as TriggerMode) || 'double_click';
+  // Load trigger (default: focused_click)
+  const savedTrigger = urlParams.trigger || (localStorage.getItem('trigger') as TriggerMode) || 'focused_click';
   const triggerRadio = document.querySelector(`input[name="trigger"][value="${savedTrigger}"]`) as HTMLInputElement;
   if (triggerRadio) {
     triggerRadio.checked = true;
@@ -478,12 +595,17 @@ function loadSettings() {
   }
 
   // Load highlight size (default: medium)
-  const savedSize = (localStorage.getItem('highlightSize') as HighlightSize) || 'medium';
+  const savedSize = urlParams.highlightSize || (localStorage.getItem('highlightSize') as HighlightSize) || 'medium';
   const sizeSelect = document.getElementById('highlightSize') as HTMLSelectElement;
   if (sizeSelect) {
     sizeSelect.value = savedSize;
     applyHighlightSize(savedSize);
   }
+
+  // Load options visibility (default: visible)
+  const optionsVisible = urlParams.optionsVisible !== undefined ? urlParams.optionsVisible :
+    (localStorage.getItem('optionsVisible') === 'false' ? false : true);
+  applyOptionsVisibility(optionsVisible);
 }
 
 /**
