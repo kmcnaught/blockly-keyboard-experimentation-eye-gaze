@@ -14,7 +14,7 @@
     "ghpages": "node scripts/deploy.js",
     "predeploy": "blockly-scripts predeploy",
     "prepublishOnly": "npm login --registry https://wombat-dressing-room.appspot.com",
-    "prestart": "node scripts/generate-build-info.js",
+    "prestart": "node scripts/generate-build-info.js && npm run build:minimal",
     "start": "blockly-scripts start",
     "start:minimal": "npm run build:minimal && python3 -m http.server 8000",
     "build:minimal": "cd test && webpack --config webpack.minimal.config.js",

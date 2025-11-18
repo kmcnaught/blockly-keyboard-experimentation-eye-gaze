@@ -33,6 +33,13 @@ import {createBuildInfoComponent, registerBuildInfoStyles, startBuildInfoAutoRef
 let autoRunTimer: number | null = null;
 let keyboardNavigation: KeyboardNavigation | null = null;
 
+// Mode types
+type Mode = 'sticky' | 'click';
+type ConnectionSize = 'minimal' | 'medium' | 'large';
+
+// Track whether we're programmatically updating checkboxes to prevent loops
+let isUpdatingFromMode = false;
+
 // Define which scenarios are valid for each toolbox type
 const TOOLBOX_SCENARIOS: Record<string, string[]> = {
   'toolbox': [
@@ -247,6 +254,68 @@ function addP5() {
   javascriptGenerator.addReservedWords('sketch');
 }
 
+/**
+ * Apply mode settings (sticky drag vs click destination).
+ */
+function applyMode(mode: Mode) {
+  if (!keyboardNavigation) return;
+
+  isUpdatingFromMode = true;
+
+  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  const keepBlockCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+  const connectionSizeRow = document.getElementById('connectionSizeRow');
+
+  if (mode === 'sticky') {
+    // Sticky drag: block sticks to mouse, no highlights
+    keyboardNavigation.setKeepBlockOnMouse(true);
+    keyboardNavigation.setHighlightConnections(false);
+
+    // Update checkboxes to reflect the mode
+    if (keepBlockCheckbox) keepBlockCheckbox.checked = true;
+    if (highlightCheckbox) highlightCheckbox.checked = false;
+
+    // Hide connection size option since highlights are disabled
+    if (connectionSizeRow) connectionSizeRow.style.display = 'none';
+  } else {
+    // Click destination: click to place, with highlights
+    keyboardNavigation.setKeepBlockOnMouse(false);
+    keyboardNavigation.setHighlightConnections(true);
+
+    // Update checkboxes to reflect the mode
+    if (keepBlockCheckbox) keepBlockCheckbox.checked = false;
+    if (highlightCheckbox) highlightCheckbox.checked = true;
+
+    // Show connection size option since highlights are enabled
+    if (connectionSizeRow) connectionSizeRow.style.display = 'flex';
+  }
+
+  localStorage.setItem('mode', mode);
+  isUpdatingFromMode = false;
+}
+
+/**
+ * Detect current mode from checkbox states.
+ */
+function detectModeFromCheckboxes(): Mode {
+  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  const keepBlockCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+
+  const highlightEnabled = highlightCheckbox?.checked ?? false;
+  const keepBlockEnabled = keepBlockCheckbox?.checked ?? false;
+
+  // Sticky mode: keepBlock on, highlights off
+  if (keepBlockEnabled && !highlightEnabled) {
+    return 'sticky';
+  }
+  // Click mode: keepBlock off, highlights on
+  else if (!keepBlockEnabled && highlightEnabled) {
+    return 'click';
+  }
+  // Default to click mode for ambiguous states
+  return 'click';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize build info styles
   registerBuildInfoStyles();
@@ -256,52 +325,31 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('run')?.addEventListener('click', runCode);
   document.getElementById('rerunButton')?.addEventListener('click', runCode);
 
-  // Wire up connection highlighting checkbox
-  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
-  // Load from localStorage, or use checkbox default
-  const savedHighlightConnections = localStorage.getItem('highlightConnections');
-  if (savedHighlightConnections !== null) {
-    highlightCheckbox.checked = savedHighlightConnections === 'true';
-  }
-  if (highlightCheckbox) {
-    keyboardNavigation?.setHighlightConnections(highlightCheckbox.checked);
-  }
-  highlightCheckbox?.addEventListener('change', () => {
-    const enabled = highlightCheckbox.checked;
-    keyboardNavigation?.setHighlightConnections(enabled);
-    localStorage.setItem('highlightConnections', String(enabled));
+  // Wire up mode dropdown
+  const modeSelect = document.getElementById('mode') as HTMLSelectElement;
+  modeSelect?.addEventListener('change', () => {
+    const mode = modeSelect.value as Mode;
+    applyMode(mode);
   });
 
-  // Wire up fatter connections checkbox
-  const fatterConnectionsCheckbox = document.getElementById('fatterConnections') as HTMLInputElement;
-  // Load from localStorage, or use checkbox default
-  const savedFatterConnections = localStorage.getItem('fatterConnections');
-  if (savedFatterConnections !== null) {
-    fatterConnectionsCheckbox.checked = savedFatterConnections === 'true';
+  // Load saved mode or default to 'click'
+  const savedMode = (localStorage.getItem('mode') as Mode) || 'click';
+  if (modeSelect) {
+    modeSelect.value = savedMode;
+    applyMode(savedMode);
   }
-  if (fatterConnectionsCheckbox) {
-    keyboardNavigation?.setFatterConnections(fatterConnectionsCheckbox.checked);
-  }
-  fatterConnectionsCheckbox?.addEventListener('change', () => {
-    const enabled = fatterConnectionsCheckbox.checked;
-    keyboardNavigation?.setFatterConnections(enabled);
-    localStorage.setItem('fatterConnections', String(enabled));
-  });
 
-  // Wire up keep block on mouse checkbox
-  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
-  // Load from localStorage, or use checkbox default
-  const savedKeepBlockOnMouse = localStorage.getItem('keepBlockOnMouse');
-  if (savedKeepBlockOnMouse !== null) {
-    keepBlockOnMouseCheckbox.checked = savedKeepBlockOnMouse === 'true';
+  // Wire up connection size dropdown
+  const connectionSizeSelect = document.getElementById('connectionSize') as HTMLSelectElement;
+  const savedConnectionSize = (localStorage.getItem('connectionSize') as ConnectionSize) || 'medium';
+  if (connectionSizeSelect) {
+    connectionSizeSelect.value = savedConnectionSize;
+    keyboardNavigation?.setConnectionSize(savedConnectionSize);
   }
-  if (keepBlockOnMouseCheckbox) {
-    keyboardNavigation?.setKeepBlockOnMouse(keepBlockOnMouseCheckbox.checked);
-  }
-  keepBlockOnMouseCheckbox?.addEventListener('change', () => {
-    const enabled = keepBlockOnMouseCheckbox.checked;
-    keyboardNavigation?.setKeepBlockOnMouse(enabled);
-    localStorage.setItem('keepBlockOnMouse', String(enabled));
+  connectionSizeSelect?.addEventListener('change', () => {
+    const size = connectionSizeSelect.value as ConnectionSize;
+    keyboardNavigation?.setConnectionSize(size);
+    localStorage.setItem('connectionSize', size);
   });
 
   // Wire up trigger mode dropdown
@@ -309,6 +357,69 @@ document.addEventListener('DOMContentLoaded', () => {
   triggerModeSelect?.addEventListener('change', () => {
     const mode = triggerModeSelect.value as TriggerMode;
     keyboardNavigation?.setTriggerMode(mode);
+  });
+
+  // Wire up advanced toggle button
+  const advancedToggle = document.getElementById('advancedToggle');
+  const advancedOptions = document.getElementById('advancedOptions');
+  advancedToggle?.addEventListener('click', () => {
+    const isExpanded = advancedOptions?.classList.contains('visible');
+    if (isExpanded) {
+      advancedOptions?.classList.remove('visible');
+      advancedToggle?.classList.remove('expanded');
+    } else {
+      advancedOptions?.classList.add('visible');
+      advancedToggle?.classList.add('expanded');
+    }
+  });
+
+  // Wire up advanced checkboxes (these update the underlying settings directly)
+  const highlightCheckbox = document.getElementById('highlightConnections') as HTMLInputElement;
+  const keepBlockOnMouseCheckbox = document.getElementById('keepBlockOnMouse') as HTMLInputElement;
+
+  // Load from localStorage for advanced checkboxes
+  const savedHighlightConnections = localStorage.getItem('highlightConnections');
+  if (savedHighlightConnections !== null) {
+    highlightCheckbox.checked = savedHighlightConnections === 'true';
+  }
+  const savedKeepBlockOnMouse = localStorage.getItem('keepBlockOnMouse');
+  if (savedKeepBlockOnMouse !== null) {
+    keepBlockOnMouseCheckbox.checked = savedKeepBlockOnMouse === 'true';
+  }
+
+  // Advanced checkbox handlers - update mode dropdown when changed manually
+  highlightCheckbox?.addEventListener('change', () => {
+    if (isUpdatingFromMode) return; // Prevent loops
+
+    const enabled = highlightCheckbox.checked;
+    keyboardNavigation?.setHighlightConnections(enabled);
+    localStorage.setItem('highlightConnections', String(enabled));
+
+    // Update mode dropdown to reflect new state
+    const detectedMode = detectModeFromCheckboxes();
+    const modeSelect = document.getElementById('mode') as HTMLSelectElement;
+    if (modeSelect) modeSelect.value = detectedMode;
+    localStorage.setItem('mode', detectedMode);
+
+    // Show/hide connection size based on highlight state
+    const connectionSizeRow = document.getElementById('connectionSizeRow');
+    if (connectionSizeRow) {
+      connectionSizeRow.style.display = enabled ? 'flex' : 'none';
+    }
+  });
+
+  keepBlockOnMouseCheckbox?.addEventListener('change', () => {
+    if (isUpdatingFromMode) return; // Prevent loops
+
+    const enabled = keepBlockOnMouseCheckbox.checked;
+    keyboardNavigation?.setKeepBlockOnMouse(enabled);
+    localStorage.setItem('keepBlockOnMouse', String(enabled));
+
+    // Update mode dropdown to reflect new state
+    const detectedMode = detectModeFromCheckboxes();
+    const modeSelect = document.getElementById('mode') as HTMLSelectElement;
+    if (modeSelect) modeSelect.value = detectedMode;
+    localStorage.setItem('mode', detectedMode);
   });
 
   // Wire up scenario dropdown to automatically select correct toolbox

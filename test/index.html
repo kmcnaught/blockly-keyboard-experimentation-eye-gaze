@@ -289,6 +289,51 @@
         color: #333;
         margin-left: 4px;
       }
+
+      /* Advanced section styling */
+      #advancedSection {
+        margin-top: 0.75rem;
+        border-top: 1px solid #ddd;
+        padding-top: 0.75rem;
+      }
+
+      #advancedToggle {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: #4285f4;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 0.5rem;
+      }
+
+      #advancedToggle:hover {
+        text-decoration: underline;
+      }
+
+      #advancedToggle::before {
+        content: "▶";
+        font-size: 12px;
+        transition: transform 0.2s;
+      }
+
+      #advancedToggle.expanded::before {
+        transform: rotate(90deg);
+      }
+
+      #advancedOptions {
+        display: none;
+      }
+
+      #advancedOptions.visible {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     </style>
   </head>
 
@@ -342,33 +387,49 @@
               </select>
             </div>
             <hr class="options-divider">
+            <!-- Mode Selection -->
+            <div>
+              <label for="mode">Mode:</label>
+              <select id="mode" name="mode">
+                <option value="click" selected>Click destination</option>
+                <option value="sticky">Sticky drag</option>
+              </select>
+            </div>
             <div>
               <label for="triggerMode">Click-stick trigger:</label>
               <select id="triggerMode">
+                <option value="focused_click" selected>Click focused block</option>
                 <option value="double_click">Double click</option>
                 <option value="shift_click">Shift + click</option>
-                <option value="focused_click">Click focused block</option>
                 <option value="grip_click">Grip handle</option>
               </select>
             </div>
-            <div class="checkbox-row">
-              <div>
-                <label>
-                  <input type="checkbox" id="fatterConnections" checked>
-                  Use larger connection highlights
-                </label>
-              </div>
-              <div>
-                <label>
-                  <input type="checkbox" id="highlightConnections">
-                  Show connection highlights in normal move mode
-                </label>
-              </div>
-              <div>
-                <label>
-                  <input type="checkbox" id="keepBlockOnMouse">
-                  Keep block on mouse during sticky move
-                </label>
+            <div id="connectionSizeRow">
+              <label for="connectionSize">Connection size:</label>
+              <select id="connectionSize">
+                <option value="minimal">Minimal</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+            <!-- Advanced Section -->
+            <div id="advancedSection">
+              <button type="button" id="advancedToggle">Advanced Options</button>
+              <div id="advancedOptions">
+                <div class="checkbox-row">
+                  <div>
+                    <label>
+                      <input type="checkbox" id="highlightConnections">
+                      Show connection highlights
+                    </label>
+                  </div>
+                  <div>
+                    <label>
+                      <input type="checkbox" id="keepBlockOnMouse">
+                      Keep block on mouse
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </form>
