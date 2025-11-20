@@ -7,6 +7,8 @@ This may include changes to cursor-based workflows and/or helper functions
 for people using grid-based access with keyboard controls, via eye gaze or 
 switch access. 
 
+⚠️ this is not production ready, leading heavily on AI-assisted vibes. ⚠️
+
 ## Original plugin repo
 
 This plugin for Blockly enables keyboard navigation. It includes
