@@ -84,8 +84,9 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
   highlightConnections: true,
 });
 
-// Initialize maze game
-const mazeGame = new MazeGame('mazeCanvas', 1);
+// Initialize maze game (load saved skin or default to 0)
+const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
+const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
 
 // Level titles for each level
 const levelTitles = [
@@ -144,6 +145,20 @@ document.getElementById('nextLevel')?.addEventListener('click', () => {
     updateLevelDisplay();
   }
 });
+
+// Character selector handler
+const characterSelect = document.getElementById('characterSelect') as HTMLSelectElement;
+if (characterSelect) {
+  // Set the current character in the dropdown
+  characterSelect.value = savedSkin.toString();
+
+  characterSelect.addEventListener('change', () => {
+    const skinId = parseInt(characterSelect.value, 10);
+    mazeGame.setSkin(skinId);
+    // Save preference
+    localStorage.setItem('mazeGameSkin', skinId.toString());
+  });
+}
 
 // Run button handler
 document.getElementById('runButton')?.addEventListener('click', () => {

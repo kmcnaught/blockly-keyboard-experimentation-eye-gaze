@@ -184,37 +184,67 @@
         color: #1976d2;
       }
 
-      .language-selector {
+      .header-selectors {
         position: absolute;
         top: 16px;
         right: 24px;
         display: flex;
         align-items: center;
+        gap: 16px;
+      }
+
+      .selector-group {
+        display: flex;
+        align-items: center;
         gap: 8px;
       }
 
-      .language-selector label {
+      .selector-group label {
         font-size: 14px;
         color: white;
         opacity: 0.9;
       }
 
-      .language-selector select {
-        padding: 6px 12px;
+      .selector-group select {
+        padding: 8px 14px;
         font-size: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
+        font-weight: 500;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.95);
+        color: #1976d2;
         cursor: pointer;
         transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231976d2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        padding-right: 32px;
       }
 
-      .language-selector select:hover {
-        background: rgba(255, 255, 255, 0.3);
+      .selector-group select:hover {
+        background: white;
+        border-color: rgba(255, 255, 255, 0.8);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
       }
 
-      .language-selector select option {
+      .selector-group select:focus {
+        outline: none;
+        background: white;
+        border-color: #ffeb3b;
+        box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.4);
+      }
+
+      .selector-group select option {
+        background: white;
+        color: #1976d2;
+        padding: 8px;
+        font-weight: 500;
+      }
+
+      .selector-group select option:checked {
         background: #1976d2;
         color: white;
       }
@@ -224,12 +254,22 @@
     <header>
       <h1>🎮 Maze Game</h1>
       <p class="subtitle">Navigate the maze using Blockly blocks with full keyboard and eye gaze support</p>
-      <div class="language-selector">
-        <label for="languageSelect">🌐 Language:</label>
-        <select id="languageSelect">
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-        </select>
+      <div class="header-selectors">
+        <div class="selector-group">
+          <label for="characterSelect">🎨 Character:</label>
+          <select id="characterSelect">
+            <option value="0">Pegman</option>
+            <option value="1">Astro</option>
+            <option value="2">Panda</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label for="languageSelect">🌐 Language:</label>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
       </div>
     </header>
 
