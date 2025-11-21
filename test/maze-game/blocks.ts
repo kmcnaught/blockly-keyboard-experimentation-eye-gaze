@@ -47,14 +47,14 @@ const LOGIC_HUE = 210;
  */
 export function registerMazeBlocks() {
   const TURN_DIRECTIONS: Blockly.MenuOption[] = [
-    ['turn left', 'turnLeft'],
-    ['turn right', 'turnRight'],
+    ['%{BKY_MAZE_TURN_LEFT}', 'turnLeft'],
+    ['%{BKY_MAZE_TURN_RIGHT}', 'turnRight'],
   ];
 
   const PATH_DIRECTIONS: Blockly.MenuOption[] = [
-    ['path ahead', 'isPathForward'],
-    ['path to the left', 'isPathLeft'],
-    ['path to the right', 'isPathRight'],
+    ['%{BKY_MAZE_PATH_AHEAD}', 'isPathForward'],
+    ['%{BKY_MAZE_PATH_LEFT}', 'isPathLeft'],
+    ['%{BKY_MAZE_PATH_RIGHT}', 'isPathRight'],
   ];
 
   // Add arrows to turn options after prefix/suffix have been separated.
@@ -80,11 +80,11 @@ export function registerMazeBlocks() {
     // Block for moving forward.
     {
       type: 'maze_moveForward',
-      message0: 'move forward',
+      message0: '%{BKY_MAZE_MOVE_FORWARD}',
       previousStatement: null,
       nextStatement: null,
       colour: MOVEMENT_HUE,
-      tooltip: 'Moves the player forward one space.',
+      tooltip: '%{BKY_MAZE_MOVE_FORWARD_TOOLTIP}',
     },
 
     // Block for turning left or right.
@@ -101,14 +101,14 @@ export function registerMazeBlocks() {
       previousStatement: null,
       nextStatement: null,
       colour: MOVEMENT_HUE,
-      tooltip: 'Turns the player left or right by 90 degrees.',
+      tooltip: '%{BKY_MAZE_TURN_TOOLTIP}',
       extensions: ['maze_turn_arrows'],
     },
 
     // Block for conditional "if there is a path".
     {
       type: 'maze_if',
-      message0: '%1%2do %3',
+      message0: '%1%2%{BKY_MAZE_DO} %3',
       args0: [
         {
           type: 'field_dropdown',
@@ -126,14 +126,14 @@ export function registerMazeBlocks() {
       previousStatement: null,
       nextStatement: null,
       colour: LOGIC_HUE,
-      tooltip: 'If there is a path in the specified direction, then do some actions.',
+      tooltip: '%{BKY_MAZE_IF_TOOLTIP}',
       extensions: ['maze_turn_arrows'],
     },
 
     // Block for conditional "if there is a path, else".
     {
       type: 'maze_ifElse',
-      message0: '%1%2do %3else %4',
+      message0: '%1%2%{BKY_MAZE_DO} %3%{BKY_MAZE_ELSE} %4',
       args0: [
         {
           type: 'field_dropdown',
@@ -155,15 +155,14 @@ export function registerMazeBlocks() {
       previousStatement: null,
       nextStatement: null,
       colour: LOGIC_HUE,
-      tooltip:
-        'If there is a path in the specified direction, then do the first block of actions. Otherwise, do the second block of actions.',
+      tooltip: '%{BKY_MAZE_IFELSE_TOOLTIP}',
       extensions: ['maze_turn_arrows'],
     },
 
     // Block for repeat loop.
     {
       type: 'maze_forever',
-      message0: 'repeat until %1%2do %3',
+      message0: '%{BKY_MAZE_REPEAT_UNTIL} %1%2%{BKY_MAZE_DO} %3',
       args0: [
         {
           type: 'field_image',
@@ -181,7 +180,7 @@ export function registerMazeBlocks() {
       ],
       previousStatement: null,
       colour: LOOPS_HUE,
-      tooltip: 'Repeat the enclosed actions until the finish point is reached.',
+      tooltip: '%{BKY_MAZE_WHILE_TOOLTIP}',
     },
   ]);
 
@@ -215,20 +214,11 @@ export function registerMazeBlocks() {
   };
 
   javascriptGenerator.forBlock['maze_forever'] = function (block) {
-    let branch = javascriptGenerator.statementToCode(block, 'DO');
-
-    // CRITICAL: Add a small delay to prevent infinite loops from freezing browser
-    // This ensures the loop yields to the event loop even if empty
-    const loopDelay = '  await new Promise(resolve => setTimeout(resolve, 0));\n';
-
-    // If branch is empty, still add the delay
-    if (!branch || branch.trim() === '') {
-      branch = loopDelay;
+    const branch = javascriptGenerator.statementToCode(block, 'DO');
+    if (branch) {
+      return 'while (notDone()) {\n' + branch + '}\n';
     } else {
-      // Add delay at the end of the loop to ensure we yield
-      branch = branch + loopDelay;
+      return 'while (notDone()) {}\n';
     }
-
-    return `while (notDone()) {\n${branch}}\n`;
   };
 }

@@ -16,6 +16,14 @@ import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 import {registerMazeBlocks} from './blocks';
 import {MazeGame} from './maze';
+import {loadMessages, getBrowserLocale, type SupportedLocale} from './messages';
+
+// Initialize locale (browser detection or saved preference)
+let currentLocale: SupportedLocale =
+  (localStorage.getItem('mazeGameLocale') as SupportedLocale) || getBrowserLocale();
+
+// Load internationalized messages
+loadMessages(currentLocale);
 
 // Register maze-specific blocks
 registerMazeBlocks();
@@ -151,4 +159,22 @@ document.getElementById('resetButton')?.addEventListener('click', () => {
 // Initial level display update
 updateLevelDisplay();
 
-console.log('Maze game initialized with keyboard navigation support');
+// Language selector handler
+const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
+if (languageSelect) {
+  // Set the current language in the dropdown
+  languageSelect.value = currentLocale;
+
+  languageSelect.addEventListener('change', () => {
+    const newLocale = languageSelect.value as SupportedLocale;
+
+    // Save preference
+    localStorage.setItem('mazeGameLocale', newLocale);
+
+    // Reload the page to apply new language
+    // (This is the simplest approach - Blockly blocks need to be re-registered with new messages)
+    window.location.reload();
+  });
+}
+
+console.log(`Maze game initialized with keyboard navigation support (locale: ${currentLocale})`);

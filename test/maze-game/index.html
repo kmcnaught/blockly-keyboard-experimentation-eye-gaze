@@ -183,12 +183,54 @@
         margin-bottom: 4px;
         color: #1976d2;
       }
+
+      .language-selector {
+        position: absolute;
+        top: 16px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .language-selector label {
+        font-size: 14px;
+        color: white;
+        opacity: 0.9;
+      }
+
+      .language-selector select {
+        padding: 6px 12px;
+        font-size: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .language-selector select:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .language-selector select option {
+        background: #1976d2;
+        color: white;
+      }
     </style>
   </head>
   <body>
     <header>
       <h1>🎮 Maze Game</h1>
       <p class="subtitle">Navigate the maze using Blockly blocks with full keyboard and eye gaze support</p>
+      <div class="language-selector">
+        <label for="languageSelect">🌐 Language:</label>
+        <select id="languageSelect">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+        </select>
+      </div>
     </header>
 
     <div class="container">
