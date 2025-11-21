@@ -8,6 +8,8 @@
  * @fileoverview Simple maze game engine.
  */
 
+import {msg} from './messages';
+
 enum Direction {
   NORTH = 0,
   EAST = 1,
@@ -55,7 +57,7 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_astro.mp3', 'assets/fail_astro.ogg'],
     crashType: CrashType.SPIN,
-    name: 'Astro',
+    name: msg('MAZE_SKIN_ASTRO'),
   },
   {
     sprite: 'assets/wheelchair.png',
@@ -65,7 +67,7 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
     crashType: CrashType.STOP,
-    name: 'Wheelchair user',
+    name: msg('MAZE_SKIN_WHEELCHAIR'),
   },
   {
     sprite: 'assets/panda.png',
@@ -75,7 +77,7 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_panda.mp3', 'assets/fail_panda.ogg'],
     crashType: CrashType.FALL,
-    name: 'Panda',
+    name: msg('MAZE_SKIN_PANDA'),
   },
   {
     sprite: 'assets/pegman.png',
@@ -85,7 +87,7 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
     crashType: CrashType.STOP,
-    name: 'Pegman',
+    name: msg('MAZE_SKIN_PEGMAN'),
   },
 ];
 
@@ -785,7 +787,7 @@ export class MazeGame {
 
   public execute(code: string) {
     if (this.executing) {
-      alert('Already executing!');
+      alert(msg('MAZE_ALERT_ALREADY_RUNNING'));
       return;
     }
 
@@ -831,10 +833,10 @@ export class MazeGame {
     if (!this.notDone()) {
       await this.animateVictory();
       setTimeout(() => {
-        alert('Success! You reached the goal!');
+        alert(msg('MAZE_SUCCESS_MESSAGE'));
       }, 500);
     } else {
-      alert('Program finished, but you did not reach the goal.');
+      alert(msg('MAZE_FAILURE_MESSAGE'));
     }
   }
 }

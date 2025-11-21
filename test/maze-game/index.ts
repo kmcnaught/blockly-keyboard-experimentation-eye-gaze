@@ -16,7 +16,7 @@ import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 import {registerMazeBlocks} from './blocks';
 import {MazeGame} from './maze';
-import {loadMessages, getBrowserLocale, type SupportedLocale} from './messages';
+import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
 
 // Initialize locale (browser detection or saved preference)
 let currentLocale: SupportedLocale =
@@ -27,6 +27,76 @@ loadMessages(currentLocale);
 
 // Register maze-specific blocks
 registerMazeBlocks();
+
+/**
+ * Update all UI text elements with internationalized messages
+ */
+function updateUIText() {
+  // Update page title and subtitle
+  const pageTitle = document.querySelector('h1');
+  if (pageTitle) {
+    pageTitle.textContent = `🎮 ${msg('MAZE_TITLE')}`;
+  }
+
+  const subtitle = document.querySelector('.subtitle');
+  if (subtitle) {
+    subtitle.textContent = msg('MAZE_SUBTITLE');
+  }
+
+  // Update character label
+  const charLabel = document.querySelector('label[for="pegmanButton"]');
+  if (charLabel) {
+    charLabel.textContent = `🎨 ${msg('MAZE_CHARACTER_LABEL')}`;
+  }
+
+  // Update language label
+  const langLabel = document.querySelector('label[for="languageSelect"]');
+  if (langLabel) {
+    langLabel.textContent = `🌐 ${msg('MAZE_LANGUAGE_LABEL')}`;
+  }
+
+  // Update button text
+  const runButton = document.getElementById('runButton');
+  if (runButton) {
+    runButton.textContent = `▶️ ${msg('MAZE_RUN_PROGRAM')}`;
+  }
+
+  const resetButton = document.getElementById('resetButton');
+  if (resetButton) {
+    resetButton.textContent = `🔄 ${msg('MAZE_RESET_PROGRAM')}`;
+  }
+
+  // Update instructions
+  const instructions = document.querySelector('.instructions');
+  if (instructions) {
+    instructions.innerHTML = `
+      <strong>${msg('MAZE_GOAL_LABEL')}</strong> ${msg('MAZE_GOAL_DESCRIPTION')}
+      <br /><br />
+      <strong>${msg('MAZE_AVAILABLE_BLOCKS_LABEL')}</strong>
+      <ul style="margin: 8px 0; padding-left: 20px;">
+        <li>${msg('MAZE_MOVE_FORWARD')}</li>
+        <li>${msg('MAZE_TURN_LEFT')} / ${msg('MAZE_TURN_RIGHT')}</li>
+        <li>${msg('MAZE_PATH_AHEAD')}/${msg('MAZE_PATH_LEFT').replace('if path to the ', '')}/${msg('MAZE_PATH_RIGHT').replace('if path to the ', '')}</li>
+        <li>${msg('MAZE_REPEAT_UNTIL')}</li>
+      </ul>
+    `;
+  }
+
+  // Update keyboard help
+  const keyboardHelp = document.querySelector('.keyboard-help');
+  if (keyboardHelp) {
+    keyboardHelp.innerHTML = `
+      <strong>⌨️ ${msg('MAZE_KEYBOARD_NAV_LABEL')}</strong>
+      ${msg('MAZE_KEYBOARD_HELP_1')}<br />
+      ${msg('MAZE_KEYBOARD_HELP_2')}<br />
+      ${msg('MAZE_KEYBOARD_HELP_3')}<br />
+      ${msg('MAZE_KEYBOARD_HELP_4')}
+    `;
+  }
+}
+
+// Update UI text on load
+updateUIText();
 
 // CRITICAL: Register keyboard navigation components BEFORE Blockly injection
 KeyboardNavigation.registerKeyboardNavigationStyles();
@@ -88,17 +158,12 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
 
-// Level titles for each level
-const levelTitles = [
-  'Straight Path',
-  'Single Turn',
-  'Multiple Turns',
-  'S-Curve',
-  'T-Junction',
-  'Zigzag Path',
-  'Decision Points',
-  'Complex Maze',
-];
+/**
+ * Get level title from message keys
+ */
+function getLevelTitle(level: number): string {
+  return msg(`MAZE_LEVEL_${level}_TITLE`);
+}
 
 // Update level display
 function updateLevelDisplay() {
@@ -111,11 +176,11 @@ function updateLevelDisplay() {
   const nextButton = document.getElementById('nextLevel') as HTMLButtonElement;
 
   if (levelTitle) {
-    levelTitle.textContent = `Level ${currentLevel}: ${levelTitles[currentLevel - 1]}`;
+    levelTitle.textContent = msg('MAZE_LEVEL_WITH_TITLE', currentLevel, getLevelTitle(currentLevel));
   }
 
   if (levelDisplay) {
-    levelDisplay.textContent = `Level ${currentLevel} of ${maxLevel}`;
+    levelDisplay.textContent = msg('MAZE_LEVEL_COUNTER', currentLevel, maxLevel);
   }
 
   if (prevButton) {

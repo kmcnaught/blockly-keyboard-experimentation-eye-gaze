@@ -40,11 +40,55 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
       'If there is a path in the specified direction, then do the first block of actions. Otherwise, do the second block of actions.',
     MAZE_WHILE_TOOLTIP: 'Repeat the enclosed actions until the finish point is reached.',
 
-    // UI strings
+    // UI strings (from Games.*)
     MAZE_RUN_PROGRAM: 'Run Program',
     MAZE_RESET_PROGRAM: 'Reset',
     MAZE_CAPACITY: 'You have %1 blocks left.',
     MAZE_CONGRATULATIONS: 'Congratulations!',
+
+    // Page UI
+    MAZE_TITLE: 'Maze',
+    MAZE_SUBTITLE: 'Navigate the maze using Blockly blocks with full keyboard and eye gaze support',
+    MAZE_CHARACTER_LABEL: 'Character:',
+    MAZE_LANGUAGE_LABEL: 'Language:',
+
+    // Level display
+    MAZE_LEVEL: 'Level',
+    MAZE_LEVEL_COUNTER: 'Level %1 of %2',
+    MAZE_LEVEL_WITH_TITLE: 'Level %1: %2',
+
+    // Instructions
+    MAZE_GOAL_LABEL: 'Goal:',
+    MAZE_GOAL_DESCRIPTION: 'Program the blue player to reach the green goal.',
+    MAZE_AVAILABLE_BLOCKS_LABEL: 'Available blocks:',
+
+    // Keyboard help
+    MAZE_KEYBOARD_NAV_LABEL: 'Keyboard Navigation:',
+    MAZE_KEYBOARD_HELP_1: 'Tab to focus on Blockly workspace',
+    MAZE_KEYBOARD_HELP_2: 'Arrow keys to navigate blocks',
+    MAZE_KEYBOARD_HELP_3: 'Enter to edit or connect blocks',
+    MAZE_KEYBOARD_HELP_4: 'Press / for help menu',
+
+    // Level titles
+    MAZE_LEVEL_1_TITLE: 'Straight Path',
+    MAZE_LEVEL_2_TITLE: 'Single Turn',
+    MAZE_LEVEL_3_TITLE: 'Multiple Turns',
+    MAZE_LEVEL_4_TITLE: 'S-Curve',
+    MAZE_LEVEL_5_TITLE: 'T-Junction',
+    MAZE_LEVEL_6_TITLE: 'Zigzag Path',
+    MAZE_LEVEL_7_TITLE: 'Decision Points',
+    MAZE_LEVEL_8_TITLE: 'Complex Maze',
+
+    // Character names
+    MAZE_SKIN_ASTRO: 'Astro',
+    MAZE_SKIN_WHEELCHAIR: 'Wheelchair user',
+    MAZE_SKIN_PANDA: 'Panda',
+    MAZE_SKIN_PEGMAN: 'Pegman',
+
+    // Alert messages
+    MAZE_ALERT_ALREADY_RUNNING: 'Already executing!',
+    MAZE_SUCCESS_MESSAGE: 'Success! You reached the goal!',
+    MAZE_FAILURE_MESSAGE: 'Program finished, but you did not reach the goal.',
   },
 
   fr: {
@@ -69,13 +113,62 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_WHILE_TOOLTIP:
       'Répète les actions à l\'intérieur du bloc jusqu\'à atteindre le but final.',
 
-    // UI strings
+    // UI strings (from Games.*)
     MAZE_RUN_PROGRAM: 'Exécuter le programme',
     MAZE_RESET_PROGRAM: 'Réinitialiser',
     MAZE_CAPACITY: 'Il vous reste %1 blocs.',
     MAZE_CONGRATULATIONS: 'Félicitations !',
+
+    // Page UI
+    MAZE_TITLE: 'Labyrinthe',
+    MAZE_SUBTITLE: 'Naviguez dans le labyrinthe en utilisant des blocs Blockly avec clavier et suivi du regard',
+    MAZE_CHARACTER_LABEL: 'Personnage :',
+    MAZE_LANGUAGE_LABEL: 'Langue :',
+
+    // Level display
+    MAZE_LEVEL: 'Niveau',
+    MAZE_LEVEL_COUNTER: 'Niveau %1 sur %2',
+    MAZE_LEVEL_WITH_TITLE: 'Niveau %1 : %2',
+
+    // Instructions
+    MAZE_GOAL_LABEL: 'Objectif :',
+    MAZE_GOAL_DESCRIPTION: 'Programmez le joueur bleu pour atteindre l\'objectif vert.',
+    MAZE_AVAILABLE_BLOCKS_LABEL: 'Blocs disponibles :',
+
+    // Keyboard help
+    MAZE_KEYBOARD_NAV_LABEL: 'Navigation au clavier :',
+    MAZE_KEYBOARD_HELP_1: 'Tab pour se concentrer sur l\'espace de travail Blockly',
+    MAZE_KEYBOARD_HELP_2: 'Touches fléchées pour naviguer entre les blocs',
+    MAZE_KEYBOARD_HELP_3: 'Entrée pour éditer ou connecter des blocs',
+    MAZE_KEYBOARD_HELP_4: 'Appuyez sur / pour le menu d\'aide',
+
+    // Level titles
+    MAZE_LEVEL_1_TITLE: 'Chemin droit',
+    MAZE_LEVEL_2_TITLE: 'Un seul virage',
+    MAZE_LEVEL_3_TITLE: 'Plusieurs virages',
+    MAZE_LEVEL_4_TITLE: 'Courbe en S',
+    MAZE_LEVEL_5_TITLE: 'Jonction en T',
+    MAZE_LEVEL_6_TITLE: 'Chemin en zigzag',
+    MAZE_LEVEL_7_TITLE: 'Points de décision',
+    MAZE_LEVEL_8_TITLE: 'Labyrinthe complexe',
+
+    // Character names
+    MAZE_SKIN_ASTRO: 'Astro',
+    MAZE_SKIN_WHEELCHAIR: 'Utilisateur de fauteuil roulant',
+    MAZE_SKIN_PANDA: 'Panda',
+    MAZE_SKIN_PEGMAN: 'Pegman',
+
+    // Alert messages
+    MAZE_ALERT_ALREADY_RUNNING: 'Déjà en cours d\'exécution !',
+    MAZE_SUCCESS_MESSAGE: 'Succès ! Vous avez atteint l\'objectif !',
+    MAZE_FAILURE_MESSAGE: 'Le programme est terminé, mais vous n\'avez pas atteint l\'objectif.',
   },
 };
+
+/**
+ * Current locale being used
+ */
+let currentLocale: SupportedLocale = 'en';
 
 /**
  * Load messages for the specified locale into Blockly.Msg
@@ -89,12 +182,31 @@ export function loadMessages(locale: SupportedLocale = 'en'): void {
     locale = 'en';
   }
 
+  currentLocale = locale;
+
   // Load all messages into Blockly.Msg
   Object.entries(MESSAGES[locale]).forEach(([key, value]) => {
     Blockly.Msg[key] = value;
   });
 
   console.log(`Loaded maze game messages for locale: ${locale}`);
+}
+
+/**
+ * Get a message by key from the current locale
+ * @param key The message key
+ * @param params Optional parameters to replace %1, %2, etc.
+ * @returns The localized message
+ */
+export function msg(key: string, ...params: (string | number)[]): string {
+  let message = MESSAGES[currentLocale]?.[key] || MESSAGES['en'][key] || key;
+
+  // Replace parameters %1, %2, etc.
+  params.forEach((param, index) => {
+    message = message.replace(`%${index + 1}`, String(param));
+  });
+
+  return message;
 }
 
 /**
