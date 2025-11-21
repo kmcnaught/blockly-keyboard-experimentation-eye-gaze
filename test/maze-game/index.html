@@ -248,6 +248,77 @@
         background: #1976d2;
         color: white;
       }
+
+      /* Pegman button and menu styles */
+      #pegmanButton {
+        padding: 0;
+        position: relative;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.95);
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        width: 49px;
+        height: 51px;
+      }
+      #pegmanButton:hover {
+        background: white;
+        border-color: rgba(255, 255, 255, 0.8);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+      #pegmanButton.buttonHover {
+        background: white;
+        border-color: #ffeb3b;
+      }
+      #pegmanButton>img {
+        height: 51px;
+        width: 1029px;
+        display: block;
+        position: absolute;
+        left: -980px;
+        top: 0;
+      }
+      #pegmanButton>span {
+        position: absolute;
+        top: 0.8ex;
+        right: 5px;
+        color: #1976d2;
+        font-weight: bold;
+        z-index: 1;
+      }
+      #pegmanMenu {
+        border: 2px solid #1976d2;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        display: none;
+        position: absolute;
+        background: white;
+        z-index: 1000;
+      }
+      #pegmanMenu>div {
+        background-color: #fff;
+        cursor: pointer;
+        padding: 4px;
+        transition: background-color 0.2s;
+        position: relative;
+        width: 49px;
+        height: 51px;
+        overflow: hidden;
+      }
+      #pegmanMenu>div:hover {
+        background-color: #e3f2fd;
+      }
+      #pegmanMenu>div>img {
+        height: 51px;
+        width: 1029px;
+        display: block;
+        position: absolute;
+        left: -980px;
+        top: 0;
+      }
     </style>
   </head>
   <body>
@@ -256,12 +327,8 @@
       <p class="subtitle">Navigate the maze using Blockly blocks with full keyboard and eye gaze support</p>
       <div class="header-selectors">
         <div class="selector-group">
-          <label for="characterSelect">🎨 Character:</label>
-          <select id="characterSelect">
-            <option value="0">Pegman</option>
-            <option value="1">Astro</option>
-            <option value="2">Panda</option>
-          </select>
+          <label for="pegmanButton">🎨 Character:</label>
+          <button id="pegmanButton"><img src="assets/pegman.png"><span>▼</span></button>
         </div>
         <div class="selector-group">
           <label for="languageSelect">🌐 Language:</label>
@@ -316,6 +383,8 @@
         </div>
       </div>
     </div>
+
+    <div id="pegmanMenu"></div>
 
     <script src="bundle.js"></script>
   </body>

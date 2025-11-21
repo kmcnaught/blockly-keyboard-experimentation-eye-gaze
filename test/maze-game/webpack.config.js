@@ -9,7 +9,7 @@ const webpack = require('webpack');
 
 module.exports = {
   mode: 'development',
-  entry: './index.ts',
+  entry: './test/maze-game/index.ts',
   devtool: 'eval-source-map',
   output: {
     path: path.resolve(__dirname),

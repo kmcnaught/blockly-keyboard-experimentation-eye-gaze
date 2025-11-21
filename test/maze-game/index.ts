@@ -146,19 +146,86 @@ document.getElementById('nextLevel')?.addEventListener('click', () => {
   }
 });
 
-// Character selector handler
-const characterSelect = document.getElementById('characterSelect') as HTMLSelectElement;
-if (characterSelect) {
-  // Set the current character in the dropdown
-  characterSelect.value = savedSkin.toString();
+// Setup the Pegman button and menu
+const pegmanButton = document.getElementById('pegmanButton');
+const pegmanImg = pegmanButton?.querySelector('img');
+const pegmanMenu = document.getElementById('pegmanMenu');
+const skins = MazeGame.getSkins();
 
-  characterSelect.addEventListener('change', () => {
-    const skinId = parseInt(characterSelect.value, 10);
-    mazeGame.setSkin(skinId);
-    // Save preference
-    localStorage.setItem('mazeGameSkin', skinId.toString());
+// Set initial character sprite in button
+if (pegmanImg) {
+  pegmanImg.src = skins[savedSkin].sprite;
+}
+
+// Build the character menu
+if (pegmanMenu) {
+  skins.forEach((skin, i) => {
+    const div = document.createElement('div');
+    const img = document.createElement('img');
+    img.src = skin.sprite;
+    div.appendChild(img);
+    pegmanMenu.appendChild(div);
+
+    div.addEventListener('click', () => {
+      changePegman(i);
+    });
   });
 }
+
+// Function to change the character
+function changePegman(skinId: number) {
+  mazeGame.setSkin(skinId);
+  localStorage.setItem('mazeGameSkin', skinId.toString());
+
+  // Update button image
+  if (pegmanImg) {
+    pegmanImg.src = skins[skinId].sprite;
+  }
+
+  hidePegmanMenu();
+}
+
+// Show pegman menu on button click
+if (pegmanButton) {
+  pegmanButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (pegmanMenu) {
+      if (pegmanMenu.style.display === 'block') {
+        hidePegmanMenu();
+      } else {
+        showPegmanMenu();
+      }
+    }
+  });
+}
+
+// Show menu function
+function showPegmanMenu() {
+  if (!pegmanButton || !pegmanMenu) return;
+
+  pegmanButton.classList.add('buttonHover');
+  const rect = pegmanButton.getBoundingClientRect();
+  pegmanMenu.style.top = `${rect.bottom + 5}px`;
+  pegmanMenu.style.left = `${rect.left}px`;
+  pegmanMenu.style.display = 'block';
+
+  // Close menu when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', hidePegmanMenu);
+  }, 0);
+}
+
+// Hide menu function
+function hidePegmanMenu() {
+  if (!pegmanMenu || !pegmanButton) return;
+
+  pegmanMenu.style.display = 'none';
+  pegmanButton.classList.remove('buttonHover');
+  document.removeEventListener('click', hidePegmanMenu);
+}
+
+// Hide menu on window resize
+window.addEventListener('resize', hidePegmanMenu);
 
 // Run button handler
 document.getElementById('runButton')?.addEventListener('click', () => {

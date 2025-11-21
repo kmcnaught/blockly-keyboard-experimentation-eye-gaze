@@ -48,16 +48,6 @@ interface Skin {
 // Available character skins
 const SKINS: Skin[] = [
   {
-    sprite: 'assets/pegman.png',
-    tiles: 'assets/tiles_pegman.png',
-    background: false,
-    look: '#000',
-    winSound: ['assets/win.mp3', 'assets/win.ogg'],
-    crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
-    crashType: CrashType.STOP,
-    name: 'Pegman',
-  },
-  {
     sprite: 'assets/astro.png',
     tiles: 'assets/tiles_astro.png',
     background: 'assets/bg_astro.jpg',
@@ -68,6 +58,16 @@ const SKINS: Skin[] = [
     name: 'Astro',
   },
   {
+    sprite: 'assets/wheelchair.png',
+    tiles: 'assets/tiles_pegman.png',
+    background: false,
+    look: '#00f',
+    winSound: ['assets/win.mp3', 'assets/win.ogg'],
+    crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
+    crashType: CrashType.STOP,
+    name: 'Wheelchair user',
+  },
+  {
     sprite: 'assets/panda.png',
     tiles: 'assets/tiles_panda.png',
     background: 'assets/bg_panda.jpg',
@@ -76,6 +76,16 @@ const SKINS: Skin[] = [
     crashSound: ['assets/fail_panda.mp3', 'assets/fail_panda.ogg'],
     crashType: CrashType.FALL,
     name: 'Panda',
+  },
+  {
+    sprite: 'assets/pegman.png',
+    tiles: 'assets/tiles_pegman.png',
+    background: false,
+    look: '#000',
+    winSound: ['assets/win.mp3', 'assets/win.ogg'],
+    crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
+    crashType: CrashType.STOP,
+    name: 'Pegman',
   },
 ];
 
@@ -223,6 +233,7 @@ export class MazeGame {
   private animationFrame: number = 0; // Current animation frame (0-15 for direction, 16-18 for victory)
   private readonly PEGMAN_WIDTH = 49;
   private readonly PEGMAN_HEIGHT = 51;
+  private tileShapeCache: string[][] = []; // Cache tile shapes so they don't change on each draw
 
   constructor(canvasId: string, level: number, skinId: number = 0) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -257,7 +268,44 @@ export class MazeGame {
     this.playerDir = Direction.EAST;
     this.animationFrame = this.playerDir * 4; // Set initial frame based on direction
 
+    this.computeTileShapes();
     this.loadAssets();
+  }
+
+  /**
+   * Pre-compute tile shapes for the maze so they don't change on each draw.
+   */
+  private computeTileShapes(): void {
+    const normalize = (nx: number, ny: number): string => {
+      if (nx < 0 || nx >= this.maze[0].length || ny < 0 || ny >= this.maze.length) {
+        return '0';
+      }
+      return this.maze[ny][nx] === SquareType.WALL ? '0' : '1';
+    };
+
+    this.tileShapeCache = [];
+    for (let y = 0; y < this.maze.length; y++) {
+      this.tileShapeCache[y] = [];
+      for (let x = 0; x < this.maze[y].length; x++) {
+        let tileShape = normalize(x, y) +       // Center
+                       normalize(x, y - 1) +    // North
+                       normalize(x + 1, y) +    // East
+                       normalize(x, y + 1) +    // South
+                       normalize(x - 1, y);     // West
+
+        // Determine which tile to use
+        let finalShape = tileShape;
+        if (!TILE_SHAPES[tileShape]) {
+          // Empty square. Use null0 for large areas, with null1-4 for borders.
+          if (tileShape === '00000' && Math.random() > 0.3) {
+            finalShape = 'null0';
+          } else {
+            finalShape = 'null' + Math.floor(1 + Math.random() * 4);
+          }
+        }
+        this.tileShapeCache[y][x] = finalShape;
+      }
+    }
   }
 
   private loadAssets(): void {
@@ -285,11 +333,13 @@ export class MazeGame {
     this.tilesImage.onload = onImageLoad;
     this.tilesImage.src = this.skin.tiles;
 
-    // Load background image if it exists
+    // Load background image if it exists, or clear it if not
     if (this.skin.background) {
       this.backgroundImage = new Image();
       this.backgroundImage.onload = onImageLoad;
       this.backgroundImage.src = this.skin.background;
+    } else {
+      this.backgroundImage = null;
     }
 
     // Load marker image
@@ -354,6 +404,7 @@ export class MazeGame {
       }
     }
 
+    this.computeTileShapes();
     this.reset();
   }
 
@@ -389,54 +440,38 @@ export class MazeGame {
         const px = x * this.squareSize;
         const py = y * this.squareSize;
 
-        // Compute tile shape based on surrounding squares
-        const normalize = (nx: number, ny: number): string => {
-          if (nx < 0 || nx >= this.maze[0].length || ny < 0 || ny >= this.maze.length) {
-            return '0';
-          }
-          return this.maze[ny][nx] === SquareType.WALL ? '0' : '1';
-        };
+        // Draw tiles for all squares (both paths and walls)
+        if (this.tilesImage && this.imagesLoaded) {
+          // Get the pre-computed tile shape from cache
+          const finalShape = this.tileShapeCache[y][x];
 
-        let tileShape = normalize(x, y) +       // Center
-                       normalize(x, y - 1) +    // North
-                       normalize(x + 1, y) +    // East (note: original uses x+1 for West due to coordinate system)
-                       normalize(x, y + 1) +    // South
-                       normalize(x - 1, y);     // West (note: original uses x-1 for East)
+          const [tileCol, tileRow] = TILE_SHAPES[finalShape] || [0, 0];
+          const srcX = tileCol * 50;
+          const srcY = tileRow * 50;
 
-        // Only draw non-wall tiles
-        if (square !== SquareType.WALL) {
-          if (this.tilesImage && this.imagesLoaded) {
-            // Determine which tile to use
-            let finalShape = tileShape;
-            if (!TILE_SHAPES[tileShape]) {
-              // Empty square. Use null0 for large areas, with null1-4 for borders.
-              if (tileShape === '00000' && Math.random() > 0.3) {
-                finalShape = 'null0';
-              } else {
-                finalShape = 'null' + Math.floor(1 + Math.random() * 4);
-              }
-            }
-
-            const [tileCol, tileRow] = TILE_SHAPES[finalShape] || [0, 0];
-            const srcX = tileCol * 50;
-            const srcY = tileRow * 50;
-
-            // Draw the tile from the sprite sheet
-            this.ctx.drawImage(
-              this.tilesImage,
-              srcX, srcY, 50, 50,
-              px, py, this.squareSize, this.squareSize
-            );
+          // Draw the tile from the sprite sheet
+          this.ctx.drawImage(
+            this.tilesImage,
+            srcX, srcY, 50, 50,
+            px, py, this.squareSize, this.squareSize
+          );
+        } else {
+          // Fallback: Draw different colors for walls vs paths
+          if (square === SquareType.WALL) {
+            this.ctx.fillStyle = '#CCC';
           } else {
-            // Fallback: Draw path tiles with bright yellow highlight
             this.ctx.fillStyle = '#FFE500';
-            this.ctx.fillRect(px, py, this.squareSize, this.squareSize);
-
-            // Add subtle darker border to separate tiles
-            this.ctx.strokeStyle = '#D4C000';
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeRect(px, py, this.squareSize, this.squareSize);
           }
+          this.ctx.fillRect(px, py, this.squareSize, this.squareSize);
+
+          // Add subtle darker border to separate tiles
+          this.ctx.strokeStyle = '#AAA';
+          this.ctx.lineWidth = 1;
+          this.ctx.strokeRect(px, py, this.squareSize, this.squareSize);
+        }
+
+        // Draw finish marker and start position (only for non-wall tiles)
+        if (square !== SquareType.WALL) {
 
           // Draw finish marker with image if loaded
           if (square === SquareType.FINISH && this.markerImage && this.imagesLoaded) {
@@ -488,9 +523,9 @@ export class MazeGame {
       const srcX = frameIndex * this.PEGMAN_WIDTH;
       const srcY = 0;
 
-      // Draw pegman at appropriate size
+      // Draw pegman at appropriate size, offset slightly upward
       const destX = px + (this.squareSize - this.PEGMAN_WIDTH) / 2;
-      const destY = py + (this.squareSize - this.PEGMAN_HEIGHT) / 2;
+      const destY = py + (this.squareSize - this.PEGMAN_HEIGHT) / 2 - 5;
 
       this.ctx.drawImage(
         this.pegmanImage,
