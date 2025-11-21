@@ -53,6 +53,72 @@ const MAZES = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ],
+  // Level 3: Multiple turns
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 4: S-curve
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 5: T-junction with conditional
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 3, 0, 0, 0, 0],
+    [0, 2, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 6: Zigzag path
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 3, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 7: Multiple decision points
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 1, 1, 1, 1, 1, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 8: Complex maze requiring loop
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 2, 1, 0, 1, 1, 0, 0],
+    [0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 3, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
 ];
 
 export class MazeGame {
@@ -67,6 +133,9 @@ export class MazeGame {
   private squareSize = 50;
   private executing = false;
   private commandQueue: Array<() => void> = [];
+  private pegmanImage: HTMLImageElement | null = null;
+  private markerImage: HTMLImageElement | null = null;
+  private imagesLoaded = false;
 
   constructor(canvasId: string, level: number) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -79,7 +148,7 @@ export class MazeGame {
       throw new Error('Could not get canvas context');
     }
     this.ctx = ctx;
-    this.level = Math.min(level, MAZES.length) - 1;
+    this.level = Math.min(Math.max(level, 1), MAZES.length) - 1;
     this.maze = MAZES[this.level];
 
     // Find start and finish positions
@@ -98,7 +167,61 @@ export class MazeGame {
     this.playerPos = {...this.startPos};
     this.playerDir = Direction.EAST;
 
+    this.loadImages();
+  }
+
+  private loadImages(): void {
+    let imagesLoadedCount = 0;
+    const totalImages = 2;
+
+    const onImageLoad = () => {
+      imagesLoadedCount++;
+      if (imagesLoadedCount === totalImages) {
+        this.imagesLoaded = true;
+        this.draw();
+      }
+    };
+
+    // Load pegman image
+    this.pegmanImage = new Image();
+    this.pegmanImage.onload = onImageLoad;
+    this.pegmanImage.src = 'assets/pegman.png';
+
+    // Load marker image
+    this.markerImage = new Image();
+    this.markerImage.onload = onImageLoad;
+    this.markerImage.src = 'assets/marker.png';
+
+    // Draw placeholder while loading
     this.draw();
+  }
+
+  public static getMaxLevel(): number {
+    return MAZES.length;
+  }
+
+  public setLevel(level: number): void {
+    this.level = Math.min(Math.max(level, 1), MAZES.length) - 1;
+    this.maze = MAZES[this.level];
+
+    // Find start and finish positions
+    this.startPos = {x: 0, y: 0};
+    this.finishPos = {x: 0, y: 0};
+    for (let y = 0; y < this.maze.length; y++) {
+      for (let x = 0; x < this.maze[y].length; x++) {
+        if (this.maze[y][x] === SquareType.START) {
+          this.startPos = {x, y};
+        } else if (this.maze[y][x] === SquareType.FINISH) {
+          this.finishPos = {x, y};
+        }
+      }
+    }
+
+    this.reset();
+  }
+
+  public getLevel(): number {
+    return this.level + 1;
   }
 
   private draw() {
@@ -107,28 +230,47 @@ export class MazeGame {
     this.canvas.width = width;
     this.canvas.height = height;
 
-    // Clear canvas
+    // Clear canvas with light background
     this.ctx.fillStyle = '#F1EEE7';
     this.ctx.fillRect(0, 0, width, height);
 
-    // Draw maze
+    // Draw outer border
+    this.ctx.strokeStyle = '#CCB';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(0, 0, width, height);
+
+    // Draw maze - only render path tiles (not walls)
     for (let y = 0; y < this.maze.length; y++) {
       for (let x = 0; x < this.maze[y].length; x++) {
         const square = this.maze[y][x];
         const px = x * this.squareSize;
         const py = y * this.squareSize;
 
-        if (square === SquareType.WALL) {
-          this.ctx.fillStyle = '#666';
+        // Only draw non-wall tiles
+        if (square !== SquareType.WALL) {
+          // Draw path tiles with bright yellow highlight
+          this.ctx.fillStyle = '#FFE500';
           this.ctx.fillRect(px, py, this.squareSize, this.squareSize);
-        } else {
-          // Draw path
-          this.ctx.strokeStyle = '#CCB';
+
+          // Add subtle darker border to separate tiles
+          this.ctx.strokeStyle = '#D4C000';
+          this.ctx.lineWidth = 2;
           this.ctx.strokeRect(px, py, this.squareSize, this.squareSize);
 
-          // Draw finish marker
-          if (square === SquareType.FINISH) {
-            this.ctx.fillStyle = '#4CAF50';
+          // Draw finish marker with image if loaded
+          if (square === SquareType.FINISH && this.markerImage && this.imagesLoaded) {
+            const markerWidth = 20;
+            const markerHeight = 34;
+            this.ctx.drawImage(
+              this.markerImage,
+              px + (this.squareSize - markerWidth) / 2,
+              py + (this.squareSize - markerHeight) / 2 - 5,
+              markerWidth,
+              markerHeight
+            );
+          } else if (square === SquareType.FINISH) {
+            // Fallback if image not loaded
+            this.ctx.fillStyle = '#F44336';
             this.ctx.beginPath();
             this.ctx.arc(
               px + this.squareSize / 2,
@@ -143,27 +285,78 @@ export class MazeGame {
       }
     }
 
-    // Draw player
-    const px = this.playerPos.x * this.squareSize + this.squareSize / 2;
-    const py = this.playerPos.y * this.squareSize + this.squareSize / 2;
+    // Draw player with pegman image if loaded
+    const px = this.playerPos.x * this.squareSize;
+    const py = this.playerPos.y * this.squareSize;
 
-    this.ctx.fillStyle = '#2196F3';
-    this.ctx.beginPath();
-    this.ctx.arc(px, py, this.squareSize / 4, 0, 2 * Math.PI);
-    this.ctx.fill();
+    if (this.pegmanImage && this.imagesLoaded) {
+      // Pegman sprite sheet is 1029x51 with 21 frames (49x51 each)
+      // Frames 0-3: Facing North (different walking poses)
+      // Frames 4-7: Facing East
+      // Frames 8-11: Facing South
+      // Frames 12-15: Facing West
+      const PEGMAN_WIDTH = 49;
+      const PEGMAN_HEIGHT = 51;
 
-    // Draw direction indicator
-    this.ctx.strokeStyle = '#2196F3';
-    this.ctx.lineWidth = 3;
-    this.ctx.beginPath();
-    this.ctx.moveTo(px, py);
-    const dirX = [0, 1, 0, -1][this.playerDir];
-    const dirY = [-1, 0, 1, 0][this.playerDir];
-    this.ctx.lineTo(
-      px + dirX * (this.squareSize / 4 + 5),
-      py + dirY * (this.squareSize / 4 + 5)
-    );
-    this.ctx.stroke();
+      // Map direction to frame number (use first frame of each direction)
+      const directionToFrame = {
+        [Direction.NORTH]: 0,
+        [Direction.EAST]: 4,
+        [Direction.SOUTH]: 8,
+        [Direction.WEST]: 12,
+      };
+
+      const frameIndex = directionToFrame[this.playerDir];
+      const srcX = frameIndex * PEGMAN_WIDTH;
+      const srcY = 0;
+
+      // Draw pegman at appropriate size
+      const destWidth = PEGMAN_WIDTH;
+      const destHeight = PEGMAN_HEIGHT;
+      const destX = px + (this.squareSize - destWidth) / 2;
+      const destY = py + (this.squareSize - destHeight) / 2;
+
+      this.ctx.drawImage(
+        this.pegmanImage,
+        srcX,
+        srcY,
+        PEGMAN_WIDTH,
+        PEGMAN_HEIGHT,
+        destX,
+        destY,
+        destWidth,
+        destHeight
+      );
+    } else {
+      // Fallback rendering
+      const centerX = px + this.squareSize / 2;
+      const centerY = py + this.squareSize / 2;
+
+      // Draw green base
+      this.ctx.fillStyle = '#4CAF50';
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY + 10, this.squareSize / 5, 0, 2 * Math.PI);
+      this.ctx.fill();
+
+      // Draw player
+      this.ctx.fillStyle = '#2196F3';
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, this.squareSize / 4, 0, 2 * Math.PI);
+      this.ctx.fill();
+
+      // Draw direction indicator
+      this.ctx.strokeStyle = '#2196F3';
+      this.ctx.lineWidth = 3;
+      this.ctx.beginPath();
+      this.ctx.moveTo(centerX, centerY);
+      const dirX = [0, 1, 0, -1][this.playerDir];
+      const dirY = [-1, 0, 1, 0][this.playerDir];
+      this.ctx.lineTo(
+        centerX + dirX * (this.squareSize / 4 + 5),
+        centerY + dirY * (this.squareSize / 4 + 5)
+      );
+      this.ctx.stroke();
+    }
   }
 
   private isPathForward(): boolean {

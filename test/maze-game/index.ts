@@ -79,7 +79,63 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
 // Initialize maze game
 const mazeGame = new MazeGame('mazeCanvas', 1);
 
-console.log('Maze game initialized with keyboard navigation support');
+// Level titles for each level
+const levelTitles = [
+  'Straight Path',
+  'Single Turn',
+  'Multiple Turns',
+  'S-Curve',
+  'T-Junction',
+  'Zigzag Path',
+  'Decision Points',
+  'Complex Maze',
+];
+
+// Update level display
+function updateLevelDisplay() {
+  const currentLevel = mazeGame.getLevel();
+  const maxLevel = MazeGame.getMaxLevel();
+
+  const levelTitle = document.getElementById('levelTitle');
+  const levelDisplay = document.getElementById('levelDisplay');
+  const prevButton = document.getElementById('prevLevel') as HTMLButtonElement;
+  const nextButton = document.getElementById('nextLevel') as HTMLButtonElement;
+
+  if (levelTitle) {
+    levelTitle.textContent = `Level ${currentLevel}: ${levelTitles[currentLevel - 1]}`;
+  }
+
+  if (levelDisplay) {
+    levelDisplay.textContent = `Level ${currentLevel} of ${maxLevel}`;
+  }
+
+  if (prevButton) {
+    prevButton.disabled = currentLevel <= 1;
+  }
+
+  if (nextButton) {
+    nextButton.disabled = currentLevel >= maxLevel;
+  }
+}
+
+// Previous level button handler
+document.getElementById('prevLevel')?.addEventListener('click', () => {
+  const currentLevel = mazeGame.getLevel();
+  if (currentLevel > 1) {
+    mazeGame.setLevel(currentLevel - 1);
+    updateLevelDisplay();
+  }
+});
+
+// Next level button handler
+document.getElementById('nextLevel')?.addEventListener('click', () => {
+  const currentLevel = mazeGame.getLevel();
+  const maxLevel = MazeGame.getMaxLevel();
+  if (currentLevel < maxLevel) {
+    mazeGame.setLevel(currentLevel + 1);
+    updateLevelDisplay();
+  }
+});
 
 // Run button handler
 document.getElementById('runButton')?.addEventListener('click', () => {
@@ -91,5 +147,8 @@ document.getElementById('runButton')?.addEventListener('click', () => {
 document.getElementById('resetButton')?.addEventListener('click', () => {
   mazeGame.reset();
 });
+
+// Initial level display update
+updateLevelDisplay();
 
 console.log('Maze game initialized with keyboard navigation support');

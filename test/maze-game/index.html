@@ -115,6 +115,37 @@
         color: #333;
       }
 
+      .level-selector {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 12px 0;
+        padding: 12px;
+        background: #e8f5e9;
+        border-radius: 4px;
+      }
+
+      .level-selector button {
+        padding: 6px 12px;
+        font-size: 14px;
+        background: #4caf50;
+        color: white;
+        min-width: 40px;
+      }
+
+      .level-selector button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .level-selector span {
+        font-weight: 500;
+        color: #2e7d32;
+        flex: 1;
+        text-align: center;
+      }
+
       .instructions {
         color: #666;
         font-size: 14px;
@@ -171,7 +202,12 @@
 
       <div class="game-container">
         <div class="game-header">
-          <h2>Level 1: Straight Path</h2>
+          <h2 id="levelTitle">Level 1</h2>
+          <div class="level-selector">
+            <button id="prevLevel">&lt;</button>
+            <span id="levelDisplay">Level 1 of 8</span>
+            <button id="nextLevel">&gt;</button>
+          </div>
           <div class="instructions">
             <strong>Goal:</strong> Program the blue player to reach the green goal.
             <br /><br />
