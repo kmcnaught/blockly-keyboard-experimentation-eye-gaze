@@ -9,6 +9,7 @@
  */
 
 import {msg} from './messages';
+import Interpreter from 'js-interpreter';
 
 enum Direction {
   NORTH = 0,
@@ -785,6 +786,83 @@ export class MazeGame {
     this.draw();
   }
 
+  /**
+   * Initialize the JS-Interpreter with the maze API.
+   * This creates a sandboxed environment where user code can only call
+   * whitelisted functions, preventing security issues and infinite loops.
+   * @param interpreter The JS-Interpreter instance.
+   * @param globalObject The interpreter's global scope object.
+   */
+  private initInterpreter(interpreter: any, globalObject: any): void {
+    // Helper function to wrap our methods for the interpreter
+    const wrapFunction = (fn: Function) => {
+      return interpreter.createNativeFunction(fn, false);
+    };
+
+    // Register moveForward
+    interpreter.setProperty(
+      globalObject,
+      'moveForward',
+      wrapFunction((blockId?: string) => {
+        this.moveForward();
+      })
+    );
+
+    // Register turnLeft
+    interpreter.setProperty(
+      globalObject,
+      'turnLeft',
+      wrapFunction((blockId?: string) => {
+        this.turnLeft();
+      })
+    );
+
+    // Register turnRight
+    interpreter.setProperty(
+      globalObject,
+      'turnRight',
+      wrapFunction((blockId?: string) => {
+        this.turnRight();
+      })
+    );
+
+    // Register isPathForward
+    interpreter.setProperty(
+      globalObject,
+      'isPathForward',
+      wrapFunction((blockId?: string) => {
+        return this.isPathForward();
+      })
+    );
+
+    // Register isPathLeft
+    interpreter.setProperty(
+      globalObject,
+      'isPathLeft',
+      wrapFunction((blockId?: string) => {
+        return this.isPathLeft();
+      })
+    );
+
+    // Register isPathRight
+    interpreter.setProperty(
+      globalObject,
+      'isPathRight',
+      wrapFunction((blockId?: string) => {
+        return this.isPathRight();
+      })
+    );
+
+    // Register notDone
+    interpreter.setProperty(
+      globalObject,
+      'notDone',
+      wrapFunction(() => {
+        return this.notDone();
+      })
+    );
+  }
+
   public execute(code: string) {
     if (this.executing) {
       alert(msg('MAZE_ALERT_ALREADY_RUNNING'));
@@ -795,29 +873,34 @@ export class MazeGame {
     this.reset();
     this.commandQueue = [];
 
-    // Create execution context - functions queue commands
-    const context: any = {
-      moveForward: (blockId?: string) => this.moveForward(),
-      turnLeft: (blockId?: string) => this.turnLeft(),
-      turnRight: (blockId?: string) => this.turnRight(),
-      isPathForward: (blockId?: string) => this.isPathForward(),
-      isPathLeft: (blockId?: string) => this.isPathLeft(),
-      isPathRight: (blockId?: string) => this.isPathRight(),
-      notDone: () => this.notDone(),
-    };
-
     try {
-      // Execute code to build command queue
-      const params = Object.keys(context);
-      const args = Object.values(context);
-      const fn = new Function(...params, code);
-      fn(...args);
+      // Create interpreter with sandboxed API
+      const interpreter = new Interpreter(
+        code,
+        (interp: any, globalObj: any) => this.initInterpreter(interp, globalObj)
+      );
 
-      // Animate the command queue
+      // Execute code step-by-step with infinite loop protection
+      // 10,000 ticks allows about 8 minutes of execution
+      let ticks = 10000;
+      while (interpreter.step()) {
+        if (ticks-- === 0) {
+          throw new Error('TIMEOUT');
+        }
+      }
+
+      // Code execution complete, now animate the command queue
       this.animateQueue();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error executing code:', e);
-      alert('Error executing code: ' + e);
+
+      // Provide user-friendly error messages
+      if (e.message === 'TIMEOUT') {
+        alert(msg('MAZE_TIMEOUT_MESSAGE') || 'Program took too long to run. Check for infinite loops.');
+      } else {
+        alert(msg('MAZE_ERROR_MESSAGE') || 'Error executing code: ' + e.message);
+      }
+
       this.executing = false;
     }
   }

@@ -20,6 +20,7 @@ module.exports = {
     extensions: ['.ts', '.js'],
     fallback: {
       'util': false,
+      'vm': false, // js-interpreter tries to import vm module, but we don't need it in browser
     },
   },
   module: {

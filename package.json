@@ -18,8 +18,10 @@
     "start": "blockly-scripts start",
     "start:minimal": "npm run build:minimal && python3 -m http.server 8000",
     "start:maze": "webpack serve --config test/maze-game/webpack.config.js",
+    "start:turtle": "webpack serve --config test/turtle-game/webpack.config.js",
     "build:minimal": "cd test && webpack --config webpack.minimal.config.js",
     "build:maze": "webpack --config test/maze-game/webpack.config.js",
+    "build:turtle": "webpack --config test/turtle-game/webpack.config.js",
     "test": "npm run test:mocha && npm run test:wdio",
     "test:ci": "npm run test:mocha && npm run test:wdio:ci",
     "test:mocha": "blockly-scripts test",
@@ -95,5 +97,8 @@
   },
   "eslintConfig": {
     "extends": "@blockly/eslint-config"
+  },
+  "dependencies": {
+    "js-interpreter": "^6.0.1"
   }
 }

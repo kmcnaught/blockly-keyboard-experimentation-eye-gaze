@@ -89,6 +89,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_ALERT_ALREADY_RUNNING: 'Already executing!',
     MAZE_SUCCESS_MESSAGE: 'Success! You reached the goal!',
     MAZE_FAILURE_MESSAGE: 'Program finished, but you did not reach the goal.',
+    MAZE_TIMEOUT_MESSAGE: 'Program took too long to run. Check for infinite loops.',
+    MAZE_ERROR_MESSAGE: 'Error executing code: ',
   },
 
   fr: {
@@ -162,6 +164,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_ALERT_ALREADY_RUNNING: 'Déjà en cours d\'exécution !',
     MAZE_SUCCESS_MESSAGE: 'Succès ! Vous avez atteint l\'objectif !',
     MAZE_FAILURE_MESSAGE: 'Le programme est terminé, mais vous n\'avez pas atteint l\'objectif.',
+    MAZE_TIMEOUT_MESSAGE: 'Le programme a pris trop de temps. Vérifiez les boucles infinies.',
+    MAZE_ERROR_MESSAGE: 'Erreur lors de l\'exécution du code : ',
   },
 };
 
