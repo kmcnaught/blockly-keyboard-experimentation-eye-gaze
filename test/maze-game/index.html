@@ -58,6 +58,84 @@
         border-top: 1px solid #ddd;
         display: flex;
         gap: 12px;
+        align-items: center;
+      }
+
+      #capacityBubble {
+        margin-left: auto;
+        padding: 8px 16px;
+        background: #e8f5e9;
+        border: 2px solid #4caf50;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #2e7d32;
+        transition: all 0.3s;
+      }
+
+      #capacityBubble.warning {
+        background: #fff3e0;
+        border-color: #ff9800;
+        color: #e65100;
+      }
+
+      #capacityBubble.error {
+        background: #ffebee;
+        border-color: #f44336;
+        color: #c62828;
+      }
+
+      #capacityBubble.hidden {
+        display: none;
+      }
+
+      /* Hint dialog styles */
+      #hintDialog {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        background: white;
+        border: 2px solid #1976d2;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        padding: 16px 20px;
+        max-width: 300px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+      }
+
+      #hintDialog::before {
+        content: '💡';
+        font-size: 20px;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      #hintDialog.visible {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      #hintDialog .close-btn {
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        color: #999;
+        padding: 0 4px;
+      }
+
+      #hintDialog .close-btn:hover {
+        color: #333;
       }
 
       button {
@@ -346,6 +424,7 @@
         <div class="controls">
           <button id="runButton">▶️ Run Program</button>
           <button id="resetButton">🔄 Reset</button>
+          <div id="capacityBubble" class="hidden"></div>
         </div>
       </div>
 
@@ -385,6 +464,7 @@
     </div>
 
     <div id="pegmanMenu"></div>
+    <div id="hintDialog"><button class="close-btn">&times;</button><span id="hintText"></span></div>
 
     <script src="bundle.js"></script>
   </body>

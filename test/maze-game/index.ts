@@ -15,7 +15,7 @@ import {KeyboardNavigation} from '../../src/index';
 import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 import {registerMazeBlocks} from './blocks';
-import {MazeGame} from './maze';
+import {MazeGame, MAX_BLOCKS} from './maze';
 import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
 
 // Initialize locale (browser detection or saved preference)
@@ -103,37 +103,54 @@ KeyboardNavigation.registerKeyboardNavigationStyles();
 registerFlyoutCursor();
 registerNavigationDeferringToolbox();
 
-// Toolbox configuration
-const toolbox = {
-  kind: 'flyoutToolbox',
-  contents: [
-    {
-      kind: 'block',
-      type: 'maze_moveForward',
-    },
-    {
-      kind: 'block',
-      type: 'maze_turn',
-    },
-    {
-      kind: 'block',
-      type: 'maze_if',
-    },
-    {
-      kind: 'block',
-      type: 'maze_ifElse',
-    },
-    {
-      kind: 'block',
-      type: 'maze_forever',
-    },
-  ],
-};
+/**
+ * Get the toolbox configuration for a specific level.
+ * Blocks are progressively unlocked as levels advance.
+ *
+ * Level 1-2: moveForward, turn (basic sequencing)
+ * Level 3-5: + forever loop (introduces loops)
+ * Level 6: + if (preset to isPathLeft)
+ * Level 7-8: + if (with dropdown)
+ * Level 9-10: + ifElse
+ */
+function getToolboxForLevel(level: number): Blockly.utils.toolbox.ToolboxDefinition {
+  const contents: Blockly.utils.toolbox.ToolboxItemInfo[] = [
+    {kind: 'block', type: 'maze_moveForward'},
+    {kind: 'block', type: 'maze_turn', fields: {DIR: 'turnLeft'}},
+    {kind: 'block', type: 'maze_turn', fields: {DIR: 'turnRight'}},
+  ];
 
-// Initialize Blockly workspace
+  // Level 3+: Add forever loop
+  if (level > 2) {
+    contents.push({kind: 'block', type: 'maze_forever'});
+  }
+
+  // Level 6: Add if block (preset to isPathLeft)
+  if (level === 6) {
+    contents.push({kind: 'block', type: 'maze_if', fields: {DIR: 'isPathLeft'}});
+  }
+  // Level 7+: Add if block with dropdown
+  else if (level > 6) {
+    contents.push({kind: 'block', type: 'maze_if'});
+  }
+
+  // Level 9+: Add ifElse block
+  if (level > 8) {
+    contents.push({kind: 'block', type: 'maze_ifElse'});
+  }
+
+  return {kind: 'flyoutToolbox', contents};
+}
+
+// Start at level 1
+const initialLevel = 1;
+const initialMaxBlocks = MAX_BLOCKS[initialLevel - 1];
+
+// Initialize Blockly workspace with level-specific configuration
 const workspace = Blockly.inject('blocklyDiv', {
-  toolbox: toolbox,
+  toolbox: getToolboxForLevel(initialLevel),
   trashcan: true,
+  maxBlocks: initialMaxBlocks === Infinity ? undefined : initialMaxBlocks,
   zoom: {
     controls: true,
     wheel: true,
@@ -148,6 +165,67 @@ const workspace = Blockly.inject('blocklyDiv', {
     wheel: true,
   },
 });
+
+/**
+ * Update the capacity bubble display based on remaining block capacity.
+ */
+function updateCapacityBubble() {
+  const capacityBubble = document.getElementById('capacityBubble');
+  if (!capacityBubble) return;
+
+  const currentLevel = mazeGame.getLevel();
+  const maxBlocks = MAX_BLOCKS[currentLevel - 1];
+
+  // Hide bubble if no limit
+  if (maxBlocks === Infinity) {
+    capacityBubble.classList.add('hidden');
+    return;
+  }
+
+  const remaining = workspace.remainingCapacity();
+  capacityBubble.classList.remove('hidden', 'warning', 'error');
+
+  if (remaining <= 0) {
+    capacityBubble.textContent = msg('MAZE_CAPACITY_NONE');
+    capacityBubble.classList.add('error');
+  } else if (remaining <= 2) {
+    capacityBubble.textContent = msg('MAZE_CAPACITY', remaining);
+    capacityBubble.classList.add('warning');
+  } else {
+    capacityBubble.textContent = msg('MAZE_CAPACITY', remaining);
+  }
+}
+
+// Listen for workspace changes to update capacity
+workspace.addChangeListener((event) => {
+  if (event.type === Blockly.Events.BLOCK_CREATE ||
+      event.type === Blockly.Events.BLOCK_DELETE ||
+      event.type === Blockly.Events.BLOCK_MOVE) {
+    updateCapacityBubble();
+  }
+});
+
+/**
+ * Update workspace configuration for a new level.
+ * This updates both the toolbox and the maxBlocks limit.
+ */
+function updateWorkspaceForLevel(level: number) {
+  const maxBlocks = MAX_BLOCKS[level - 1];
+
+  // Update toolbox with level-appropriate blocks
+  workspace.updateToolbox(getToolboxForLevel(level));
+
+  // Update max blocks - need to set the option and refresh
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const options = workspace.options as any;
+  options.maxBlocks = maxBlocks === Infinity ? Infinity : maxBlocks;
+
+  // Clear workspace when changing levels
+  workspace.clear();
+
+  // Update capacity display
+  updateCapacityBubble();
+}
 
 // Initialize keyboard navigation plugin
 const keyboardNavigation = new KeyboardNavigation(workspace, {
@@ -196,7 +274,9 @@ function updateLevelDisplay() {
 document.getElementById('prevLevel')?.addEventListener('click', () => {
   const currentLevel = mazeGame.getLevel();
   if (currentLevel > 1) {
-    mazeGame.setLevel(currentLevel - 1);
+    const newLevel = currentLevel - 1;
+    mazeGame.setLevel(newLevel);
+    updateWorkspaceForLevel(newLevel);
     updateLevelDisplay();
   }
 });
@@ -206,7 +286,9 @@ document.getElementById('nextLevel')?.addEventListener('click', () => {
   const currentLevel = mazeGame.getLevel();
   const maxLevel = MazeGame.getMaxLevel();
   if (currentLevel < maxLevel) {
-    mazeGame.setLevel(currentLevel + 1);
+    const newLevel = currentLevel + 1;
+    mazeGame.setLevel(newLevel);
+    updateWorkspaceForLevel(newLevel);
     updateLevelDisplay();
   }
 });
@@ -323,5 +405,213 @@ if (languageSelect) {
     window.location.reload();
   });
 }
+
+// ========== HINT SYSTEM ==========
+
+// Track execution state for hints
+let hasRun = false;
+let lastResult: 'success' | 'failure' | 'error' | 'none' = 'none';
+let hintTimeout: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Show a hint dialog with the given message.
+ */
+function showHint(messageKey: string) {
+  const hintDialog = document.getElementById('hintDialog');
+  const hintText = document.getElementById('hintText');
+  if (!hintDialog || !hintText) return;
+
+  hintText.textContent = msg(messageKey);
+  hintDialog.classList.add('visible');
+
+  // Position hint near the workspace
+  const blocklyDiv = document.getElementById('blocklyDiv');
+  if (blocklyDiv) {
+    const rect = blocklyDiv.getBoundingClientRect();
+    hintDialog.style.top = `${rect.top + 20}px`;
+    hintDialog.style.left = `${rect.left + 20}px`;
+  }
+}
+
+/**
+ * Hide the hint dialog.
+ */
+function hideHint() {
+  const hintDialog = document.getElementById('hintDialog');
+  if (hintDialog) {
+    hintDialog.classList.remove('visible');
+  }
+  if (hintTimeout) {
+    clearTimeout(hintTimeout);
+    hintTimeout = null;
+  }
+}
+
+// Close button for hint dialog
+document.querySelector('#hintDialog .close-btn')?.addEventListener('click', hideHint);
+
+/**
+ * Determine which hint to show based on current level and workspace state.
+ * This implements the original blockly-games hint logic.
+ */
+function levelHelp() {
+  // Don't show hints while executing
+  if (mazeGame.isExecuting()) return;
+
+  const level = mazeGame.getLevel();
+  const blocks = workspace.getAllBlocks(false);
+  const topBlocks = workspace.getTopBlocks(false);
+  const maxBlocks = MAX_BLOCKS[level - 1];
+  const remaining = workspace.remainingCapacity();
+
+  // Helper to check if a block type exists
+  const hasBlockType = (type: string) => blocks.some(b => b.type === type);
+
+  // Helper to count blocks in a loop
+  const getNestedBlockCount = (loopBlock: Blockly.Block): number => {
+    let count = 0;
+    let block = loopBlock.getInputTargetBlock('DO');
+    while (block) {
+      count++;
+      block = block.getNextBlock();
+    }
+    return count;
+  };
+
+  hideHint(); // Clear any existing hint
+
+  // Schedule hint with delay to avoid showing too quickly
+  hintTimeout = setTimeout(() => {
+    let hintKey: string | null = null;
+
+    switch (level) {
+      case 1:
+        // Level 1 hints
+        if (blocks.length < 2) {
+          hintKey = 'MAZE_HINT_STACK';
+        } else if (topBlocks.length > 1) {
+          hintKey = 'MAZE_HINT_ONE_TOP_BLOCK';
+        } else if (!hasRun) {
+          hintKey = 'MAZE_HINT_RUN';
+        }
+        break;
+
+      case 2:
+        // Level 2: Hint about resetting after failure
+        if (hasRun && lastResult === 'failure') {
+          hintKey = 'MAZE_HINT_RESET';
+        }
+        break;
+
+      case 3:
+        // Level 3: Introduces loops (block limit 2)
+        if (remaining === 0 && !hasBlockType('maze_forever')) {
+          hintKey = 'MAZE_HINT_CAPACITY';
+        } else if (!hasBlockType('maze_forever') && remaining > 0) {
+          hintKey = 'MAZE_HINT_REPEAT';
+        }
+        break;
+
+      case 4:
+        // Level 4: Multiple blocks in loop
+        if (remaining === 0 && (!hasBlockType('maze_forever') || topBlocks.length > 1)) {
+          hintKey = 'MAZE_HINT_CAPACITY';
+        } else if (hasBlockType('maze_forever')) {
+          const foreverBlock = blocks.find(b => b.type === 'maze_forever');
+          if (foreverBlock && getNestedBlockCount(foreverBlock) < 2) {
+            hintKey = 'MAZE_HINT_REPEAT_MANY';
+          }
+        }
+        break;
+
+      case 5:
+        // Level 5: No specific hint (optional skin hint in original)
+        break;
+
+      case 6:
+        // Level 6: Introduces if block
+        if (!hasBlockType('maze_if')) {
+          hintKey = 'MAZE_HINT_IF';
+        }
+        break;
+
+      case 7:
+      case 8:
+        // Level 7-8: If block with dropdown
+        if (hasBlockType('maze_if')) {
+          // Check if any if block still has default isPathForward
+          const ifBlock = blocks.find(b => b.type === 'maze_if');
+          if (ifBlock) {
+            const fieldValue = ifBlock.getFieldValue('DIR');
+            if (fieldValue === 'isPathForward') {
+              hintKey = 'MAZE_HINT_MENU';
+            }
+          }
+        }
+        break;
+
+      case 9:
+        // Level 9: Introduces ifElse
+        if (!hasBlockType('maze_ifElse')) {
+          hintKey = 'MAZE_HINT_IF_ELSE';
+        }
+        break;
+
+      case 10:
+        // Level 10: Wall following hint (show once)
+        if (!localStorage.getItem('maze_level10_hint_shown')) {
+          hintKey = 'MAZE_HINT_WALL_FOLLOW';
+          localStorage.setItem('maze_level10_hint_shown', 'true');
+        }
+        break;
+    }
+
+    if (hintKey) {
+      showHint(hintKey);
+    }
+  }, 2000); // 2 second delay before showing hints
+}
+
+// Update run button handler to track execution
+const originalRunHandler = document.getElementById('runButton');
+if (originalRunHandler) {
+  originalRunHandler.addEventListener('click', () => {
+    hasRun = true;
+    hideHint();
+  });
+}
+
+// Listen for maze game completion events
+mazeGame.onComplete((success: boolean) => {
+  lastResult = success ? 'success' : 'failure';
+  // Trigger hint check after a short delay
+  setTimeout(levelHelp, 500);
+});
+
+// Trigger hints on workspace changes (with debouncing via the timeout in levelHelp)
+workspace.addChangeListener((event) => {
+  if (event.type === Blockly.Events.BLOCK_CREATE ||
+      event.type === Blockly.Events.BLOCK_DELETE ||
+      event.type === Blockly.Events.BLOCK_CHANGE ||
+      event.type === Blockly.Events.BLOCK_MOVE) {
+    levelHelp();
+  }
+});
+
+// Reset hint state when level changes
+function resetHintState() {
+  hasRun = false;
+  lastResult = 'none';
+  hideHint();
+  // Trigger initial hint for new level
+  setTimeout(levelHelp, 1000);
+}
+
+// Hook into level change handlers
+document.getElementById('prevLevel')?.addEventListener('click', resetHintState);
+document.getElementById('nextLevel')?.addEventListener('click', resetHintState);
+
+// Initial hint after page load
+setTimeout(levelHelp, 3000);
 
 console.log(`Maze game initialized with keyboard navigation support (locale: ${currentLocale})`);

@@ -43,7 +43,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     // UI strings (from Games.*)
     MAZE_RUN_PROGRAM: 'Run Program',
     MAZE_RESET_PROGRAM: 'Reset',
-    MAZE_CAPACITY: 'You have %1 blocks left.',
+    MAZE_CAPACITY: '%1 blocks left',
+    MAZE_CAPACITY_NONE: 'No blocks left!',
     MAZE_CONGRATULATIONS: 'Congratulations!',
 
     // Page UI
@@ -72,12 +73,14 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     // Level titles
     MAZE_LEVEL_1_TITLE: 'Straight Path',
     MAZE_LEVEL_2_TITLE: 'Single Turn',
-    MAZE_LEVEL_3_TITLE: 'Multiple Turns',
-    MAZE_LEVEL_4_TITLE: 'S-Curve',
-    MAZE_LEVEL_5_TITLE: 'T-Junction',
-    MAZE_LEVEL_6_TITLE: 'Zigzag Path',
-    MAZE_LEVEL_7_TITLE: 'Decision Points',
-    MAZE_LEVEL_8_TITLE: 'Complex Maze',
+    MAZE_LEVEL_3_TITLE: 'Loop Practice',
+    MAZE_LEVEL_4_TITLE: 'Diagonal Staircase',
+    MAZE_LEVEL_5_TITLE: 'Vertical Corridor',
+    MAZE_LEVEL_6_TITLE: 'Box Maze',
+    MAZE_LEVEL_7_TITLE: 'Complex Branching',
+    MAZE_LEVEL_8_TITLE: 'Intricate Maze',
+    MAZE_LEVEL_9_TITLE: 'Winding Path',
+    MAZE_LEVEL_10_TITLE: 'Wall Follower',
 
     // Character names
     MAZE_SKIN_ASTRO: 'Astro',
@@ -91,6 +94,19 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_FAILURE_MESSAGE: 'Program finished, but you did not reach the goal.',
     MAZE_TIMEOUT_MESSAGE: 'Program took too long to run. Check for infinite loops.',
     MAZE_ERROR_MESSAGE: 'Error executing code: ',
+
+    // Hints
+    MAZE_HINT_STACK: 'Stack a couple of "move forward" blocks together to help me reach the goal.',
+    MAZE_HINT_ONE_TOP_BLOCK: 'On this level, you need to stack together all of the blocks in the workspace.',
+    MAZE_HINT_RUN: 'Run your program to see what happens.',
+    MAZE_HINT_RESET: 'Your program didn\'t solve the maze. Press "Reset" and try again.',
+    MAZE_HINT_REPEAT: 'Reach the end of this path using only two blocks. Use "repeat until" to run a block more than once.',
+    MAZE_HINT_CAPACITY: 'You have used up all the blocks for this level. To create a new block, you first need to delete an existing block.',
+    MAZE_HINT_REPEAT_MANY: 'You can fit more than one block inside a "repeat until" block.',
+    MAZE_HINT_IF: 'An "if" block will do something only if the condition is true. Try turning left if there is a path to the left.',
+    MAZE_HINT_MENU: 'Click on the dropdown in the "if" block to change its condition.',
+    MAZE_HINT_IF_ELSE: '"If-else" blocks will do one thing or the other.',
+    MAZE_HINT_WALL_FOLLOW: 'Can you solve this complicated maze? Try following the left-hand wall. Advanced programmers only!',
   },
 
   fr: {
@@ -118,7 +134,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     // UI strings (from Games.*)
     MAZE_RUN_PROGRAM: 'Exécuter le programme',
     MAZE_RESET_PROGRAM: 'Réinitialiser',
-    MAZE_CAPACITY: 'Il vous reste %1 blocs.',
+    MAZE_CAPACITY: '%1 blocs restants',
+    MAZE_CAPACITY_NONE: 'Plus de blocs !',
     MAZE_CONGRATULATIONS: 'Félicitations !',
 
     // Page UI
@@ -147,12 +164,14 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     // Level titles
     MAZE_LEVEL_1_TITLE: 'Chemin droit',
     MAZE_LEVEL_2_TITLE: 'Un seul virage',
-    MAZE_LEVEL_3_TITLE: 'Plusieurs virages',
-    MAZE_LEVEL_4_TITLE: 'Courbe en S',
-    MAZE_LEVEL_5_TITLE: 'Jonction en T',
-    MAZE_LEVEL_6_TITLE: 'Chemin en zigzag',
-    MAZE_LEVEL_7_TITLE: 'Points de décision',
-    MAZE_LEVEL_8_TITLE: 'Labyrinthe complexe',
+    MAZE_LEVEL_3_TITLE: 'Pratique de boucle',
+    MAZE_LEVEL_4_TITLE: 'Escalier diagonal',
+    MAZE_LEVEL_5_TITLE: 'Couloir vertical',
+    MAZE_LEVEL_6_TITLE: 'Labyrinthe en boîte',
+    MAZE_LEVEL_7_TITLE: 'Branchement complexe',
+    MAZE_LEVEL_8_TITLE: 'Labyrinthe élaboré',
+    MAZE_LEVEL_9_TITLE: 'Chemin sinueux',
+    MAZE_LEVEL_10_TITLE: 'Suiveur de mur',
 
     // Character names
     MAZE_SKIN_ASTRO: 'Astro',
@@ -166,6 +185,19 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_FAILURE_MESSAGE: 'Le programme est terminé, mais vous n\'avez pas atteint l\'objectif.',
     MAZE_TIMEOUT_MESSAGE: 'Le programme a pris trop de temps. Vérifiez les boucles infinies.',
     MAZE_ERROR_MESSAGE: 'Erreur lors de l\'exécution du code : ',
+
+    // Hints
+    MAZE_HINT_STACK: 'Empilez quelques blocs "avancer" ensemble pour m\'aider à atteindre l\'objectif.',
+    MAZE_HINT_ONE_TOP_BLOCK: 'À ce niveau, vous devez empiler tous les blocs ensemble dans l\'espace de travail.',
+    MAZE_HINT_RUN: 'Exécutez votre programme pour voir ce qui se passe.',
+    MAZE_HINT_RESET: 'Votre programme n\'a pas résolu le labyrinthe. Appuyez sur "Réinitialiser" et réessayez.',
+    MAZE_HINT_REPEAT: 'Atteignez la fin de ce chemin avec seulement deux blocs. Utilisez "répéter jusqu\'à" pour exécuter un bloc plusieurs fois.',
+    MAZE_HINT_CAPACITY: 'Vous avez utilisé tous les blocs pour ce niveau. Pour créer un nouveau bloc, vous devez d\'abord supprimer un bloc existant.',
+    MAZE_HINT_REPEAT_MANY: 'Vous pouvez mettre plus d\'un bloc à l\'intérieur d\'un bloc "répéter jusqu\'à".',
+    MAZE_HINT_IF: 'Un bloc "si" ne fera quelque chose que si la condition est vraie. Essayez de tourner à gauche s\'il y a un chemin vers la gauche.',
+    MAZE_HINT_MENU: 'Cliquez sur le menu déroulant dans le bloc "si" pour changer sa condition.',
+    MAZE_HINT_IF_ELSE: 'Les blocs "si-sinon" feront une chose ou l\'autre.',
+    MAZE_HINT_WALL_FOLLOW: 'Pouvez-vous résoudre ce labyrinthe compliqué ? Essayez de suivre le mur de gauche. Réservé aux programmeurs avancés !',
   },
 };
 

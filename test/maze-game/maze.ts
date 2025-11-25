@@ -25,6 +25,23 @@ enum SquareType {
   FINISH = 3,
 }
 
+/**
+ * Maximum number of blocks allowed per level.
+ * Infinity means no limit (levels 1-2 for learning).
+ */
+export const MAX_BLOCKS = [
+  Infinity, // Level 1: No limit (learning sequencing)
+  Infinity, // Level 2: No limit (learning turns)
+  2,        // Level 3: Forces use of loop
+  5,        // Level 4: Loop with multiple blocks
+  5,        // Level 5: Vertical maze
+  5,        // Level 6: Introduces conditionals
+  5,        // Level 7: If with dropdown
+  10,       // Level 8: Complex navigation
+  7,        // Level 9: Restrictive despite complexity
+  10,       // Level 10: Final challenge
+];
+
 // Crash type constants
 enum CrashType {
   STOP = 1,  // Bounce animation
@@ -119,11 +136,34 @@ const TILE_SHAPES: Record<string, [number, number]> = {
 };
 
 /**
- * Simple maze layouts by level.
+ * Maze layouts by level - matches original blockly-games/maze.
+ * SquareType: 0=WALL, 1=OPEN, 2=START, 3=FINISH
  */
 const MAZES = [
-  // Level 1: Simple straight path
+  // Level 1: Simple straight path (2 moves)
   [
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 2, 1, 3, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 2: L-shape (one turn)
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 3, 0, 0, 0],
+    [0, 0, 2, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 3: Straight path (introduces loop - block limit 2)
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -131,83 +171,82 @@ const MAZES = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
   ],
-  // Level 2: Single turn
+  // Level 4: Diagonal staircase (path continues past start/goal)
   [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 3, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-  ],
-  // Level 3: Multiple turns
-  [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 3, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-  ],
-  // Level 4: S-curve
-  [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1],
+    [0, 0, 0, 0, 0, 3, 1, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0],
     [0, 0, 0, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 3, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 2, 1, 0, 0, 0, 0, 0],
+    [1, 1, 0, 0, 0, 0, 0, 0],
   ],
-  // Level 5: T-junction with conditional
+  // Level 5: Vertical corridor with turns
   [
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 3, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 2, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 6: Box maze (introduces if block)
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0, 1, 0, 0],
+    [0, 1, 1, 3, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
     [0, 2, 1, 1, 1, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
   ],
-  // Level 6: Zigzag path
+  // Level 7: Complex branching (if with dropdown)
   [
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 3, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 1, 0],
+    [0, 2, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 1, 0],
+    [0, 1, 1, 3, 0, 1, 0, 0],
+    [0, 1, 0, 1, 0, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ],
-  // Level 7: Multiple decision points
+  // Level 8: Intricate maze
   [
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 0, 0, 0],
+    [0, 1, 0, 0, 1, 1, 0, 0],
+    [0, 1, 1, 1, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0, 1, 0, 0],
+    [0, 2, 1, 1, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // Level 9: Complex winding path (introduces ifElse)
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
     [0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 3, 0, 0],
+    [3, 1, 1, 1, 1, 1, 1, 0],
+    [0, 1, 0, 1, 0, 1, 1, 0],
+    [1, 1, 1, 1, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0, 2, 1, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ],
-  // Level 8: Complex maze requiring loop
+  // Level 10: Wall-following challenge (final level)
   [
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 2, 1, 0, 1, 1, 0, 0],
-    [0, 0, 1, 0, 1, 0, 0, 0],
-    [0, 0, 1, 1, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 3, 0],
+    [0, 1, 1, 0, 3, 0, 1, 0],
+    [0, 1, 1, 0, 1, 1, 1, 0],
+    [0, 1, 0, 1, 0, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 0, 1, 0, 0, 1, 0],
+    [0, 2, 1, 1, 1, 0, 1, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
   ],
 ];
@@ -223,7 +262,16 @@ export class MazeGame {
   private finishPos: Position;
   private squareSize = 50;
   private executing = false;
-  private commandQueue: Array<() => Promise<void>> = [];
+
+  // Execution state (updated during interpreter run, separate from animation state)
+  private pegmanX = 0;
+  private pegmanY = 0;
+  private pegmanD: Direction = Direction.EAST;
+
+  // Log of actions recorded during execution, replayed during animation
+  // Format: [action, blockId] where action is 'north'|'south'|'east'|'west'|'left'|'right'|'fail_forward'|'fail_backward'|'finish'
+  private log: Array<[string, string?]> = [];
+
   private pegmanImage: HTMLImageElement | null = null;
   private tilesImage: HTMLImageElement | null = null;
   private backgroundImage: HTMLImageElement | null = null;
@@ -415,6 +463,31 @@ export class MazeGame {
     return this.level + 1;
   }
 
+  /**
+   * Check if the maze is currently executing code.
+   */
+  public isExecuting(): boolean {
+    return this.executing;
+  }
+
+  // Callback for completion events
+  private completionCallbacks: Array<(success: boolean) => void> = [];
+
+  /**
+   * Register a callback to be called when execution completes.
+   * @param callback Function called with true if goal reached, false otherwise.
+   */
+  public onComplete(callback: (success: boolean) => void): void {
+    this.completionCallbacks.push(callback);
+  }
+
+  /**
+   * Notify all completion callbacks.
+   */
+  private notifyCompletion(success: boolean): void {
+    this.completionCallbacks.forEach(cb => cb(success));
+  }
+
   private draw() {
     const width = this.maze[0].length * this.squareSize;
     const height = this.maze.length * this.squareSize;
@@ -573,30 +646,54 @@ export class MazeGame {
     }
   }
 
-  private isPathForward(): boolean {
-    const dirX = [0, 1, 0, -1][this.playerDir];
-    const dirY = [-1, 0, 1, 0][this.playerDir];
-    const newX = this.playerPos.x + dirX;
-    const newY = this.playerPos.y + dirY;
+  /**
+   * Constrain a direction to 0-3 range (NORTH, EAST, SOUTH, WEST).
+   */
+  private constrainDirection4(d: number): Direction {
+    return ((d % 4) + 4) % 4 as Direction;
+  }
+
+  /**
+   * Check if there is a path in the given direction relative to current facing.
+   * @param direction 0=forward, 1=right, 2=backward, 3=left
+   * @param blockId Optional block ID for logging
+   * @returns true if path exists
+   */
+  private isPath(direction: number, blockId?: string): boolean {
+    const effectiveDirection = this.constrainDirection4(this.pegmanD + direction);
+    const dirDeltas = [
+      {x: 0, y: -1, look: 'look_north'},  // NORTH
+      {x: 1, y: 0, look: 'look_east'},    // EAST
+      {x: 0, y: 1, look: 'look_south'},   // SOUTH
+      {x: -1, y: 0, look: 'look_west'},   // WEST
+    ];
+
+    const delta = dirDeltas[effectiveDirection];
+    const newX = this.pegmanX + delta.x;
+    const newY = this.pegmanY + delta.y;
+
+    // Log the look action if blockId provided (for animation)
+    if (blockId) {
+      this.log.push([delta.look, blockId]);
+    }
+
     return this.isValidPosition(newX, newY);
   }
 
-  private isPathLeft(): boolean {
-    const leftDir = (this.playerDir + 3) % 4;
-    const dirX = [0, 1, 0, -1][leftDir];
-    const dirY = [-1, 0, 1, 0][leftDir];
-    const newX = this.playerPos.x + dirX;
-    const newY = this.playerPos.y + dirY;
-    return this.isValidPosition(newX, newY);
+  private isPathForward(blockId?: string): boolean {
+    return this.isPath(0, blockId);
   }
 
-  private isPathRight(): boolean {
-    const rightDir = (this.playerDir + 1) % 4;
-    const dirX = [0, 1, 0, -1][rightDir];
-    const dirY = [-1, 0, 1, 0][rightDir];
-    const newX = this.playerPos.x + dirX;
-    const newY = this.playerPos.y + dirY;
-    return this.isValidPosition(newX, newY);
+  private isPathRight(blockId?: string): boolean {
+    return this.isPath(1, blockId);
+  }
+
+  private isPathBackward(blockId?: string): boolean {
+    return this.isPath(2, blockId);
+  }
+
+  private isPathLeft(blockId?: string): boolean {
+    return this.isPath(3, blockId);
   }
 
   private isValidPosition(x: number, y: number): boolean {
@@ -606,45 +703,71 @@ export class MazeGame {
     return this.maze[y][x] !== SquareType.WALL;
   }
 
-  private moveForward(): void {
-    this.commandQueue.push(async () => {
-      const dirX = [0, 1, 0, -1][this.playerDir];
-      const dirY = [-1, 0, 1, 0][this.playerDir];
-      const newX = this.playerPos.x + dirX;
-      const newY = this.playerPos.y + dirY;
+  /**
+   * Move pegman in the given direction.
+   * @param direction 0=forward, 2=backward
+   * @param blockId Block ID for logging
+   * @throws false if wall collision (stops execution)
+   *
+   * Note: Unlike wall collision, reaching the goal does NOT stop execution.
+   * The code continues running - if you overshoot the goal, you fail.
+   * Success/failure is determined by final position after all code runs.
+   */
+  private move(direction: number, blockId?: string): void {
+    // Check for wall collision
+    if (!this.isPath(direction, undefined)) {
+      this.log.push([direction === 0 ? 'fail_forward' : 'fail_backward', blockId]);
+      throw false; // Wall collision - stops execution
+    }
 
-      if (!this.isValidPosition(newX, newY)) {
-        await this.animateCrash(dirX, dirY);
-        return;
-      }
+    const effectiveDirection = this.constrainDirection4(this.pegmanD + direction);
+    const dirDeltas = [
+      {x: 0, y: -1, cmd: 'north'},  // NORTH
+      {x: 1, y: 0, cmd: 'east'},    // EAST
+      {x: 0, y: 1, cmd: 'south'},   // SOUTH
+      {x: -1, y: 0, cmd: 'west'},   // WEST
+    ];
 
-      // Smooth animation with 4 steps
-      await this.animateMove(this.playerPos.x, this.playerPos.y, newX, newY);
-      this.playerPos.x = newX;
-      this.playerPos.y = newY;
-    });
+    const delta = dirDeltas[effectiveDirection];
+    this.pegmanX += delta.x;
+    this.pegmanY += delta.y;
+    this.log.push([delta.cmd, blockId]);
+
+    // Do NOT stop on reaching goal - let execution continue
+    // Final position is checked after all code completes
   }
 
-  private turnLeft(): void {
-    this.commandQueue.push(async () => {
-      const startFrame = this.playerDir * 4;
-      const endDir = ((this.playerDir + 3) % 4) as Direction;
-      const endFrame = endDir * 4;
-      await this.animateTurn(startFrame, endFrame);
-      this.playerDir = endDir;
-      this.animationFrame = endFrame;
-    });
+  private moveForward(blockId?: string): void {
+    this.move(0, blockId);
   }
 
-  private turnRight(): void {
-    this.commandQueue.push(async () => {
-      const startFrame = this.playerDir * 4;
-      const endDir = ((this.playerDir + 1) % 4) as Direction;
-      const endFrame = endDir * 4;
-      await this.animateTurn(startFrame, endFrame);
-      this.playerDir = endDir;
-      this.animationFrame = endFrame;
-    });
+  private moveBackward(blockId?: string): void {
+    this.move(2, blockId);
+  }
+
+  /**
+   * Turn pegman.
+   * @param direction 0=left, 1=right
+   * @param blockId Block ID for logging
+   */
+  private turn(direction: number, blockId?: string): void {
+    if (direction === 1) {
+      // Turn right (clockwise)
+      this.pegmanD = this.constrainDirection4(this.pegmanD + 1);
+      this.log.push(['right', blockId]);
+    } else {
+      // Turn left (counter-clockwise)
+      this.pegmanD = this.constrainDirection4(this.pegmanD - 1);
+      this.log.push(['left', blockId]);
+    }
+  }
+
+  private turnLeft(blockId?: string): void {
+    this.turn(0, blockId);
+  }
+
+  private turnRight(blockId?: string): void {
+    this.turn(1, blockId);
   }
 
   /**
@@ -659,7 +782,9 @@ export class MazeGame {
     for (let i = 1; i <= steps; i++) {
       const x = startX + deltaX * i;
       const y = startY + deltaY * i;
-      this.drawPegman(x, y, this.playerDir * 4);
+      const frame = this.playerDir * 4;
+      this.animationFrame = frame;
+      this.drawPegman(x, y, frame);
       this.draw();
       await this.delay(stepDelay);
     }
@@ -767,10 +892,14 @@ export class MazeGame {
     this.draw();
   }
 
+  /**
+   * Check if pegman has NOT reached the goal (used during execution).
+   * Uses execution state (pegmanX/Y) not animation state (playerPos).
+   */
   private notDone(): boolean {
     return (
-      this.playerPos.x !== this.finishPos.x ||
-      this.playerPos.y !== this.finishPos.y
+      this.pegmanX !== this.finishPos.x ||
+      this.pegmanY !== this.finishPos.y
     );
   }
 
@@ -804,7 +933,16 @@ export class MazeGame {
       globalObject,
       'moveForward',
       wrapFunction((blockId?: string) => {
-        this.moveForward();
+        this.moveForward(blockId);
+      })
+    );
+
+    // Register moveBackward
+    interpreter.setProperty(
+      globalObject,
+      'moveBackward',
+      wrapFunction((blockId?: string) => {
+        this.moveBackward(blockId);
       })
     );
 
@@ -813,7 +951,7 @@ export class MazeGame {
       globalObject,
       'turnLeft',
       wrapFunction((blockId?: string) => {
-        this.turnLeft();
+        this.turnLeft(blockId);
       })
     );
 
@@ -822,7 +960,7 @@ export class MazeGame {
       globalObject,
       'turnRight',
       wrapFunction((blockId?: string) => {
-        this.turnRight();
+        this.turnRight(blockId);
       })
     );
 
@@ -831,16 +969,7 @@ export class MazeGame {
       globalObject,
       'isPathForward',
       wrapFunction((blockId?: string) => {
-        return this.isPathForward();
-      })
-    );
-
-    // Register isPathLeft
-    interpreter.setProperty(
-      globalObject,
-      'isPathLeft',
-      wrapFunction((blockId?: string) => {
-        return this.isPathLeft();
+        return this.isPathForward(blockId);
       })
     );
 
@@ -849,7 +978,25 @@ export class MazeGame {
       globalObject,
       'isPathRight',
       wrapFunction((blockId?: string) => {
-        return this.isPathRight();
+        return this.isPathRight(blockId);
+      })
+    );
+
+    // Register isPathBackward
+    interpreter.setProperty(
+      globalObject,
+      'isPathBackward',
+      wrapFunction((blockId?: string) => {
+        return this.isPathBackward(blockId);
+      })
+    );
+
+    // Register isPathLeft
+    interpreter.setProperty(
+      globalObject,
+      'isPathLeft',
+      wrapFunction((blockId?: string) => {
+        return this.isPathLeft(blockId);
       })
     );
 
@@ -863,6 +1010,9 @@ export class MazeGame {
     );
   }
 
+  // Result type enum matching original
+  private result: 'unset' | 'success' | 'failure' | 'timeout' | 'error' = 'unset';
+
   public execute(code: string) {
     if (this.executing) {
       alert(msg('MAZE_ALERT_ALREADY_RUNNING'));
@@ -871,7 +1021,13 @@ export class MazeGame {
 
     this.executing = true;
     this.reset();
-    this.commandQueue = [];
+
+    // Clear log and reset execution state
+    this.log = [];
+    this.pegmanX = this.startPos.x;
+    this.pegmanY = this.startPos.y;
+    this.pegmanD = Direction.EAST;
+    this.result = 'unset';
 
     try {
       // Create interpreter with sandboxed API
@@ -885,41 +1041,154 @@ export class MazeGame {
       let ticks = 10000;
       while (interpreter.step()) {
         if (ticks-- === 0) {
-          throw new Error('TIMEOUT');
+          throw Infinity; // Timeout
         }
       }
 
-      // Code execution complete, now animate the command queue
-      this.animateQueue();
+      // Code execution completed normally - check if goal was reached
+      this.result = this.notDone() ? 'failure' : 'success';
     } catch (e: any) {
-      console.error('Error executing code:', e);
-
-      // Provide user-friendly error messages
-      if (e.message === 'TIMEOUT') {
-        alert(msg('MAZE_TIMEOUT_MESSAGE') || 'Program took too long to run. Check for infinite loops.');
+      if (e === Infinity) {
+        // Timeout
+        this.result = 'timeout';
+      } else if (e === false) {
+        // Wall collision
+        this.result = 'error';
       } else {
-        alert(msg('MAZE_ERROR_MESSAGE') || 'Error executing code: ' + e.message);
+        // Other error
+        console.error('Error executing code:', e);
+        this.result = 'error';
       }
+    }
 
-      this.executing = false;
+    // Reset visual state and animate the recorded log
+    this.playerPos = {...this.startPos};
+    this.playerDir = Direction.EAST;
+    this.animationFrame = Direction.EAST * 4;
+    this.draw();
+
+    // Start animation playback
+    this.animate();
+  }
+
+  /**
+   * Animate the recorded log of actions.
+   * Recursively processes each action with appropriate delays.
+   */
+  private animate(): void {
+    const action = this.log.shift();
+
+    if (!action) {
+      // No more actions - show result
+      this.showResult();
+      return;
+    }
+
+    const [cmd, _blockId] = action;
+    const stepDelay = 300; // ms per action
+
+    switch (cmd) {
+      case 'north':
+        this.animateMoveAsync(0, -1).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'south':
+        this.animateMoveAsync(0, 1).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'east':
+        this.animateMoveAsync(1, 0).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'west':
+        this.animateMoveAsync(-1, 0).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'left':
+        this.animateTurnAsync(-1).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'right':
+        this.animateTurnAsync(1).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      case 'fail_forward':
+      case 'fail_backward': {
+        const dir = cmd === 'fail_forward' ? 0 : 2;
+        const effectiveDir = this.constrainDirection4(this.playerDir + dir);
+        const dirDeltas = [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}];
+        const delta = dirDeltas[effectiveDir];
+        this.animateCrashAsync(delta.x, delta.y).then(() => setTimeout(() => this.animate(), 50));
+        break;
+      }
+      case 'look_north':
+      case 'look_south':
+      case 'look_east':
+      case 'look_west':
+        // Look actions are just visual cues, skip with minimal delay
+        setTimeout(() => this.animate(), 50);
+        break;
+      default:
+        // Unknown action, skip
+        setTimeout(() => this.animate(), 50);
     }
   }
 
-  private async animateQueue() {
-    for (const command of this.commandQueue) {
-      await command(); // Commands are now async
-    }
+  /**
+   * Animate movement in a direction (async version for log playback).
+   */
+  private async animateMoveAsync(deltaX: number, deltaY: number): Promise<void> {
+    const startX = this.playerPos.x;
+    const startY = this.playerPos.y;
+    const endX = startX + deltaX;
+    const endY = startY + deltaY;
 
+    await this.animateMove(startX, startY, endX, endY);
+    this.playerPos.x = endX;
+    this.playerPos.y = endY;
+  }
+
+  /**
+   * Animate turn (async version for log playback).
+   * @param direction -1 for left, 1 for right
+   */
+  private async animateTurnAsync(direction: number): Promise<void> {
+    const startFrame = this.playerDir * 4;
+    const endDir = this.constrainDirection4(this.playerDir + direction);
+    const endFrame = endDir * 4;
+
+    await this.animateTurn(startFrame, endFrame);
+    this.playerDir = endDir;
+    this.animationFrame = endFrame;
+  }
+
+  /**
+   * Animate crash (async version for log playback).
+   */
+  private async animateCrashAsync(deltaX: number, deltaY: number): Promise<void> {
+    await this.animateCrash(deltaX, deltaY);
+  }
+
+  /**
+   * Show the result after animation completes.
+   */
+  private async showResult(): Promise<void> {
     this.executing = false;
 
-    // Check if finished
-    if (!this.notDone()) {
-      await this.animateVictory();
-      setTimeout(() => {
-        alert(msg('MAZE_SUCCESS_MESSAGE'));
-      }, 500);
-    } else {
-      alert(msg('MAZE_FAILURE_MESSAGE'));
+    switch (this.result) {
+      case 'success':
+        await this.animateVictory();
+        setTimeout(() => {
+          alert(msg('MAZE_SUCCESS_MESSAGE'));
+          this.notifyCompletion(true);
+        }, 500);
+        break;
+      case 'failure':
+        alert(msg('MAZE_FAILURE_MESSAGE'));
+        this.notifyCompletion(false);
+        break;
+      case 'timeout':
+        alert(msg('MAZE_TIMEOUT_MESSAGE'));
+        this.notifyCompletion(false);
+        break;
+      case 'error':
+        // Wall collision - no additional message needed (crash animation shown)
+        this.notifyCompletion(false);
+        break;
     }
   }
 }
