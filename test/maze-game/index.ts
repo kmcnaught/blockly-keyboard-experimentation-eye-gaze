@@ -236,6 +236,11 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
 
+// Register block highlighting callback for code execution visualization
+mazeGame.onHighlight((blockId) => {
+  workspace.highlightBlock(blockId);
+});
+
 /**
  * Get level title from message keys
  */

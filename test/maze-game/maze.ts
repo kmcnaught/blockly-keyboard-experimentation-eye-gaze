@@ -473,12 +473,23 @@ export class MazeGame {
   // Callback for completion events
   private completionCallbacks: Array<(success: boolean) => void> = [];
 
+  // Callback for block highlighting during execution
+  private highlightCallback: ((blockId: string | null) => void) | null = null;
+
   /**
    * Register a callback to be called when execution completes.
    * @param callback Function called with true if goal reached, false otherwise.
    */
   public onComplete(callback: (success: boolean) => void): void {
     this.completionCallbacks.push(callback);
+  }
+
+  /**
+   * Register a callback to be called when a block should be highlighted.
+   * @param callback Function called with block ID to highlight, or null to clear.
+   */
+  public onHighlight(callback: (blockId: string | null) => void): void {
+    this.highlightCallback = callback;
   }
 
   /**
@@ -1084,8 +1095,15 @@ export class MazeGame {
       return;
     }
 
-    const [cmd, _blockId] = action;
-    const stepDelay = 300; // ms per action
+    const [cmd, blockId] = action;
+
+    // Highlight the block that triggered this action
+    if (blockId && this.highlightCallback) {
+      const match = blockId.match(/^block_id_(.+)$/);
+      if (match) {
+        this.highlightCallback(match[1]);
+      }
+    }
 
     switch (cmd) {
       case 'north':
@@ -1168,6 +1186,11 @@ export class MazeGame {
    */
   private async showResult(): Promise<void> {
     this.executing = false;
+
+    // Clear block highlighting
+    if (this.highlightCallback) {
+      this.highlightCallback(null);
+    }
 
     switch (this.result) {
       case 'success':
