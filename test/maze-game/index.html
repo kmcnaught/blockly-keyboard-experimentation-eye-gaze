@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Maze Game - Blockly with Keyboard Navigation</title>
+    <title>Maze</title>
     <style>
       body {
         font-family: 'Roboto', Arial, sans-serif;
@@ -25,12 +25,6 @@
         margin: 0;
         font-size: 24px;
         font-weight: 500;
-      }
-
-      .subtitle {
-        margin: 4px 0 0 0;
-        font-size: 14px;
-        opacity: 0.9;
       }
 
       .container {
@@ -187,12 +181,6 @@
         margin-bottom: 16px;
       }
 
-      .game-header h2 {
-        margin: 0 0 8px 0;
-        font-size: 18px;
-        color: #333;
-      }
-
       .level-selector {
         display: flex;
         gap: 8px;
@@ -224,13 +212,6 @@
         text-align: center;
       }
 
-      .instructions {
-        color: #666;
-        font-size: 14px;
-        line-height: 1.6;
-        margin-bottom: 16px;
-      }
-
       .canvas-wrapper {
         display: flex;
         justify-content: center;
@@ -246,22 +227,6 @@
         border: 1px solid #ccc;
       }
 
-      .keyboard-help {
-        margin-top: 16px;
-        padding: 12px;
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        border-radius: 4px;
-        font-size: 13px;
-        line-height: 1.6;
-      }
-
-      .keyboard-help strong {
-        display: block;
-        margin-bottom: 4px;
-        color: #1976d2;
-      }
-
       .header-selectors {
         position: absolute;
         top: 16px;
@@ -275,12 +240,6 @@
         display: flex;
         align-items: center;
         gap: 8px;
-      }
-
-      .selector-group label {
-        font-size: 14px;
-        color: white;
-        opacity: 0.9;
       }
 
       .selector-group select {
@@ -401,15 +360,12 @@
   </head>
   <body>
     <header>
-      <h1>🎮 Maze Game</h1>
-      <p class="subtitle">Navigate the maze using Blockly blocks with full keyboard and eye gaze support</p>
+      <h1>Maze</h1>
       <div class="header-selectors">
         <div class="selector-group">
-          <label for="pegmanButton">🎨 Character:</label>
           <button id="pegmanButton"><img src="assets/pegman.png"><span>▼</span></button>
         </div>
         <div class="selector-group">
-          <label for="languageSelect">🌐 Language:</label>
           <select id="languageSelect">
             <option value="en">English</option>
             <option value="fr">Français</option>
@@ -422,43 +378,23 @@
       <div class="blockly-container">
         <div id="blocklyDiv"></div>
         <div class="controls">
-          <button id="runButton">▶️ Run Program</button>
-          <button id="resetButton">🔄 Reset</button>
+          <button id="runButton">Run Program</button>
+          <button id="resetButton">Reset</button>
           <div id="capacityBubble" class="hidden"></div>
         </div>
       </div>
 
       <div class="game-container">
         <div class="game-header">
-          <h2 id="levelTitle">Level 1</h2>
           <div class="level-selector">
             <button id="prevLevel">&lt;</button>
-            <span id="levelDisplay">Level 1 of 8</span>
+            <span id="levelDisplay">Level 1</span>
             <button id="nextLevel">&gt;</button>
-          </div>
-          <div class="instructions">
-            <strong>Goal:</strong> Program the blue player to reach the green goal.
-            <br /><br />
-            <strong>Available blocks:</strong>
-            <ul style="margin: 8px 0; padding-left: 20px;">
-              <li>move forward</li>
-              <li>turn left / turn right</li>
-              <li>if path ahead/left/right</li>
-              <li>repeat until finish</li>
-            </ul>
           </div>
         </div>
 
         <div class="canvas-wrapper">
           <canvas id="mazeCanvas"></canvas>
-        </div>
-
-        <div class="keyboard-help">
-          <strong>⌨️ Keyboard Navigation:</strong>
-          Tab to focus on Blockly workspace<br />
-          Arrow keys to navigate blocks<br />
-          Enter to edit or connect blocks<br />
-          Press <code>/</code> for help menu
         </div>
       </div>
     </div>

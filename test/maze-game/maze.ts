@@ -62,7 +62,6 @@ interface Skin {
   winSound: string[];   // Paths to win sound files
   crashSound: string[]; // Paths to crash sound files
   crashType: CrashType; // Type of crash animation
-  name: string;         // Display name for the skin
 }
 
 // Available character skins
@@ -75,7 +74,6 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_astro.mp3', 'assets/fail_astro.ogg'],
     crashType: CrashType.SPIN,
-    name: msg('MAZE_SKIN_ASTRO'),
   },
   {
     sprite: 'assets/wheelchair.png',
@@ -85,7 +83,6 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
     crashType: CrashType.STOP,
-    name: msg('MAZE_SKIN_WHEELCHAIR'),
   },
   {
     sprite: 'assets/panda.png',
@@ -95,7 +92,6 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_panda.mp3', 'assets/fail_panda.ogg'],
     crashType: CrashType.FALL,
-    name: msg('MAZE_SKIN_PANDA'),
   },
   {
     sprite: 'assets/pegman.png',
@@ -105,7 +101,6 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
     crashType: CrashType.STOP,
-    name: msg('MAZE_SKIN_PEGMAN'),
   },
 ];
 
@@ -1042,7 +1037,6 @@ export class MazeGame {
 
   public execute(code: string) {
     if (this.executing) {
-      alert(msg('MAZE_ALERT_ALREADY_RUNNING'));
       return;
     }
 
@@ -1212,7 +1206,7 @@ export class MazeGame {
       case 'success':
         await this.animateVictory();
         setTimeout(() => {
-          alert(msg('MAZE_SUCCESS_MESSAGE'));
+          alert(msg('MAZE_CONGRATULATIONS'));
           this.notifyCompletion(true);
         }, 500);
         break;

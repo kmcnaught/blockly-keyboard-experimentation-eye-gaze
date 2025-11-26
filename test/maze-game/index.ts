@@ -32,66 +32,21 @@ registerMazeBlocks();
  * Update all UI text elements with internationalized messages
  */
 function updateUIText() {
-  // Update page title and subtitle
+  // Update page title
   const pageTitle = document.querySelector('h1');
   if (pageTitle) {
-    pageTitle.textContent = `🎮 ${msg('MAZE_TITLE')}`;
-  }
-
-  const subtitle = document.querySelector('.subtitle');
-  if (subtitle) {
-    subtitle.textContent = msg('MAZE_SUBTITLE');
-  }
-
-  // Update character label
-  const charLabel = document.querySelector('label[for="pegmanButton"]');
-  if (charLabel) {
-    charLabel.textContent = `🎨 ${msg('MAZE_CHARACTER_LABEL')}`;
-  }
-
-  // Update language label
-  const langLabel = document.querySelector('label[for="languageSelect"]');
-  if (langLabel) {
-    langLabel.textContent = `🌐 ${msg('MAZE_LANGUAGE_LABEL')}`;
+    pageTitle.textContent = msg('MAZE_TITLE');
   }
 
   // Update button text
   const runButton = document.getElementById('runButton');
   if (runButton) {
-    runButton.textContent = `▶️ ${msg('MAZE_RUN_PROGRAM')}`;
+    runButton.textContent = msg('MAZE_RUN_PROGRAM');
   }
 
   const resetButton = document.getElementById('resetButton');
   if (resetButton) {
-    resetButton.textContent = `🔄 ${msg('MAZE_RESET_PROGRAM')}`;
-  }
-
-  // Update instructions
-  const instructions = document.querySelector('.instructions');
-  if (instructions) {
-    instructions.innerHTML = `
-      <strong>${msg('MAZE_GOAL_LABEL')}</strong> ${msg('MAZE_GOAL_DESCRIPTION')}
-      <br /><br />
-      <strong>${msg('MAZE_AVAILABLE_BLOCKS_LABEL')}</strong>
-      <ul style="margin: 8px 0; padding-left: 20px;">
-        <li>${msg('MAZE_MOVE_FORWARD')}</li>
-        <li>${msg('MAZE_TURN_LEFT')} / ${msg('MAZE_TURN_RIGHT')}</li>
-        <li>${msg('MAZE_PATH_AHEAD')}/${msg('MAZE_PATH_LEFT').replace('if path to the ', '')}/${msg('MAZE_PATH_RIGHT').replace('if path to the ', '')}</li>
-        <li>${msg('MAZE_REPEAT_UNTIL')}</li>
-      </ul>
-    `;
-  }
-
-  // Update keyboard help
-  const keyboardHelp = document.querySelector('.keyboard-help');
-  if (keyboardHelp) {
-    keyboardHelp.innerHTML = `
-      <strong>⌨️ ${msg('MAZE_KEYBOARD_NAV_LABEL')}</strong>
-      ${msg('MAZE_KEYBOARD_HELP_1')}<br />
-      ${msg('MAZE_KEYBOARD_HELP_2')}<br />
-      ${msg('MAZE_KEYBOARD_HELP_3')}<br />
-      ${msg('MAZE_KEYBOARD_HELP_4')}
-    `;
+    resetButton.textContent = msg('MAZE_RESET_PROGRAM');
   }
 }
 
@@ -186,8 +141,11 @@ function updateCapacityBubble() {
   capacityBubble.classList.remove('hidden', 'warning', 'error');
 
   if (remaining <= 0) {
-    capacityBubble.textContent = msg('MAZE_CAPACITY_NONE');
+    capacityBubble.textContent = msg('MAZE_CAPACITY', 0);
     capacityBubble.classList.add('error');
+  } else if (remaining === 1) {
+    capacityBubble.textContent = msg('MAZE_CAPACITY_1', remaining);
+    capacityBubble.classList.add('warning');
   } else if (remaining <= 2) {
     capacityBubble.textContent = msg('MAZE_CAPACITY', remaining);
     capacityBubble.classList.add('warning');
@@ -241,29 +199,17 @@ mazeGame.onHighlight((blockId) => {
   workspace.highlightBlock(blockId);
 });
 
-/**
- * Get level title from message keys
- */
-function getLevelTitle(level: number): string {
-  return msg(`MAZE_LEVEL_${level}_TITLE`);
-}
-
 // Update level display
 function updateLevelDisplay() {
   const currentLevel = mazeGame.getLevel();
   const maxLevel = MazeGame.getMaxLevel();
 
-  const levelTitle = document.getElementById('levelTitle');
   const levelDisplay = document.getElementById('levelDisplay');
   const prevButton = document.getElementById('prevLevel') as HTMLButtonElement;
   const nextButton = document.getElementById('nextLevel') as HTMLButtonElement;
 
-  if (levelTitle) {
-    levelTitle.textContent = msg('MAZE_LEVEL_WITH_TITLE', currentLevel, getLevelTitle(currentLevel));
-  }
-
   if (levelDisplay) {
-    levelDisplay.textContent = msg('MAZE_LEVEL_COUNTER', currentLevel, maxLevel);
+    levelDisplay.textContent = `${msg('MAZE_LEVEL')} ${currentLevel}`;
   }
 
   if (prevButton) {
@@ -618,5 +564,3 @@ document.getElementById('nextLevel')?.addEventListener('click', resetHintState);
 
 // Initial hint after page load
 setTimeout(levelHelp, 3000);
-
-console.log(`Maze game initialized with keyboard navigation support (locale: ${currentLocale})`);
