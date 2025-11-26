@@ -84,7 +84,6 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
 
     // Page UI
     TURTLE_TITLE: 'Turtle',
-    TURTLE_SUBTITLE: 'Draw graphics with turtle programming using Blockly blocks',
     TURTLE_LANGUAGE_LABEL: 'Language:',
 
     // Level display
@@ -92,13 +91,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     TURTLE_LEVEL_COUNTER: 'Level %1 of %2',
 
     // Instructions
-    TURTLE_GOAL_LABEL: 'Goal:',
     TURTLE_SPEED_LABEL: 'Speed:',
-
-    // Alert messages
-    TURTLE_ALERT_ALREADY_RUNNING: 'Already executing!',
-    TURTLE_SUCCESS_MESSAGE: 'Success! Your drawing matches the goal!',
-    TURTLE_PARTIAL_SUCCESS: 'Close! Your drawing is similar but not quite right.',
 
     // Category names for Level 10 toolbox
     CATEGORY_TURTLE: 'Turtle',
@@ -175,7 +168,6 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
 
     // Page UI
     TURTLE_TITLE: 'Tortue',
-    TURTLE_SUBTITLE: 'Dessinez des graphiques avec la programmation tortue en utilisant des blocs Blockly',
     TURTLE_LANGUAGE_LABEL: 'Langue :',
 
     // Level display
@@ -183,13 +175,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     TURTLE_LEVEL_COUNTER: 'Niveau %1 sur %2',
 
     // Instructions
-    TURTLE_GOAL_LABEL: 'Objectif :',
     TURTLE_SPEED_LABEL: 'Vitesse :',
-
-    // Alert messages
-    TURTLE_ALERT_ALREADY_RUNNING: 'Déjà en cours d\'exécution !',
-    TURTLE_SUCCESS_MESSAGE: 'Succès ! Votre dessin correspond à l\'objectif !',
-    TURTLE_PARTIAL_SUCCESS: 'Presque ! Votre dessin est similaire mais pas tout à fait juste.',
 
     // Category names for Level 10 toolbox
     CATEGORY_TURTLE: 'Tortue',

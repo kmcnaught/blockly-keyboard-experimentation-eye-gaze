@@ -46,27 +46,22 @@ let animationSpeed = 0.5; // 0 = slow, 1 = fast
 function updateUIText() {
   const pageTitle = document.querySelector('h1');
   if (pageTitle) {
-    pageTitle.textContent = `🐢 ${msg('TURTLE_TITLE')}`;
-  }
-
-  const subtitle = document.querySelector('.subtitle');
-  if (subtitle) {
-    subtitle.textContent = msg('TURTLE_SUBTITLE');
+    pageTitle.textContent = msg('TURTLE_TITLE');
   }
 
   const langLabel = document.querySelector('label[for="languageSelect"]');
   if (langLabel) {
-    langLabel.textContent = `🌐 ${msg('TURTLE_LANGUAGE_LABEL')}`;
+    langLabel.textContent = msg('TURTLE_LANGUAGE_LABEL');
   }
 
   const runButton = document.getElementById('runButton');
   if (runButton) {
-    runButton.textContent = `▶️ ${msg('TURTLE_RUN_PROGRAM')}`;
+    runButton.textContent = msg('TURTLE_RUN_PROGRAM');
   }
 
   const resetButton = document.getElementById('resetButton');
   if (resetButton) {
-    resetButton.textContent = `🔄 ${msg('TURTLE_RESET_PROGRAM')}`;
+    resetButton.textContent = msg('TURTLE_RESET_PROGRAM');
   }
 
   const speedLabel = document.querySelector('label[for="speedSlider"]');
@@ -461,7 +456,6 @@ turtleGame = new TurtleGame(displayCanvas, answerCanvas, scratchCanvas, currentL
 function updateLevelDisplay() {
   const levelTitle = document.getElementById('levelTitle');
   const levelDisplay = document.getElementById('levelDisplay');
-  const goalDescription = document.querySelector('.goal-description');
   const prevButton = document.getElementById('prevLevel') as HTMLButtonElement;
   const nextButton = document.getElementById('nextLevel') as HTMLButtonElement;
 
@@ -471,14 +465,6 @@ function updateLevelDisplay() {
 
   if (levelDisplay) {
     levelDisplay.textContent = msg('TURTLE_LEVEL_COUNTER', currentLevel, 10);
-  }
-
-  if (goalDescription) {
-    if (currentLevel === 10) {
-      goalDescription.innerHTML = `<strong>${msg('TURTLE_GOAL_LABEL')}</strong> ${msg('TURTLE_HELP_TEXT10')}`;
-    } else {
-      goalDescription.innerHTML = `<strong>${msg('TURTLE_GOAL_LABEL')}</strong> Match your drawing to the semi-transparent pattern shown on the canvas. The turtle starts in the center facing up.`;
-    }
   }
 
   if (prevButton) {
@@ -638,7 +624,6 @@ function animate(id?: string) {
 // Execute the user's program
 async function execute() {
   if (isRunning) {
-    alert(msg('TURTLE_ALERT_ALREADY_RUNNING'));
     return;
   }
 
@@ -669,11 +654,12 @@ async function execute() {
     }
 
     if (steps >= maxSteps) {
-      alert('Program took too long to execute. It may have an infinite loop.');
+      // Simplified error like original
+      alert('Infinite loop?');
     }
   } catch (error) {
-    console.error('Execution error:', error);
-    alert(`Error: ${error}`);
+    // User error, terminate in shame (like original)
+    alert(error);
   }
 
   // Clear highlighting
@@ -686,17 +672,28 @@ async function execute() {
   const result = turtleGame.checkAnswer(blockCount);
 
   if (result.correct) {
-    alert(msg('TURTLE_SUCCESS_MESSAGE'));
+    // Play win sound and show congratulations (like original)
     if (currentLevel < 10) {
       // Move to next level
       setTimeout(() => {
-        if (confirm(msg('TURTLE_NEXT_LEVEL', currentLevel + 1))) {
+        if (confirm(`${msg('TURTLE_CONGRATULATIONS')}\n${msg('TURTLE_NEXT_LEVEL', currentLevel + 1)}`)) {
           setLevel(currentLevel + 1);
         }
       }, 500);
     }
-  } else if (result.message) {
-    alert(result.message);
+  } else if (result.needsLoop) {
+    // Show "use a loop" dialog (like original)
+    let loopMsg = msg('TURTLE_HELP_USE_LOOP');
+    if (currentLevel < 3) {
+      loopMsg += '\n' + msg('TURTLE_HELP_USE_LOOP3');
+    } else if (currentLevel < 4) {
+      loopMsg += '\n' + msg('TURTLE_HELP_USE_LOOP4');
+    }
+    alert(loopMsg);
+  } else {
+    // Wrong answer - change pen to red (like original)
+    turtleGame.setPenColour('#ff0000');
+    turtleGame.display();
   }
 
   isRunning = false;

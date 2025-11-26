@@ -415,15 +415,12 @@ export class TurtleGame {
   /**
    * Check if the user's drawing matches the answer.
    * @param blockCount Number of blocks in the user's program.
-   * @returns True if the answer is correct, false otherwise.
+   * @returns Result object with correct status and optional needsLoop flag.
    */
-  checkAnswer(blockCount: number): {correct: boolean; message?: string} {
+  checkAnswer(blockCount: number): {correct: boolean; needsLoop?: boolean} {
     // Level 10 is free draw - any non-trivial program is correct.
     if (this.level === 10) {
-      return {
-        correct: blockCount > 1,
-        message: blockCount > 1 ? undefined : 'Add more blocks to create a drawing!',
-      };
+      return {correct: blockCount > 1};
     }
 
     // Compare the Alpha (opacity) byte of each pixel.
@@ -447,10 +444,8 @@ export class TurtleGame {
       this.level === 9 ? 600 : this.level === 8 ? 350 : 100;
 
     if (pixelErrors > maxErrors) {
-      return {
-        correct: false,
-        message: 'Your drawing is different from the goal. Try again!',
-      };
+      // Drawing doesn't match - caller should change pen to red.
+      return {correct: false};
     }
 
     // Check block count to encourage using loops.
@@ -459,11 +454,8 @@ export class TurtleGame {
       (this.level === 3 && blockCount > 4) ||
       (this.level === 5 && blockCount > 10)
     ) {
-      return {
-        correct: false,
-        message:
-          'Your solution works, but you can do better. Try using a loop!',
-      };
+      // Solution works but could be better with a loop.
+      return {correct: false, needsLoop: true};
     }
 
     return {correct: true};
