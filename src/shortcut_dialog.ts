@@ -11,7 +11,6 @@ import {
   getLongActionShortcutsAsKeys,
   upperCaseFirst,
 } from './shortcut_formatting';
-import {clearHelpHint} from './hints';
 
 /**
  * Class for handling the shortcuts dialog.
@@ -53,7 +52,6 @@ export class ShortcutDialog {
   }
 
   toggle(workspace: Blockly.WorkspaceSvg) {
-    clearHelpHint(workspace);
     this.toggleInternal();
   }
 

@@ -26,11 +26,7 @@ import type {Block} from 'blockly/core';
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
 import {Mover, MoveType} from './mover';
-import {
-  showConstrainedMovementHint,
-  showHelpHint,
-  showUnconstrainedMoveHint,
-} from '../hints';
+import {showConstrainedMovementHint} from '../hints';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -151,9 +147,7 @@ export class EnterAction {
       curNode.showEditor();
       return true;
     } else if (curNode instanceof BlockSvg) {
-      if (!this.tryShowFullBlockFieldEditor(curNode)) {
-        showHelpHint(workspace);
-      }
+      this.tryShowFullBlockFieldEditor(curNode);
       return true;
     } else if (
       curNode instanceof RenderedConnection ||
@@ -224,15 +218,7 @@ export class EnterAction {
       insertStartPoint,
     );
 
-    const isStartBlock =
-      !newBlock.outputConnection &&
-      !newBlock.nextConnection &&
-      !newBlock.previousConnection;
-    if (isStartBlock) {
-      showUnconstrainedMoveHint(workspace, false);
-    } else {
-      showConstrainedMovementHint(workspace);
-    }
+    showConstrainedMovementHint(workspace);
   }
 
   /**

@@ -12,7 +12,6 @@ import {
   utils,
 } from 'blockly';
 import {Direction, getDirectionFromXY} from './drag_direction';
-import {showUnconstrainedMoveHint} from './hints';
 import {MoveIcon} from './move_icon';
 import {MoveType} from './actions/mover';
 import {ConnectionHighlighter} from './connection_highlighter';
@@ -174,12 +173,6 @@ export class KeyboardDragStrategy extends dragging.BlockDragStrategy {
       }
     } else {
       this.searchNode = null;
-
-      if (this.isConstrainedMovement()) {
-        // @ts-expect-error private field
-        const workspace = this.workspace;
-        showUnconstrainedMoveHint(workspace, true);
-      }
     }
   }
 

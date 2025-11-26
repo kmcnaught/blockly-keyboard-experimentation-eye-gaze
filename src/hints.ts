@@ -6,35 +6,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Msg, WorkspaceSvg, Toast} from 'blockly';
+import {WorkspaceSvg, Toast} from 'blockly';
 import {SHORTCUT_NAMES} from './constants';
 import {getShortActionShortcut} from './shortcut_formatting';
 
-const unconstrainedMoveHintId = 'unconstrainedMoveHint';
 const constrainedMoveHintId = 'constrainedMoveHint';
 const copiedHintId = 'copiedHint';
 const cutHintId = 'cutHint';
-const helpHintId = 'helpHint';
-
-/**
- * Nudge the user to use unconstrained movement.
- *
- * @param workspace Workspace.
- * @param force Set to show it even if previously shown.
- */
-export function showUnconstrainedMoveHint(
-  workspace: WorkspaceSvg,
-  force = false,
-) {
-  const enter = getShortActionShortcut(SHORTCUT_NAMES.EDIT_OR_CONFIRM);
-  const modifier = navigator.platform.startsWith('Mac') ? '⌥' : 'Ctrl';
-  const message = `Hold ${modifier} and use arrow keys to move freely, then ${enter} to accept the position`;
-  Toast.show(workspace, {
-    message,
-    id: unconstrainedMoveHintId,
-    oncePerSession: !force,
-  });
-}
 
 /**
  * Nudge the user to move a block that's in move mode.
@@ -58,7 +36,6 @@ export function showConstrainedMovementHint(workspace: WorkspaceSvg) {
  */
 export function clearMoveHints(workspace: WorkspaceSvg) {
   Toast.hide(workspace, constrainedMoveHintId);
-  Toast.hide(workspace, unconstrainedMoveHintId);
 }
 
 /**
@@ -95,27 +72,4 @@ export function showCutHint(workspace: WorkspaceSvg) {
 export function clearPasteHints(workspace: WorkspaceSvg) {
   Toast.hide(workspace, cutHintId);
   Toast.hide(workspace, copiedHintId);
-}
-
-/**
- * Nudge the user to open the help.
- *
- * @param workspace The workspace.
- */
-export function showHelpHint(workspace: WorkspaceSvg) {
-  const shortcut = getShortActionShortcut('list_shortcuts');
-  const message = Msg['HELP_PROMPT'].replace('%1', shortcut);
-  const id = helpHintId;
-  Toast.show(workspace, {message, id});
-}
-
-/**
- * Clear the help hint.
- *
- * @param workspace The workspace.
- */
-export function clearHelpHint(workspace: WorkspaceSvg) {
-  // TODO: We'd like to do this in MakeCode too as we override.
-  // Could have an option for showing help in the plugin?
-  Toast.hide(workspace, helpHintId);
 }
