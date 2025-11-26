@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Turtle Game - Blockly with Keyboard Navigation</title>
+    <style>
+      body {
+        font-family: 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      header {
+        background: #1976d2;
+        color: white;
+        padding: 16px 24px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .subtitle {
+        margin: 4px 0 0 0;
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .blockly-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-right: 1px solid #ddd;
+      }
+
+      #blocklyDiv {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .controls {
+        padding: 16px;
+        background: #fafafa;
+        border-top: 1px solid #ddd;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      button {
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      #runButton {
+        background: #4caf50;
+        color: white;
+      }
+
+      #runButton:hover {
+        background: #45a049;
+      }
+
+      #resetButton {
+        background: #ff9800;
+        color: white;
+        display: none;
+      }
+
+      #resetButton:hover {
+        background: #e68900;
+      }
+
+      .speed-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .speed-control label {
+        font-size: 13px;
+        color: #666;
+        font-weight: 500;
+      }
+
+      .speed-control input[type="range"] {
+        width: 120px;
+        cursor: pointer;
+      }
+
+      .game-container {
+        flex: 0 0 480px;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        background: white;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .game-header {
+        margin-bottom: 16px;
+      }
+
+      .game-header h2 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .level-selector {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 12px 0;
+        padding: 12px;
+        background: #fff3e0;
+        border-radius: 4px;
+      }
+
+      .level-selector button {
+        padding: 6px 12px;
+        font-size: 14px;
+        background: #ff9800;
+        color: white;
+        min-width: 40px;
+      }
+
+      .level-selector button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .level-selector span {
+        font-weight: 500;
+        color: #e65100;
+        flex: 1;
+        text-align: center;
+      }
+
+      .goal-description {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #f9f9f9;
+        border-left: 4px solid #ff9800;
+        border-radius: 4px;
+      }
+
+      .canvas-wrapper {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        padding: 0;
+        width: 400px;
+        height: 400px;
+        margin: 0 auto;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #display {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 3;
+      }
+
+      #answer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+      }
+
+      #scratch {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+      }
+
+      .header-selectors {
+        position: absolute;
+        top: 16px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .selector-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .selector-group label {
+        font-size: 14px;
+        color: white;
+        opacity: 0.9;
+      }
+
+      .selector-group select {
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.95);
+        color: #1976d2;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231976d2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        padding-right: 32px;
+      }
+
+      .selector-group select:hover {
+        background: white;
+        border-color: rgba(255, 255, 255, 0.8);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      .selector-group select:focus {
+        outline: none;
+        background: white;
+        border-color: #ffeb3b;
+        box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.4);
+      }
+
+      .selector-group select option {
+        background: white;
+        color: #1976d2;
+        padding: 8px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🐢 Turtle Graphics</h1>
+      <p class="subtitle">Draw graphics with turtle programming using Blockly blocks</p>
+      <div class="header-selectors">
+        <div class="selector-group">
+          <label for="languageSelect">🌐 Language:</label>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="blockly-container">
+        <div id="blocklyDiv"></div>
+        <div class="controls">
+          <button id="runButton">▶️ Run Program</button>
+          <button id="resetButton">🔄 Reset</button>
+          <div class="speed-control">
+            <label for="speedSlider">🐢 Speed: 🐇</label>
+            <input
+              type="range"
+              id="speedSlider"
+              min="0"
+              max="1"
+              step="0.1"
+              value="0.5"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="game-container">
+        <div class="game-header">
+          <h2 id="levelTitle">Level 1</h2>
+          <div class="level-selector">
+            <button id="prevLevel">&lt;</button>
+            <span id="levelDisplay">Level 1 of 10</span>
+            <button id="nextLevel">&gt;</button>
+          </div>
+          <div class="goal-description">
+            <strong>🎯 Goal:</strong> Match your drawing to the semi-transparent pattern shown on the canvas. The turtle starts in the center facing up. Levels 1-9 have specific goals, level 10 is free draw!
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <!-- Three canvases stacked: scratch (user drawing), answer (goal), display (composite) -->
+          <canvas id="scratch" width="400" height="400"></canvas>
+          <canvas id="answer" width="400" height="400"></canvas>
+          <canvas id="display" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script src="bundle.js"></script>
+  </body>
+</html>

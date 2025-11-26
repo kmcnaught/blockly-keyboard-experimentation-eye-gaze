@@ -669,6 +669,30 @@ export class MazeGame {
   }
 
   /**
+   * Draw a single quarter-circle arc for the look/radar animation.
+   * @param centerX Center X coordinate in pixels
+   * @param centerY Center Y coordinate in pixels
+   * @param radius Arc radius in pixels
+   * @param rotation Rotation angle in radians
+   */
+  private drawLookArc(
+    centerX: number,
+    centerY: number,
+    radius: number,
+    rotation: number,
+  ): void {
+    this.ctx.save();
+    this.ctx.translate(centerX, centerY);
+    this.ctx.rotate(rotation);
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, radius, -Math.PI / 2, 0); // Quarter circle
+    this.ctx.strokeStyle = this.skin.look;
+    this.ctx.lineWidth = 3;
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  /**
    * Constrain a direction to 0-3 range (NORTH, EAST, SOUTH, WEST).
    */
   private constrainDirection4(d: number): Direction {
@@ -915,6 +939,48 @@ export class MazeGame {
   }
 
   /**
+   * Animate the radar/sonar "look" effect when checking for paths.
+   * Shows 3 expanding quarter-circle arcs in the direction being checked.
+   * @param direction The direction being looked at (NORTH, EAST, SOUTH, WEST)
+   */
+  private async animateLook(direction: Direction): Promise<void> {
+    // Calculate position offset based on direction (from original blockly-games)
+    let x = this.playerPos.x;
+    let y = this.playerPos.y;
+    switch (direction) {
+      case Direction.NORTH:
+        x += 0.5;
+        break;
+      case Direction.EAST:
+        x += 1;
+        y += 0.5;
+        break;
+      case Direction.SOUTH:
+        x += 0.5;
+        y += 1;
+        break;
+      case Direction.WEST:
+        y += 0.5;
+        break;
+    }
+    const px = x * this.squareSize;
+    const py = y * this.squareSize;
+    // Rotation: direction * 90° - 45° (NORTH=-45°, EAST=45°, SOUTH=135°, WEST=225°)
+    const rotation = (direction * Math.PI) / 2 - Math.PI / 4;
+
+    // Scaled from original 15, 35, 55 with scale(0.4)
+    const radii = [6, 14, 22];
+    const waveDelay = 75; // Match existing animation step timing
+
+    for (let i = 0; i < radii.length; i++) {
+      this.draw();
+      this.drawLookArc(px, py, radii[i], rotation);
+      await this.delay(waveDelay);
+    }
+    this.draw(); // Final redraw to clear last wave
+  }
+
+  /**
    * Check if pegman has NOT reached the goal (used during execution).
    * Uses execution state (pegmanX/Y) not animation state (playerPos).
    */
@@ -1144,11 +1210,16 @@ export class MazeGame {
         break;
       }
       case 'look_north':
-      case 'look_south':
+        this.animateLook(Direction.NORTH).then(() => this.animate());
+        break;
       case 'look_east':
+        this.animateLook(Direction.EAST).then(() => this.animate());
+        break;
+      case 'look_south':
+        this.animateLook(Direction.SOUTH).then(() => this.animate());
+        break;
       case 'look_west':
-        // Look actions are just visual cues, skip with minimal delay
-        setTimeout(() => this.animate(), 50);
+        this.animateLook(Direction.WEST).then(() => this.animate());
         break;
       default:
         // Unknown action, skip
