@@ -34,6 +34,10 @@ export class TurtleGame {
   // Current level
   private level: number = 1;
 
+  // Turtle image
+  private turtleImage: HTMLImageElement;
+  private turtleImageLoaded: boolean = false;
+
   constructor(
     displayCanvas: HTMLCanvasElement,
     answerCanvas: HTMLCanvasElement,
@@ -44,6 +48,14 @@ export class TurtleGame {
     this.ctxAnswer = answerCanvas.getContext('2d')!;
     this.ctxScratch = scratchCanvas.getContext('2d')!;
     this.level = level;
+
+    // Load turtle image
+    this.turtleImage = new Image();
+    this.turtleImage.onload = () => {
+      this.turtleImageLoaded = true;
+      this.display();
+    };
+    this.turtleImage.src = 'assets/turtle.svg';
 
     this.drawAnswer();
   }
@@ -91,50 +103,66 @@ export class TurtleGame {
 
     // Draw the turtle if visible.
     if (this.visible) {
-      // Make the turtle the colour of the pen.
-      this.ctxDisplay.strokeStyle = this.ctxScratch.strokeStyle;
-      this.ctxDisplay.fillStyle = this.ctxScratch.fillStyle;
+      const turtleSize = 40; // Size of the turtle image on canvas
 
-      // Draw the turtle body (circle).
-      const radius = this.ctxScratch.lineWidth / 2 + 10;
-      this.ctxDisplay.beginPath();
-      this.ctxDisplay.arc(this.turtleX, this.turtleY, radius, 0, 2 * Math.PI, false);
-      this.ctxDisplay.lineWidth = 3;
-      this.ctxDisplay.stroke();
+      if (this.turtleImageLoaded) {
+        // Draw the cute turtle image with rotation
+        this.ctxDisplay.save();
+        this.ctxDisplay.translate(this.turtleX, this.turtleY);
+        this.ctxDisplay.rotate(this.toRadians(this.turtleHeading));
+        this.ctxDisplay.drawImage(
+          this.turtleImage,
+          -turtleSize / 2,
+          -turtleSize / 2,
+          turtleSize,
+          turtleSize
+        );
+        this.ctxDisplay.restore();
+      } else {
+        // Fallback: draw simple turtle shape if image not loaded yet
+        this.ctxDisplay.strokeStyle = this.ctxScratch.strokeStyle;
+        this.ctxDisplay.fillStyle = this.ctxScratch.fillStyle;
 
-      // Draw the turtle head (arrow).
-      const WIDTH_CONST = 0.3;
-      const HEAD_TIP = 10;
-      const ARROW_TIP = 4;
-      const BEND = 6;
-      let radians = this.toRadians(this.turtleHeading);
-      const tipX = this.turtleX + (radius + HEAD_TIP) * Math.sin(radians);
-      const tipY = this.turtleY - (radius + HEAD_TIP) * Math.cos(radians);
-      radians -= WIDTH_CONST;
-      const leftX = this.turtleX + (radius + ARROW_TIP) * Math.sin(radians);
-      const leftY = this.turtleY - (radius + ARROW_TIP) * Math.cos(radians);
-      radians += WIDTH_CONST / 2;
-      const leftControlX = this.turtleX + (radius + BEND) * Math.sin(radians);
-      const leftControlY = this.turtleY - (radius + BEND) * Math.cos(radians);
-      radians += WIDTH_CONST;
-      const rightControlX = this.turtleX + (radius + BEND) * Math.sin(radians);
-      const rightControlY = this.turtleY - (radius + BEND) * Math.cos(radians);
-      radians += WIDTH_CONST / 2;
-      const rightX = this.turtleX + (radius + ARROW_TIP) * Math.sin(radians);
-      const rightY = this.turtleY - (radius + ARROW_TIP) * Math.cos(radians);
-      this.ctxDisplay.beginPath();
-      this.ctxDisplay.moveTo(tipX, tipY);
-      this.ctxDisplay.lineTo(leftX, leftY);
-      this.ctxDisplay.bezierCurveTo(
-        leftControlX,
-        leftControlY,
-        rightControlX,
-        rightControlY,
-        rightX,
-        rightY
-      );
-      this.ctxDisplay.closePath();
-      this.ctxDisplay.fill();
+        const radius = this.ctxScratch.lineWidth / 2 + 10;
+        this.ctxDisplay.beginPath();
+        this.ctxDisplay.arc(this.turtleX, this.turtleY, radius, 0, 2 * Math.PI, false);
+        this.ctxDisplay.lineWidth = 3;
+        this.ctxDisplay.stroke();
+
+        // Draw the turtle head (arrow) as fallback.
+        const WIDTH_CONST = 0.3;
+        const HEAD_TIP = 10;
+        const ARROW_TIP = 4;
+        const BEND = 6;
+        let radians = this.toRadians(this.turtleHeading);
+        const tipX = this.turtleX + (radius + HEAD_TIP) * Math.sin(radians);
+        const tipY = this.turtleY - (radius + HEAD_TIP) * Math.cos(radians);
+        radians -= WIDTH_CONST;
+        const leftX = this.turtleX + (radius + ARROW_TIP) * Math.sin(radians);
+        const leftY = this.turtleY - (radius + ARROW_TIP) * Math.cos(radians);
+        radians += WIDTH_CONST / 2;
+        const leftControlX = this.turtleX + (radius + BEND) * Math.sin(radians);
+        const leftControlY = this.turtleY - (radius + BEND) * Math.cos(radians);
+        radians += WIDTH_CONST;
+        const rightControlX = this.turtleX + (radius + BEND) * Math.sin(radians);
+        const rightControlY = this.turtleY - (radius + BEND) * Math.cos(radians);
+        radians += WIDTH_CONST / 2;
+        const rightX = this.turtleX + (radius + ARROW_TIP) * Math.sin(radians);
+        const rightY = this.turtleY - (radius + ARROW_TIP) * Math.cos(radians);
+        this.ctxDisplay.beginPath();
+        this.ctxDisplay.moveTo(tipX, tipY);
+        this.ctxDisplay.lineTo(leftX, leftY);
+        this.ctxDisplay.bezierCurveTo(
+          leftControlX,
+          leftControlY,
+          rightControlX,
+          rightControlY,
+          rightX,
+          rightY
+        );
+        this.ctxDisplay.closePath();
+        this.ctxDisplay.fill();
+      }
     }
   }
 

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Turtle top-down view - cute style -->
+
+  <!-- Back left leg -->
+  <ellipse cx="14" cy="44" rx="8" ry="6" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Back right leg -->
+  <ellipse cx="50" cy="44" rx="8" ry="6" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Front left leg -->
+  <ellipse cx="14" cy="20" rx="8" ry="6" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Front right leg -->
+  <ellipse cx="50" cy="20" rx="8" ry="6" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Tail -->
+  <ellipse cx="32" cy="58" rx="4" ry="6" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Shell (main body) -->
+  <ellipse cx="32" cy="32" rx="20" ry="22" fill="#7cb342" stroke="#558b2f" stroke-width="2"/>
+
+  <!-- Shell pattern - center hexagon -->
+  <polygon points="32,16 42,22 42,42 32,48 22,42 22,22" fill="#8bc34a" stroke="#689f38" stroke-width="1.5"/>
+
+  <!-- Shell pattern - top sections -->
+  <path d="M32,16 L42,22 L42,14 Q32,10 22,14 L22,22 Z" fill="#9ccc65" stroke="#7cb342" stroke-width="1"/>
+
+  <!-- Shell pattern - side sections -->
+  <path d="M42,22 L52,28 L52,36 L42,42 Z" fill="#9ccc65" stroke="#7cb342" stroke-width="1"/>
+  <path d="M22,22 L12,28 L12,36 L22,42 Z" fill="#9ccc65" stroke="#7cb342" stroke-width="1"/>
+
+  <!-- Shell pattern - bottom sections -->
+  <path d="M22,42 L22,50 Q32,54 42,50 L42,42 L32,48 Z" fill="#9ccc65" stroke="#7cb342" stroke-width="1"/>
+
+  <!-- Head -->
+  <ellipse cx="32" cy="4" rx="9" ry="8" fill="#5d8a4a" stroke="#3d5a2a" stroke-width="1.5"/>
+
+  <!-- Eyes -->
+  <circle cx="28" cy="3" r="2.5" fill="#2d2d2d"/>
+  <circle cx="36" cy="3" r="2.5" fill="#2d2d2d"/>
+
+  <!-- Eye highlights -->
+  <circle cx="27" cy="2" r="1" fill="white"/>
+  <circle cx="35" cy="2" r="1" fill="white"/>
+
+  <!-- Cute smile -->
+  <path d="M29,7 Q32,10 35,7" fill="none" stroke="#3d5a2a" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Blush marks -->
+  <ellipse cx="24" cy="5" rx="2" ry="1" fill="#ffb3b3" opacity="0.6"/>
+  <ellipse cx="40" cy="5" rx="2" ry="1" fill="#ffb3b3" opacity="0.6"/>
+</svg>
