@@ -564,3 +564,70 @@ document.getElementById('nextLevel')?.addEventListener('click', resetHintState);
 
 // Initial hint after page load
 setTimeout(levelHelp, 3000);
+
+// ========== GLOBAL KEYBOARD SHORTCUTS ==========
+
+/**
+ * Global keyboard shortcuts for quick navigation and actions.
+ * These work from anywhere on the page.
+ *
+ * Shortcuts:
+ * - Ctrl+Alt+1: Jump to workspace
+ * - Ctrl+Alt+2: Jump to toolbox
+ * - Ctrl+Alt+R: Run the program
+ */
+document.addEventListener('keydown', (e: KeyboardEvent) => {
+  // Ignore if user is typing in an input field
+  const target = e.target as HTMLElement;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+      target.isContentEditable) {
+    return;
+  }
+
+  // Ctrl+Alt+1: Jump to workspace
+  if (e.ctrlKey && e.altKey && e.key === '1') {
+    e.preventDefault();
+    e.stopPropagation();
+    // Enable keyboard navigation mode
+    Blockly.keyboardNavigationController.setIsActive(true);
+    // Focus the workspace - try to focus first block if available
+    const topBlocks = workspace.getTopBlocks(true);
+    if (topBlocks.length > 0) {
+      Blockly.getFocusManager().focusNode(topBlocks[0]);
+    } else {
+      Blockly.getFocusManager().focusTree(workspace);
+    }
+    return;
+  }
+
+  // Ctrl+Alt+2: Jump to toolbox/flyout
+  if (e.ctrlKey && e.altKey && e.key === '2') {
+    e.preventDefault();
+    e.stopPropagation();
+    // Enable keyboard navigation mode
+    Blockly.keyboardNavigationController.setIsActive(true);
+    // Focus the toolbox or flyout
+    const toolbox = workspace.getToolbox();
+    const flyout = workspace.getFlyout();
+    if (toolbox) {
+      Blockly.getFocusManager().focusTree(toolbox);
+    } else if (flyout) {
+      Blockly.getFocusManager().focusTree(flyout.getWorkspace());
+    }
+    return;
+  }
+
+  // Ctrl+Alt+R: Run the program
+  if (e.ctrlKey && e.altKey && e.key === 'r') {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only run if not already executing
+    if (!mazeGame.isExecuting()) {
+      hasRun = true;
+      hideHint();
+      const code = javascriptGenerator.workspaceToCode(workspace);
+      mazeGame.execute(code);
+    }
+    return;
+  }
+});
