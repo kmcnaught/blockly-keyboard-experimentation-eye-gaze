@@ -359,50 +359,65 @@ export class MazeGame {
     }
   }
 
-  private loadAssets(): void {
+  private loadAssets(isInitialLoad = true): void {
     let imagesLoadedCount = 0;
     let totalImages = 3; // pegman, tiles, marker
     if (this.skin.background) {
       totalImages++; // Add background if it exists
     }
 
+    // Store new images in temporary variables until all are loaded
+    // This prevents the flash of default colors when switching skins
+    let newPegmanImage: HTMLImageElement | null = null;
+    let newTilesImage: HTMLImageElement | null = null;
+    let newBackgroundImage: HTMLImageElement | null = null;
+    let newMarkerImage: HTMLImageElement | null = null;
+
     const onImageLoad = () => {
       imagesLoadedCount++;
       if (imagesLoadedCount === totalImages) {
+        // All images loaded - now swap them in atomically
+        this.pegmanImage = newPegmanImage;
+        this.tilesImage = newTilesImage;
+        this.backgroundImage = newBackgroundImage;
+        this.markerImage = newMarkerImage;
         this.imagesLoaded = true;
         this.draw();
       }
     };
 
     // Load pegman sprite sheet
-    this.pegmanImage = new Image();
-    this.pegmanImage.onload = onImageLoad;
-    this.pegmanImage.src = this.skin.sprite;
+    newPegmanImage = new Image();
+    newPegmanImage.onload = onImageLoad;
+    newPegmanImage.src = this.skin.sprite;
 
     // Load tiles image
-    this.tilesImage = new Image();
-    this.tilesImage.onload = onImageLoad;
-    this.tilesImage.src = this.skin.tiles;
+    newTilesImage = new Image();
+    newTilesImage.onload = onImageLoad;
+    newTilesImage.src = this.skin.tiles;
 
     // Load background image if it exists, or clear it if not
     if (this.skin.background) {
-      this.backgroundImage = new Image();
-      this.backgroundImage.onload = onImageLoad;
-      this.backgroundImage.src = this.skin.background;
+      newBackgroundImage = new Image();
+      newBackgroundImage.onload = onImageLoad;
+      newBackgroundImage.src = this.skin.background;
     } else {
-      this.backgroundImage = null;
+      newBackgroundImage = null;
     }
 
     // Load marker image
-    this.markerImage = new Image();
-    this.markerImage.onload = onImageLoad;
-    this.markerImage.src = 'assets/marker.png';
+    newMarkerImage = new Image();
+    newMarkerImage.onload = onImageLoad;
+    newMarkerImage.src = 'assets/marker.png';
 
     // Load audio files
     this.loadAudio();
 
-    // Draw placeholder while loading
-    this.draw();
+    // Only draw placeholder on initial load (when there's nothing else to show)
+    // When switching skins, keep showing the old skin until new one is ready
+    if (isInitialLoad) {
+      this.draw();
+    }
   }
 
   private loadAudio(): void {
@@ -430,8 +445,9 @@ export class MazeGame {
   public setSkin(skinId: number): void {
     this.skinId = Math.min(Math.max(skinId, 0), SKINS.length - 1);
     this.skin = SKINS[this.skinId];
-    this.imagesLoaded = false;
-    this.loadAssets();
+    // Don't set imagesLoaded = false - keep showing old skin until new one is ready
+    // Pass false to loadAssets so it doesn't draw placeholder colors
+    this.loadAssets(false);
   }
 
   public getSkin(): number {
