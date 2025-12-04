@@ -34,6 +34,17 @@ let hasStartedTimer: boolean = false;
 let originalInstructionsHTML: string = '';
 let dragStartListener: ((e: Blockly.Events.Abstract) => void) | null = null;
 
+// Audio playback state
+let audioContext: AudioContext | null = null;
+const audioBuffers: Record<string, AudioBuffer> = {};
+let isPlaying = false;
+let stopRequested = false;
+
+// Audio timing configuration (in seconds)
+const OVERLAP_TIME = 0;
+const FADE_DURATION = 0.2;
+const GAP_WHEN_NO_AND = 0.5; // Pause between "knees" and "toes" when "and" is missing
+
 /**
  * Define custom blocks for the "Head, Shoulders, Knees and Toes" scenario.
  */
@@ -130,6 +141,244 @@ function defineCustomBlocks() {
 }
 
 // No toolbox needed - all blocks are pre-placed on the workspace
+
+/**
+ * Load audio files for playback using Web Audio API.
+ */
+async function loadAudioFiles() {
+  audioContext = new AudioContext();
+  const files = ['head', 'shoulders', 'knees', 'and', 'toes'];
+
+  await Promise.all(
+    files.map(async (name) => {
+      try {
+        const response = await fetch(`../music-samples/${name}.wav`);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[name] = await audioContext!.decodeAudioData(arrayBuffer);
+      } catch (error) {
+        console.error(`Failed to load audio file: ${name}`, error);
+      }
+    }),
+  );
+}
+
+/**
+ * Play a single audio file with optional fade in/out.
+ *
+ * @param name - Name of the audio file to play
+ * @param fadeIn - Whether to fade in at the start
+ * @param fadeOut - Whether to fade out at the end
+ * @param waitForEnd - If true, wait for full duration; otherwise resolve early
+ *   for overlap
+ */
+function playAudio(
+  name: string,
+  fadeIn = false,
+  fadeOut = false,
+  waitForEnd = false,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!audioContext) {
+      reject(new Error('AudioContext not initialized'));
+      return;
+    }
+
+    const buffer = audioBuffers[name];
+    if (!buffer) {
+      resolve();
+      return;
+    }
+
+    // Resume audio context if suspended (required for user gesture)
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+
+    const gainNode = audioContext.createGain();
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    const duration = buffer.duration;
+    const now = audioContext.currentTime;
+
+    // Apply fade in
+    if (fadeIn) {
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(1, now + FADE_DURATION);
+    } else {
+      gainNode.gain.setValueAtTime(1, now);
+    }
+
+    // Apply fade out
+    if (fadeOut) {
+      const fadeOutStart = now + duration - FADE_DURATION;
+      gainNode.gain.setValueAtTime(1, fadeOutStart);
+      gainNode.gain.linearRampToValueAtTime(0, now + duration);
+    }
+
+    source.start(now);
+
+    // Determine when to resolve - early for overlap, or full duration for last sample
+    const resolveTime = waitForEnd
+      ? duration * 1000
+      : Math.max(0, (duration - OVERLAP_TIME) * 1000);
+
+    setTimeout(() => resolve(), resolveTime);
+  });
+}
+
+/**
+ * Highlight a block during audio playback.
+ */
+function highlightBlock(block: Blockly.BlockSvg, highlight: boolean) {
+  const svg = block.getSvgRoot();
+  if (highlight) {
+    svg.classList.add('blocklyPlayingAudio');
+  } else {
+    svg.classList.remove('blocklyPlayingAudio');
+  }
+}
+
+/**
+ * Play audio for a single block with visual highlighting.
+ *
+ * @param block - The block to play audio for
+ * @param isFirst - Whether this is the first block (fade in first sample)
+ * @param isLast - Whether this is the last block (fade out last sample)
+ */
+async function playBlockAudio(
+  block: Blockly.BlockSvg,
+  isFirst: boolean,
+  isLast: boolean,
+): Promise<void> {
+  highlightBlock(block, true);
+
+  try {
+    switch (block.type) {
+      case 'lyric_heads':
+        await playAudio('head', isFirst, isLast, isLast);
+        break;
+      case 'lyric_shoulders':
+        await playAudio('shoulders', isFirst, isLast, isLast);
+        break;
+      case 'lyric_knees_toes':
+        // For knees_toes, first sample gets fade in if this is the first block
+        await playAudio('knees', isFirst, false, false);
+        // Check for connector_and in value input
+        const connectorInput = block.getInput('CONNECTOR');
+        const connectorBlock = connectorInput?.connection?.targetBlock();
+        if (connectorBlock && connectorBlock.type === 'connector_and') {
+          highlightBlock(connectorBlock as Blockly.BlockSvg, true);
+          await playAudio('and', false, false, false);
+          highlightBlock(connectorBlock as Blockly.BlockSvg, false);
+        } else {
+          // Short pause when "and" is missing
+          await new Promise((resolve) =>
+            setTimeout(resolve, GAP_WHEN_NO_AND * 1000),
+          );
+        }
+        // Last sample of this block gets fade out if this is the last block
+        await playAudio('toes', false, isLast, isLast);
+        break;
+    }
+  } finally {
+    highlightBlock(block, false);
+  }
+}
+
+/**
+ * Get the chain of blocks connected inside the song container.
+ */
+function getConnectedBlocks(): Blockly.BlockSvg[] {
+  if (!workspace) return [];
+
+  const blocks = workspace.getAllBlocks(false);
+  const container = blocks.find((b) => b.type === 'song_container');
+  if (!container) return [];
+
+  const lyricsInput = container.getInput('LYRICS');
+  if (!lyricsInput || !lyricsInput.connection) return [];
+
+  const chain: Blockly.BlockSvg[] = [];
+  let currentBlock = lyricsInput.connection.targetBlock();
+  while (currentBlock) {
+    chain.push(currentBlock as Blockly.BlockSvg);
+    const nextConnection = currentBlock.nextConnection;
+    currentBlock = nextConnection?.targetBlock() || null;
+  }
+
+  return chain;
+}
+
+/**
+ * Update the Run/Stop button state and text.
+ */
+function updateRunButton(playing: boolean) {
+  const runButton = document.getElementById('runButton') as HTMLButtonElement;
+  if (!runButton) return;
+
+  if (playing) {
+    runButton.textContent = 'Stop';
+    runButton.classList.add('playing');
+  } else {
+    runButton.textContent = 'Run';
+    runButton.classList.remove('playing');
+  }
+}
+
+/**
+ * Stop the currently playing song.
+ */
+function stopSong() {
+  if (!isPlaying) return;
+  stopRequested = true;
+
+  // Clear all block highlights
+  if (workspace) {
+    workspace.getAllBlocks(false).forEach((block) => {
+      highlightBlock(block as Blockly.BlockSvg, false);
+    });
+  }
+}
+
+/**
+ * Run the song - play audio for all connected blocks in order.
+ */
+async function runSong() {
+  // If already playing, stop instead
+  if (isPlaying) {
+    stopSong();
+    return;
+  }
+
+  const chain = getConnectedBlocks();
+  if (chain.length === 0) {
+    return;
+  }
+
+  isPlaying = true;
+  stopRequested = false;
+  updateRunButton(true);
+
+  try {
+    for (let i = 0; i < chain.length; i++) {
+      if (stopRequested) break;
+
+      const isFirst = i === 0;
+      const isLast = i === chain.length - 1;
+      await playBlockAudio(chain[i], isFirst, isLast);
+    }
+  } catch (error) {
+    console.error('Audio playback error:', error);
+  } finally {
+    isPlaying = false;
+    stopRequested = false;
+    updateRunButton(false);
+  }
+}
 
 /**
  * Parse URL parameters for settings.
@@ -251,14 +500,20 @@ function showSuccess() {
   const instructionsPane = document.getElementById('instructionsPane');
   if (instructionsPane) {
     instructionsPane.innerHTML = `
-      <h2>🚀 Success! 🚀</h2>
+      <h2>Success!</h2>
       <p style="font-size: 18px; font-weight: 500; color: #4285f4;">
         Song completed in ${timeText}
       </p>
       <p style="margin-top: 24px; color: #666;">
-        Great job assembling the blocks! 🎉
+        Great job assembling the blocks!
       </p>
+      <p style="margin-top: 16px; font-weight: 500; color: #34a853;">
+        Press Run to hear your song!
+      </p>
+      <button id="runButton" aria-live="polite">Run</button>
     `;
+    // Re-attach the run button event listener
+    document.getElementById('runButton')?.addEventListener('click', runSong);
   }
 
   isTaskComplete = true;
@@ -569,6 +824,10 @@ function setupEventHandlers() {
   resetButton?.addEventListener('click', () => {
     loadScenario();
   });
+
+  // Run button
+  const runButton = document.getElementById('runButton');
+  runButton?.addEventListener('click', runSong);
 }
 
 /**
@@ -618,6 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
     originalInstructionsHTML = instructionsPane.innerHTML;
   }
 
+  loadAudioFiles();
   createWorkspace();
   setupEventHandlers();
   loadSettings();

@@ -182,6 +182,48 @@
         background: #fce8e6;
       }
 
+      #runButton {
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 500;
+        border: 2px solid #34a853;
+        background: #34a853;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+        margin-top: 16px;
+        width: 100%;
+      }
+
+      #runButton:hover:not(:disabled) {
+        background: #2e8b47;
+        border-color: #2e8b47;
+      }
+
+      #runButton.playing {
+        background: #ea4335;
+        border-color: #ea4335;
+      }
+
+      #runButton.playing:hover {
+        background: #c5221f;
+        border-color: #c5221f;
+      }
+
+      #runButton:disabled {
+        background: #ccc;
+        border-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Highlight blocks during audio playback */
+      .blocklyPlayingAudio > .blocklyPath {
+        stroke: #ff9800 !important;
+        stroke-width: 4px !important;
+        filter: drop-shadow(0 0 8px #ff9800);
+      }
+
       #controls.hidden {
         display: none;
       }
@@ -302,6 +344,7 @@
           <h2>Goal</h2>
           <p>Assemble the blocks to create the complete song "Head, shoulders knees and toes".</p>
           <img src="../head_shoulders_knees_toes.png" alt="Goal: Complete song structure">
+          <button id="runButton" aria-live="polite">Run</button>
         </div>
         <div id="blocklyDiv"></div>
       </div>
