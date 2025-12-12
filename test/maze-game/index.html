@@ -435,6 +435,64 @@
       header.christmas h1::after {
         content: ' 🦌';
       }
+
+      /* Instruction bar styles */
+      #instructionBar {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-bottom: 2px solid #1976d2;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: all 0.3s ease;
+      }
+
+      #instructionBar.hidden {
+        display: none;
+      }
+
+      #instructionBar .instruction-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+      }
+
+      #instructionBar #levelInstruction {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1565c0;
+      }
+
+      #instructionBar #contextualHint {
+        font-size: 13px;
+        color: #1976d2;
+        font-style: italic;
+      }
+
+      #instructionBar #contextualHint:empty {
+        display: none;
+      }
+
+      #instructionBar .shortcut-hints {
+        display: flex;
+        gap: 8px;
+        font-size: 11px;
+        color: #5c6bc0;
+        white-space: nowrap;
+      }
+
+      #instructionBar .shortcut-hints kbd {
+        display: inline-block;
+        padding: 2px 6px;
+        font-family: monospace;
+        font-size: 11px;
+        background: white;
+        border: 1px solid #90caf9;
+        border-radius: 3px;
+        box-shadow: 0 1px 0 #90caf9;
+      }
     </style>
   </head>
   <body>
@@ -452,6 +510,19 @@
         </div>
       </div>
     </header>
+
+    <div id="instructionBar">
+      <div class="instruction-content">
+        <span id="levelInstruction"></span>
+        <span id="contextualHint"></span>
+      </div>
+      <div class="shortcut-hints">
+        <span><kbd>R</kbd> run</span>
+        <span><kbd>H</kbd> toggle</span>
+        <span><kbd>[</kbd><kbd>]</kbd> levels</span>
+        <span><kbd>?</kbd> help</span>
+      </div>
+    </div>
 
     <div class="container">
       <div class="blockly-container">

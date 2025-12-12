@@ -67,6 +67,18 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_MENU: 'Click on %1 in the \'if\' block to change its condition.',
     MAZE_HINT_IF_ELSE: 'If-else blocks will do one thing or the other.',
     MAZE_HINT_WALL_FOLLOW: 'Can you solve this complicated maze? Try following the left-hand wall. Advanced programmers only!',
+
+    // Level instructions (what the user should accomplish)
+    MAZE_INSTRUCTION_1: 'Get to the goal using move and turn blocks.',
+    MAZE_INSTRUCTION_2: 'Navigate the turns to reach the goal.',
+    MAZE_INSTRUCTION_3: 'Use a repeat loop to reach the goal with fewer blocks.',
+    MAZE_INSTRUCTION_4: 'Put multiple blocks inside the repeat loop.',
+    MAZE_INSTRUCTION_5: 'Solve the maze using loops.',
+    MAZE_INSTRUCTION_6: 'Use the "if" block to turn when there\'s a path.',
+    MAZE_INSTRUCTION_7: 'Change the "if" condition to check different directions.',
+    MAZE_INSTRUCTION_8: 'Combine loops and conditions to solve the maze.',
+    MAZE_INSTRUCTION_9: 'Use "if-else" to handle both paths.',
+    MAZE_INSTRUCTION_10: 'Solve this challenging maze using all your skills.',
   },
 
   fr: {
@@ -118,6 +130,18 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_MENU: 'Cliquez sur %1 dans le bloc « si » pour changer sa condition.',
     MAZE_HINT_IF_ELSE: 'Les blocs si-sinon feront une chose ou l\'autre.',
     MAZE_HINT_WALL_FOLLOW: 'Pouvez-vous résoudre ce labyrinthe compliqué ? Essayez de suivre le mur de gauche. Réservé aux programmeurs avancés !',
+
+    // Level instructions (what the user should accomplish)
+    MAZE_INSTRUCTION_1: 'Atteignez l\'objectif en utilisant les blocs avancer et tourner.',
+    MAZE_INSTRUCTION_2: 'Naviguez dans les virages pour atteindre l\'objectif.',
+    MAZE_INSTRUCTION_3: 'Utilisez une boucle pour atteindre l\'objectif avec moins de blocs.',
+    MAZE_INSTRUCTION_4: 'Mettez plusieurs blocs dans la boucle.',
+    MAZE_INSTRUCTION_5: 'Résolvez le labyrinthe en utilisant des boucles.',
+    MAZE_INSTRUCTION_6: 'Utilisez le bloc « si » pour tourner quand il y a un chemin.',
+    MAZE_INSTRUCTION_7: 'Changez la condition « si » pour vérifier différentes directions.',
+    MAZE_INSTRUCTION_8: 'Combinez boucles et conditions pour résoudre le labyrinthe.',
+    MAZE_INSTRUCTION_9: 'Utilisez « si-sinon » pour gérer les deux chemins.',
+    MAZE_INSTRUCTION_10: 'Résolvez ce labyrinthe difficile en utilisant toutes vos compétences.',
   },
 };
 

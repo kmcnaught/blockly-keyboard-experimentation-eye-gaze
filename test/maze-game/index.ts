@@ -221,28 +221,11 @@ function updateLevelDisplay() {
   }
 }
 
-// Previous level button handler
-document.getElementById('prevLevel')?.addEventListener('click', () => {
-  const currentLevel = mazeGame.getLevel();
-  if (currentLevel > 1) {
-    const newLevel = currentLevel - 1;
-    mazeGame.setLevel(newLevel);
-    updateWorkspaceForLevel(newLevel);
-    updateLevelDisplay();
-  }
-});
+// Previous level button handler (uses shared function, resetHintState called there)
+document.getElementById('prevLevel')?.addEventListener('click', goToPreviousLevel);
 
-// Next level button handler
-document.getElementById('nextLevel')?.addEventListener('click', () => {
-  const currentLevel = mazeGame.getLevel();
-  const maxLevel = MazeGame.getMaxLevel();
-  if (currentLevel < maxLevel) {
-    const newLevel = currentLevel + 1;
-    mazeGame.setLevel(newLevel);
-    updateWorkspaceForLevel(newLevel);
-    updateLevelDisplay();
-  }
-});
+// Next level button handler (uses shared function, resetHintState called there)
+document.getElementById('nextLevel')?.addEventListener('click', goToNextLevel);
 
 // Setup the Pegman button and menu
 const pegmanButton = document.getElementById('pegmanButton');
@@ -434,6 +417,85 @@ if (languageSelect) {
   });
 }
 
+// ========== INSTRUCTION BAR SYSTEM ==========
+
+/**
+ * Display modes for the instruction bar.
+ * - 'both': Show instructions and hints
+ * - 'instructions': Show only level instructions
+ * - 'none': Hide the instruction bar completely
+ */
+type DisplayMode = 'both' | 'instructions' | 'none';
+
+// Load saved display mode or default to 'both'
+let displayMode: DisplayMode =
+  (localStorage.getItem('mazeDisplayMode') as DisplayMode) || 'both';
+
+/**
+ * Cycle through display modes: both -> instructions -> none -> both
+ */
+function cycleDisplayMode() {
+  const modes: DisplayMode[] = ['both', 'instructions', 'none'];
+  const currentIndex = modes.indexOf(displayMode);
+  displayMode = modes[(currentIndex + 1) % modes.length];
+  localStorage.setItem('mazeDisplayMode', displayMode);
+  updateInstructionBar();
+}
+
+/**
+ * Update the instruction bar based on current display mode and level.
+ */
+function updateInstructionBar() {
+  const instructionBar = document.getElementById('instructionBar');
+  const levelInstruction = document.getElementById('levelInstruction');
+  const contextualHint = document.getElementById('contextualHint');
+
+  if (!instructionBar || !levelInstruction) return;
+
+  // Handle 'none' mode - hide the bar
+  if (displayMode === 'none') {
+    instructionBar.classList.add('hidden');
+    return;
+  }
+
+  // Show the bar
+  instructionBar.classList.remove('hidden');
+
+  // Update level instruction
+  const level = mazeGame.getLevel();
+  const instructionKey = `MAZE_INSTRUCTION_${level}`;
+  levelInstruction.textContent = msg(instructionKey);
+
+  // Handle hints visibility
+  if (contextualHint) {
+    if (displayMode === 'instructions') {
+      // Hide hints in instructions-only mode
+      contextualHint.textContent = '';
+    }
+    // In 'both' mode, hints are updated by updateContextualHint()
+  }
+}
+
+/**
+ * Update just the contextual hint portion of the instruction bar.
+ */
+function updateContextualHint(hintKey: string | null) {
+  const contextualHint = document.getElementById('contextualHint');
+  if (!contextualHint) return;
+
+  // Don't show hints if display mode is not 'both'
+  if (displayMode !== 'both') {
+    contextualHint.textContent = '';
+    return;
+  }
+
+  if (hintKey) {
+    contextualHint.textContent = msg(hintKey);
+  } else {
+    contextualHint.textContent = '';
+  }
+}
+
 // ========== HINT SYSTEM ==========
 
 // Track execution state for hints
@@ -442,41 +504,22 @@ let lastResult: 'success' | 'failure' | 'error' | 'none' = 'none';
 let hintTimeout: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Show a hint dialog with the given message.
+ * Show a hint in the instruction bar.
  */
 function showHint(messageKey: string) {
-  const hintDialog = document.getElementById('hintDialog');
-  const hintText = document.getElementById('hintText');
-  if (!hintDialog || !hintText) return;
-
-  hintText.textContent = msg(messageKey);
-  hintDialog.classList.add('visible');
-
-  // Position hint near the workspace
-  const blocklyDiv = document.getElementById('blocklyDiv');
-  if (blocklyDiv) {
-    const rect = blocklyDiv.getBoundingClientRect();
-    hintDialog.style.top = `${rect.top + 20}px`;
-    hintDialog.style.left = `${rect.left + 20}px`;
-  }
+  updateContextualHint(messageKey);
 }
 
 /**
- * Hide the hint dialog.
+ * Hide the contextual hint.
  */
 function hideHint() {
-  const hintDialog = document.getElementById('hintDialog');
-  if (hintDialog) {
-    hintDialog.classList.remove('visible');
-  }
+  updateContextualHint(null);
   if (hintTimeout) {
     clearTimeout(hintTimeout);
     hintTimeout = null;
   }
 }
-
-// Close button for hint dialog
-document.querySelector('#hintDialog .close-btn')?.addEventListener('click', hideHint);
 
 /**
  * Determine which hint to show based on current level and workspace state.
@@ -631,18 +674,48 @@ function resetHintState() {
   hasRun = false;
   lastResult = 'none';
   hideHint();
+  // Update instruction bar for new level
+  updateInstructionBar();
   // Trigger initial hint for new level
   setTimeout(levelHelp, 1000);
 }
 
-// Hook into level change handlers
-document.getElementById('prevLevel')?.addEventListener('click', resetHintState);
-document.getElementById('nextLevel')?.addEventListener('click', resetHintState);
+// Note: resetHintState is called within goToPreviousLevel and goToNextLevel
 
-// Initial hint after page load
+// Initialize instruction bar and hints after page load
+updateInstructionBar();
 setTimeout(levelHelp, 3000);
 
 // ========== GLOBAL KEYBOARD SHORTCUTS ==========
+
+/**
+ * Go to previous level (shared by button and keyboard shortcut).
+ */
+function goToPreviousLevel() {
+  const currentLevel = mazeGame.getLevel();
+  if (currentLevel > 1) {
+    const newLevel = currentLevel - 1;
+    mazeGame.setLevel(newLevel);
+    updateWorkspaceForLevel(newLevel);
+    updateLevelDisplay();
+    resetHintState();
+  }
+}
+
+/**
+ * Go to next level (shared by button and keyboard shortcut).
+ */
+function goToNextLevel() {
+  const currentLevel = mazeGame.getLevel();
+  const maxLevel = MazeGame.getMaxLevel();
+  if (currentLevel < maxLevel) {
+    const newLevel = currentLevel + 1;
+    mazeGame.setLevel(newLevel);
+    updateWorkspaceForLevel(newLevel);
+    updateLevelDisplay();
+    resetHintState();
+  }
+}
 
 /**
  * Global keyboard shortcuts for quick navigation and actions.
@@ -651,8 +724,14 @@ setTimeout(levelHelp, 3000);
  * Shortcuts:
  * - Ctrl+Alt+1: Jump to workspace
  * - Ctrl+Alt+2: Jump to toolbox
- * - Ctrl+Alt+R: Run the program
+ * - Ctrl+Alt+R: Run the program (alternative)
+ * - H: Toggle instruction bar display mode
+ * - [: Previous level
+ * - ]: Next level
+ * - R: Run the program
+ * - ? or /: Show shortcuts dialog
  */
+// Use capture phase (true) to handle shortcuts before Blockly intercepts them
 document.addEventListener('keydown', (e: KeyboardEvent) => {
   // Ignore if user is typing in an input field
   const target = e.target as HTMLElement;
@@ -707,4 +786,59 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
     return;
   }
-});
+
+  // H: Toggle instruction bar display mode (no modifiers)
+  if (e.key === 'h' || e.key === 'H') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      cycleDisplayMode();
+      return;
+    }
+  }
+
+  // [: Previous level (no modifiers)
+  if (e.key === '[') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      goToPreviousLevel();
+      return;
+    }
+  }
+
+  // ]: Next level (no modifiers)
+  if (e.key === ']') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      goToNextLevel();
+      return;
+    }
+  }
+
+  // R: Run the program (no modifiers)
+  if (e.key === 'r' || e.key === 'R') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!mazeGame.isExecuting()) {
+        hasRun = true;
+        hideHint();
+        const code = javascriptGenerator.workspaceToCode(workspace);
+        mazeGame.execute(code);
+      }
+      return;
+    }
+  }
+
+  // ? or /: Show shortcuts dialog (no modifiers)
+  if (e.key === '?' || e.key === '/') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      keyboardNavigation.toggleShortcutDialog();
+      return;
+    }
+  }
+}, true); // Use capture phase to handle before Blockly
