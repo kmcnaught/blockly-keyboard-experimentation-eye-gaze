@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <!-- Night sky gradient -->
+    <linearGradient id="nightSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a20"/>
+      <stop offset="30%" style="stop-color:#1a1a40"/>
+      <stop offset="60%" style="stop-color:#2a3a50"/>
+      <stop offset="100%" style="stop-color:#3a4a5a"/>
+    </linearGradient>
+
+    <!-- Aurora gradient 1 - green -->
+    <linearGradient id="aurora1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:0"/>
+      <stop offset="30%" style="stop-color:#00ff88;stop-opacity:0.3"/>
+      <stop offset="50%" style="stop-color:#00ffaa;stop-opacity:0.4"/>
+      <stop offset="70%" style="stop-color:#00ff88;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0"/>
+    </linearGradient>
+
+    <!-- Aurora gradient 2 - purple -->
+    <linearGradient id="aurora2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8800ff;stop-opacity:0"/>
+      <stop offset="30%" style="stop-color:#8800ff;stop-opacity:0.2"/>
+      <stop offset="50%" style="stop-color:#aa44ff;stop-opacity:0.3"/>
+      <stop offset="70%" style="stop-color:#8800ff;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#8800ff;stop-opacity:0"/>
+    </linearGradient>
+
+    <!-- Aurora gradient 3 - teal -->
+    <linearGradient id="aurora3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00aaaa;stop-opacity:0"/>
+      <stop offset="40%" style="stop-color:#00cccc;stop-opacity:0.25"/>
+      <stop offset="60%" style="stop-color:#00aaaa;stop-opacity:0.25"/>
+      <stop offset="100%" style="stop-color:#00aaaa;stop-opacity:0"/>
+    </linearGradient>
+
+    <!-- Mountain gradient -->
+    <linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a5a6a"/>
+      <stop offset="100%" style="stop-color:#2a3a4a"/>
+    </linearGradient>
+
+    <!-- Snow cap gradient -->
+    <linearGradient id="snowCap" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#d0e0f0"/>
+    </linearGradient>
+
+    <!-- Star glow filter -->
+    <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Night sky background -->
+  <rect width="400" height="400" fill="url(#nightSky)"/>
+
+  <!-- Stars - various sizes -->
+  <g fill="#ffffff" filter="url(#starGlow)">
+    <!-- Bright stars -->
+    <circle cx="50" cy="30" r="1.5"/>
+    <circle cx="120" cy="45" r="2"/>
+    <circle cx="200" cy="20" r="1.8"/>
+    <circle cx="280" cy="55" r="1.5"/>
+    <circle cx="350" cy="35" r="2"/>
+    <circle cx="80" cy="80" r="1.2"/>
+    <circle cx="180" cy="70" r="1.5"/>
+    <circle cx="320" cy="85" r="1.8"/>
+    <circle cx="370" cy="100" r="1.2"/>
+
+    <!-- Medium stars -->
+    <circle cx="30" cy="60" r="1"/>
+    <circle cx="95" cy="25" r="1"/>
+    <circle cx="145" cy="90" r="1"/>
+    <circle cx="220" cy="50" r="1"/>
+    <circle cx="260" cy="30" r="1"/>
+    <circle cx="310" cy="60" r="1"/>
+    <circle cx="385" cy="70" r="1"/>
+
+    <!-- Small dim stars -->
+    <circle cx="15" cy="40" r="0.5" opacity="0.6"/>
+    <circle cx="65" cy="55" r="0.5" opacity="0.6"/>
+    <circle cx="110" cy="15" r="0.5" opacity="0.6"/>
+    <circle cx="160" cy="35" r="0.5" opacity="0.6"/>
+    <circle cx="190" cy="95" r="0.5" opacity="0.6"/>
+    <circle cx="240" cy="40" r="0.5" opacity="0.6"/>
+    <circle cx="295" cy="25" r="0.5" opacity="0.6"/>
+    <circle cx="340" cy="50" r="0.5" opacity="0.6"/>
+    <circle cx="360" cy="80" r="0.5" opacity="0.6"/>
+    <circle cx="25" cy="100" r="0.5" opacity="0.6"/>
+    <circle cx="130" cy="75" r="0.5" opacity="0.6"/>
+    <circle cx="270" cy="90" r="0.5" opacity="0.6"/>
+  </g>
+
+  <!-- Aurora borealis waves -->
+  <!-- Green aurora - main wave -->
+  <path d="M0 80 Q50 60, 100 90 T200 70 T300 95 T400 75"
+        stroke="url(#aurora1)" stroke-width="40" fill="none" opacity="0.6"/>
+  <path d="M0 100 Q60 80, 120 110 T240 85 T360 115 T400 90"
+        stroke="url(#aurora1)" stroke-width="30" fill="none" opacity="0.5"/>
+
+  <!-- Purple aurora - secondary wave -->
+  <path d="M0 120 Q70 100, 140 130 T280 100 T400 125"
+        stroke="url(#aurora2)" stroke-width="35" fill="none" opacity="0.5"/>
+  <path d="M0 90 Q40 70, 80 95 T160 75 T240 100 T320 80 T400 105"
+        stroke="url(#aurora2)" stroke-width="25" fill="none" opacity="0.4"/>
+
+  <!-- Teal aurora - accent -->
+  <path d="M0 140 Q80 120, 160 145 T320 120 T400 145"
+        stroke="url(#aurora3)" stroke-width="20" fill="none" opacity="0.5"/>
+
+  <!-- Distant mountains -->
+  <!-- Back mountain range -->
+  <polygon points="0,320 40,260 80,290 120,250 160,280 200,240 240,270 280,230 320,260 360,220 400,250 400,320"
+           fill="url(#mountain)" opacity="0.6"/>
+
+  <!-- Middle mountain range -->
+  <polygon points="0,340 30,290 70,310 110,270 150,300 190,260 230,295 270,255 310,285 350,245 400,280 400,340"
+           fill="url(#mountain)" opacity="0.8"/>
+
+  <!-- Snow caps on middle mountains -->
+  <polygon points="110,270 120,280 100,280" fill="url(#snowCap)" opacity="0.9"/>
+  <polygon points="190,260 205,275 175,275" fill="url(#snowCap)" opacity="0.9"/>
+  <polygon points="270,255 285,270 255,270" fill="url(#snowCap)" opacity="0.9"/>
+  <polygon points="350,245 368,265 332,265" fill="url(#snowCap)" opacity="0.9"/>
+
+  <!-- Front mountain range -->
+  <polygon points="0,360 50,310 100,340 150,300 200,330 250,290 300,320 350,280 400,320 400,360"
+           fill="url(#mountain)"/>
+
+  <!-- Snow caps on front mountains -->
+  <polygon points="50,310 65,325 35,325" fill="url(#snowCap)"/>
+  <polygon points="150,300 170,320 130,320" fill="url(#snowCap)"/>
+  <polygon points="250,290 270,312 230,312" fill="url(#snowCap)"/>
+  <polygon points="350,280 372,305 328,305" fill="url(#snowCap)"/>
+
+  <!-- Snow-covered ground at bottom -->
+  <rect x="0" y="355" width="400" height="45" fill="#e8f0f8"/>
+
+  <!-- Ground snow drifts -->
+  <ellipse cx="50" cy="370" rx="60" ry="15" fill="#ffffff" opacity="0.8"/>
+  <ellipse cx="150" cy="375" rx="50" ry="12" fill="#ffffff" opacity="0.7"/>
+  <ellipse cx="280" cy="368" rx="70" ry="18" fill="#ffffff" opacity="0.8"/>
+  <ellipse cx="380" cy="372" rx="40" ry="14" fill="#ffffff" opacity="0.7"/>
+
+  <!-- Distant evergreen silhouettes -->
+  <g fill="#1a2a3a" opacity="0.8">
+    <polygon points="20,355 25,330 30,355"/>
+    <polygon points="35,355 42,320 49,355"/>
+    <polygon points="60,355 68,325 76,355"/>
+    <polygon points="85,355 90,335 95,355"/>
+
+    <polygon points="130,355 138,328 146,355"/>
+    <polygon points="155,355 160,340 165,355"/>
+
+    <polygon points="200,355 208,325 216,355"/>
+    <polygon points="225,355 233,332 241,355"/>
+    <polygon points="250,355 255,342 260,355"/>
+
+    <polygon points="295,355 305,318 315,355"/>
+    <polygon points="325,355 330,338 335,355"/>
+
+    <polygon points="360,355 370,328 380,355"/>
+    <polygon points="385,355 392,340 399,355"/>
+  </g>
+</svg>

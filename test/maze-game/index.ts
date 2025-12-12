@@ -255,6 +255,13 @@ if (pegmanImg) {
   pegmanImg.src = skins[savedSkin].sprite;
 }
 
+// Initialize Christmas theme if Rudolph was saved as preferred skin
+// (RUDOLPH_SKIN_ID will be 4 - index of Rudolph in SKINS array)
+if (savedSkin === 4) {
+  // Defer to ensure DOM is ready
+  setTimeout(() => setChristmasTheme(true), 100);
+}
+
 // Build the character menu
 if (pegmanMenu) {
   skins.forEach((skin, i) => {
@@ -270,6 +277,73 @@ if (pegmanMenu) {
   });
 }
 
+// Christmas theme constants
+const RUDOLPH_SKIN_ID = 4; // Index of Rudolph in SKINS array
+let snowflakesCreated = false;
+
+/**
+ * Create snowflake elements for the snow effect.
+ */
+function createSnowflakes() {
+  if (snowflakesCreated) return;
+
+  const snowContainer = document.getElementById('snowContainer');
+  if (!snowContainer) return;
+
+  // Clear existing snowflakes
+  snowContainer.innerHTML = '';
+
+  // Create 30 snowflakes with varied properties
+  const snowflakeChars = ['❄', '❅', '❆', '•'];
+  for (let i = 0; i < 30; i++) {
+    const snowflake = document.createElement('div');
+    snowflake.className = 'snowflake';
+    snowflake.textContent = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+
+    // Random horizontal position
+    snowflake.style.left = `${Math.random() * 100}%`;
+
+    // Random size (0.5em to 1.5em)
+    const size = 0.5 + Math.random() * 1;
+    snowflake.style.fontSize = `${size}em`;
+
+    // Random animation duration (5s to 15s for parallax effect)
+    const duration = 5 + Math.random() * 10;
+    snowflake.style.animationDuration = `${duration}s`;
+
+    // Random delay so they don't all start at once
+    snowflake.style.animationDelay = `${Math.random() * duration}s`;
+
+    // Random opacity (0.5 to 1.0)
+    snowflake.style.opacity = `${0.5 + Math.random() * 0.5}`;
+
+    snowContainer.appendChild(snowflake);
+  }
+
+  snowflakesCreated = true;
+}
+
+/**
+ * Enable or disable Christmas theme effects.
+ */
+function setChristmasTheme(enabled: boolean) {
+  const header = document.querySelector('header');
+  const snowContainer = document.getElementById('snowContainer');
+
+  if (enabled) {
+    // Enable Christmas theme
+    header?.classList.add('christmas');
+    if (snowContainer) {
+      createSnowflakes();
+      snowContainer.classList.add('active');
+    }
+  } else {
+    // Disable Christmas theme
+    header?.classList.remove('christmas');
+    snowContainer?.classList.remove('active');
+  }
+}
+
 // Function to change the character
 function changePegman(skinId: number) {
   mazeGame.setSkin(skinId);
@@ -279,6 +353,9 @@ function changePegman(skinId: number) {
   if (pegmanImg) {
     pegmanImg.src = skins[skinId].sprite;
   }
+
+  // Toggle Christmas theme based on skin
+  setChristmasTheme(skinId === RUDOLPH_SKIN_ID);
 
   hidePegmanMenu();
 }

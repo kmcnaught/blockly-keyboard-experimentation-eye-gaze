@@ -47,6 +47,7 @@ enum CrashType {
   STOP = 1,  // Bounce animation
   SPIN = 2,  // Spinning animation
   FALL = 3,  // Falling animation with gravity
+  FLAIL = 4, // Flip upside down with legs flailing (Rudolph)
 }
 
 interface Position {
@@ -58,6 +59,7 @@ interface Skin {
   sprite: string;       // Path to sprite image (1029x51, 21 frames)
   tiles: string;        // Path to tile set image
   background: string | false;  // Path to background image or false
+  marker?: string;      // Path to goal marker image (defaults to marker.png)
   look: string;         // Color for sonar look icon
   winSound: string[];   // Paths to win sound files
   crashSound: string[]; // Paths to crash sound files
@@ -101,6 +103,38 @@ const SKINS: Skin[] = [
     winSound: ['assets/win.mp3', 'assets/win.ogg'],
     crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
     crashType: CrashType.STOP,
+  },
+  // Christmas theme: Rudolph the Reindeer
+  {
+    sprite: 'assets/rudolph.png',
+    tiles: 'assets/tiles_rudolph.png',
+    background: 'assets/bg_rudolph.jpg',
+    look: '#ff0000',  // Red for Rudolph's glowing nose
+    winSound: ['assets/win_rudolph.mp3', 'assets/win_rudolph.ogg'],
+    crashSound: ['assets/fail_rudolph.mp3', 'assets/fail_rudolph.ogg'],
+    crashType: CrashType.FLAIL,  // Flips upside down with legs flailing
+  },
+  // Football theme: Chase the Ball - footballer runs to reach the ball
+  {
+    sprite: 'assets/footballer_chase.png',
+    tiles: 'assets/tiles_football.png',
+    background: 'assets/bg_stadium.jpg',
+    marker: 'assets/marker_ball.png',
+    look: '#cc0000',  // Red for team colors
+    winSound: ['assets/win.mp3', 'assets/win.ogg'],
+    crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
+    crashType: CrashType.FALL,  // Player trips and falls
+  },
+  // Football theme: Dribble to Score - footballer dribbles ball to goal
+  {
+    sprite: 'assets/footballer_dribble.png',
+    tiles: 'assets/tiles_football.png',
+    background: 'assets/bg_stadium.jpg',
+    marker: 'assets/marker_goal.png',
+    look: '#0066cc',  // Blue for team colors
+    winSound: ['assets/win.mp3', 'assets/win.ogg'],
+    crashSound: ['assets/fail_pegman.mp3', 'assets/fail_pegman.ogg'],
+    crashType: CrashType.FLAIL,  // Misses the goal comically
   },
 ];
 
@@ -400,10 +434,10 @@ export class MazeGame {
       newBackgroundImage = null;
     }
 
-    // Load marker image
+    // Load marker image (use skin-specific marker or default)
     newMarkerImage = new Image();
     newMarkerImage.onload = onImageLoad;
-    newMarkerImage.src = 'assets/marker.png';
+    newMarkerImage.src = this.skin.marker || 'assets/marker.png';
 
     // Load audio files
     this.loadAudio();
@@ -669,6 +703,51 @@ export class MazeGame {
   }
 
   /**
+   * Draw pegman at specified position with rotation (for crash animations).
+   * @param x Grid x position
+   * @param y Grid y position
+   * @param frame Frame number
+   * @param angle Rotation angle in degrees
+   */
+  private drawPegmanRotated(x: number, y: number, frame: number, angle: number): void {
+    const px = x * this.squareSize;
+    const py = y * this.squareSize;
+
+    if (this.pegmanImage && this.imagesLoaded) {
+      const frameIndex = Math.min(Math.max(Math.floor(frame), 0), 20);
+      const srcX = frameIndex * this.PEGMAN_WIDTH;
+      const srcY = 0;
+
+      // Center of the sprite in the cell
+      const centerX = px + this.squareSize / 2;
+      const centerY = py + this.squareSize / 2 - 5;
+
+      // Save context, rotate around center, draw, restore
+      this.ctx.save();
+      this.ctx.translate(centerX, centerY);
+      this.ctx.rotate((angle * Math.PI) / 180);
+
+      // Draw centered on the rotation point
+      this.ctx.drawImage(
+        this.pegmanImage,
+        srcX,
+        srcY,
+        this.PEGMAN_WIDTH,
+        this.PEGMAN_HEIGHT,
+        -this.PEGMAN_WIDTH / 2,
+        -this.PEGMAN_HEIGHT / 2,
+        this.PEGMAN_WIDTH,
+        this.PEGMAN_HEIGHT
+      );
+
+      this.ctx.restore();
+    } else {
+      // Fallback - just draw normal pegman
+      this.drawPegman(x, y, frame);
+    }
+  }
+
+  /**
    * Draw a single quarter-circle arc for the look/radar animation.
    * @param centerX Center X coordinate in pixels
    * @param centerY Center Y coordinate in pixels
@@ -899,6 +978,36 @@ export class MazeGame {
       this.drawPegman(startX, startY, this.playerDir * 4);
       this.draw();
       await this.delay(75);
+    } else if (this.skin.crashType === CrashType.FLAIL) {
+      // Rudolph flips upside down with legs flailing in the air
+      const startX = this.playerPos.x;
+      const startY = this.playerPos.y;
+      const bounceDistance = 0.15;
+
+      // Bump forward slightly
+      this.drawPegman(startX + deltaX * bounceDistance, startY + deltaY * bounceDistance, this.playerDir * 4);
+      this.draw();
+      await this.delay(50);
+
+      // Flip upside down and flail legs - cycle through crash frames 18-20
+      // Draw upside down using rotation
+      for (let cycle = 0; cycle < 3; cycle++) {
+        for (let frame = 18; frame <= 20; frame++) {
+          this.draw(); // Redraw background/maze
+          this.drawPegmanRotated(startX, startY, frame, 180);
+          await this.delay(100);
+        }
+      }
+
+      // Final position - stay upside down briefly
+      this.draw();
+      this.drawPegmanRotated(startX, startY, 18, 180);
+      await this.delay(200);
+
+      // Pop back right-side up
+      this.draw();
+      this.drawPegman(startX, startY, this.playerDir * 4);
+      await this.delay(100);
     } else {
       // For SPIN and FALL, do a simple bounce for now
       // (Full implementation would be more complex)
