@@ -939,11 +939,8 @@ export class MazeGame {
     const stepDelay = 75; // 75ms per step = 300ms total
 
     for (let i = 1; i <= steps; i++) {
-      const x = startX + deltaX * i;
-      const y = startY + deltaY * i;
-      const frame = this.playerDir * 4;
-      this.animationFrame = frame;
-      this.drawPegman(x, y, frame);
+      this.playerPos = {x: startX + deltaX * i, y: startY + deltaY * i};
+      this.animationFrame = this.playerDir * 4;
       this.draw();
       await this.delay(stepDelay);
     }
@@ -987,76 +984,57 @@ export class MazeGame {
       this.crashAudio.play().catch(() => {}); // Ignore audio errors
     }
 
-    if (this.skin.crashType === CrashType.STOP) {
-      // Bounce animation
-      const bounceDistance = 0.25;
-      const startX = this.playerPos.x;
-      const startY = this.playerPos.y;
+    const startPos = {x: this.playerPos.x, y: this.playerPos.y};
+    const bounceDistance = this.skin.crashType === CrashType.FLAIL ? 0.15 : 0.25;
 
-      // Move forward slightly
-      this.drawPegman(startX + deltaX * bounceDistance, startY + deltaY * bounceDistance, this.playerDir * 4);
+    if (this.skin.crashType === CrashType.STOP || this.skin.crashType === CrashType.SPIN || this.skin.crashType === CrashType.FALL) {
+      // Bounce animation - temporarily move position forward then back
+      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
       this.draw();
       await this.delay(75);
 
-      // Bounce back
-      this.drawPegman(startX, startY, this.playerDir * 4);
+      this.playerPos = startPos;
       this.draw();
       await this.delay(75);
 
-      // Forward again
-      this.drawPegman(startX + deltaX * bounceDistance, startY + deltaY * bounceDistance, this.playerDir * 4);
+      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
       this.draw();
       await this.delay(75);
 
-      // Final return
-      this.drawPegman(startX, startY, this.playerDir * 4);
+      this.playerPos = startPos;
       this.draw();
       await this.delay(75);
     } else if (this.skin.crashType === CrashType.FLAIL) {
       // Rudolph flips upside down with legs flailing in the air
-      const startX = this.playerPos.x;
-      const startY = this.playerPos.y;
-      const bounceDistance = 0.15;
-
       // Bump forward slightly
-      this.drawPegman(startX + deltaX * bounceDistance, startY + deltaY * bounceDistance, this.playerDir * 4);
+      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
       this.draw();
       await this.delay(50);
 
+      // Return to start position for flailing
+      this.playerPos = startPos;
+
       // Flip upside down and flail legs - cycle through crash frames 18-20
-      // Draw upside down using rotation
       for (let cycle = 0; cycle < 3; cycle++) {
         for (let frame = 18; frame <= 20; frame++) {
-          this.draw(); // Redraw background/maze
-          this.drawPegmanRotated(startX, startY, frame, 180);
+          this.draw();
+          this.drawPegmanRotated(startPos.x, startPos.y, frame, 180);
           await this.delay(100);
         }
       }
 
       // Final position - stay upside down briefly
       this.draw();
-      this.drawPegmanRotated(startX, startY, 18, 180);
+      this.drawPegmanRotated(startPos.x, startPos.y, 18, 180);
       await this.delay(200);
 
       // Pop back right-side up
       this.draw();
-      this.drawPegman(startX, startY, this.playerDir * 4);
       await this.delay(100);
-    } else {
-      // For SPIN and FALL, do a simple bounce for now
-      // (Full implementation would be more complex)
-      const bounceDistance = 0.25;
-      const startX = this.playerPos.x;
-      const startY = this.playerPos.y;
-
-      this.drawPegman(startX + deltaX * bounceDistance, startY + deltaY * bounceDistance, this.playerDir * 4);
-      this.draw();
-      await this.delay(150);
-
-      this.drawPegman(startX, startY, this.playerDir * 4);
-      this.draw();
-      await this.delay(150);
     }
+
+    // Ensure we're back at start position
+    this.playerPos = startPos;
   }
 
   /**
