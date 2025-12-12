@@ -70,6 +70,7 @@ registerNavigationDeferringToolbox();
  */
 function getToolboxForLevel(level: number): Blockly.utils.toolbox.ToolboxDefinition {
   const contents: Blockly.utils.toolbox.ToolboxItemInfo[] = [
+    {kind: 'label', text: 'Available blocks:'},
     {kind: 'block', type: 'maze_moveForward'},
     {kind: 'block', type: 'maze_turn', fields: {DIR: 'turnLeft'}},
     {kind: 'block', type: 'maze_turn', fields: {DIR: 'turnRight'}},
@@ -109,7 +110,7 @@ const workspace = Blockly.inject('blocklyDiv', {
   zoom: {
     controls: true,
     wheel: true,
-    startScale: 1.0,
+    startScale: 1.2,
     maxScale: 3,
     minScale: 0.3,
     scaleSpeed: 1.2,
@@ -385,16 +386,29 @@ function hidePegmanMenu() {
 // Hide menu on window resize
 window.addEventListener('resize', hidePegmanMenu);
 
-// Run button handler
-document.getElementById('runButton')?.addEventListener('click', () => {
+/**
+ * Run the program - shared by main button, fullscreen button, and keyboard shortcuts.
+ */
+function runProgram() {
+  if (mazeGame.isExecuting()) return;
+  hasRun = true;
+  hideHint();
   const code = javascriptGenerator.workspaceToCode(workspace);
   mazeGame.execute(code);
-});
+}
+
+/**
+ * Reset the maze - shared by main button and fullscreen button.
+ */
+function resetProgram() {
+  mazeGame.reset();
+}
+
+// Run button handler
+document.getElementById('runButton')?.addEventListener('click', runProgram);
 
 // Reset button handler
-document.getElementById('resetButton')?.addEventListener('click', () => {
-  mazeGame.reset();
-});
+document.getElementById('resetButton')?.addEventListener('click', resetProgram);
 
 // Initial level display update
 updateLevelDisplay();
@@ -643,15 +657,6 @@ function levelHelp() {
   }, 2000); // 2 second delay before showing hints
 }
 
-// Update run button handler to track execution
-const originalRunHandler = document.getElementById('runButton');
-if (originalRunHandler) {
-  originalRunHandler.addEventListener('click', () => {
-    hasRun = true;
-    hideHint();
-  });
-}
-
 // Listen for maze game completion events
 mazeGame.onComplete((success: boolean) => {
   lastResult = success ? 'success' : 'failure';
@@ -777,13 +782,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.ctrlKey && e.altKey && e.key === 'r') {
     e.preventDefault();
     e.stopPropagation();
-    // Only run if not already executing
-    if (!mazeGame.isExecuting()) {
-      hasRun = true;
-      hideHint();
-      const code = javascriptGenerator.workspaceToCode(workspace);
-      mazeGame.execute(code);
-    }
+    runProgram();
     return;
   }
 
@@ -822,12 +821,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
       e.stopPropagation();
-      if (!mazeGame.isExecuting()) {
-        hasRun = true;
-        hideHint();
-        const code = javascriptGenerator.workspaceToCode(workspace);
-        mazeGame.execute(code);
-      }
+      runProgram();
       return;
     }
   }
@@ -841,4 +835,345 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
       return;
     }
   }
+
+  // F: Toggle fullscreen mode (no modifiers)
+  if (e.key === 'f' || e.key === 'F') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFullscreen();
+      return;
+    }
+  }
+
+  // G: Toggle game panel/sidebar (no modifiers)
+  if (e.key === 'g' || e.key === 'G') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSidebar();
+      return;
+    }
+  }
+
+  // Escape: Exit fullscreen mode
+  if (e.key === 'Escape') {
+    if (isFullscreenActive()) {
+      e.preventDefault();
+      e.stopPropagation();
+      exitFullscreen();
+      return;
+    }
+  }
 }, true); // Use capture phase to handle before Blockly
+
+// ========== FULLSCREEN MODE ==========
+
+let fullscreenActive = false;
+const fullscreenOverlay = document.getElementById('fullscreenOverlay');
+const canvasWrapper = document.querySelector('.canvas-wrapper') as HTMLElement;
+const mazeCanvas = document.getElementById('mazeCanvas') as HTMLCanvasElement;
+const fullscreenCanvasContainer = document.querySelector('.fullscreen-canvas-container') as HTMLElement;
+
+// Store focusable elements for focus trap
+let previouslyFocusedElement: HTMLElement | null = null;
+
+/**
+ * Check if fullscreen mode is active.
+ */
+function isFullscreenActive(): boolean {
+  return fullscreenActive;
+}
+
+/**
+ * Toggle fullscreen mode.
+ */
+function toggleFullscreen() {
+  if (fullscreenActive) {
+    exitFullscreen();
+  } else {
+    enterFullscreen();
+  }
+}
+
+/**
+ * Enter fullscreen mode.
+ */
+function enterFullscreen() {
+  if (!fullscreenOverlay || !mazeCanvas || !fullscreenCanvasContainer || !canvasWrapper) return;
+
+  // Store the currently focused element to restore later
+  previouslyFocusedElement = document.activeElement as HTMLElement;
+
+  // Move the canvas to the fullscreen overlay
+  fullscreenCanvasContainer.appendChild(mazeCanvas);
+
+  // Show the overlay
+  fullscreenOverlay.classList.add('active');
+  document.body.classList.add('fullscreen-active');
+  fullscreenActive = true;
+
+  // Set inert on all background content for proper modal behavior
+  document.querySelectorAll('body > *:not(#fullscreenOverlay):not(#snowContainer)').forEach(el => {
+    (el as HTMLElement).inert = true;
+  });
+
+  // Update button states
+  updateFullscreenLevelButtons();
+
+  // Focus the close button for accessibility
+  const closeButton = fullscreenOverlay.querySelector('.fullscreen-close') as HTMLElement;
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+/**
+ * Exit fullscreen mode.
+ */
+function exitFullscreen() {
+  if (!fullscreenOverlay || !mazeCanvas || !canvasWrapper) return;
+
+  // Move the canvas back to the original location
+  canvasWrapper.appendChild(mazeCanvas);
+
+  // Hide the overlay
+  fullscreenOverlay.classList.remove('active');
+  document.body.classList.remove('fullscreen-active');
+  fullscreenActive = false;
+
+  // Remove inert from background content
+  document.querySelectorAll('body > *:not(#fullscreenOverlay):not(#snowContainer)').forEach(el => {
+    (el as HTMLElement).inert = false;
+  });
+
+  // Restore focus to the previously focused element
+  if (previouslyFocusedElement) {
+    previouslyFocusedElement.focus();
+  }
+}
+
+/**
+ * Update fullscreen level navigation button states.
+ */
+function updateFullscreenLevelButtons() {
+  const currentLevel = mazeGame.getLevel();
+  const maxLevel = MazeGame.getMaxLevel();
+
+  const prevButton = fullscreenOverlay?.querySelector('.fullscreen-prev') as HTMLButtonElement;
+  const nextButton = fullscreenOverlay?.querySelector('.fullscreen-next') as HTMLButtonElement;
+
+  if (prevButton) {
+    prevButton.disabled = currentLevel <= 1;
+  }
+  if (nextButton) {
+    nextButton.disabled = currentLevel >= maxLevel;
+  }
+}
+
+// Wire up fullscreen overlay buttons
+if (fullscreenOverlay) {
+  // Close button
+  const closeButton = fullscreenOverlay.querySelector('.fullscreen-close');
+  closeButton?.addEventListener('click', exitFullscreen);
+
+  // Run button - uses shared runProgram()
+  const fsRunButton = fullscreenOverlay.querySelector('.fullscreen-run');
+  fsRunButton?.addEventListener('click', runProgram);
+
+  // Reset button - uses shared resetProgram()
+  const fsResetButton = fullscreenOverlay.querySelector('.fullscreen-reset');
+  fsResetButton?.addEventListener('click', resetProgram);
+
+  // Previous level button
+  const prevButton = fullscreenOverlay.querySelector('.fullscreen-prev');
+  prevButton?.addEventListener('click', () => {
+    goToPreviousLevel();
+    updateFullscreenLevelButtons();
+  });
+
+  // Next level button
+  const nextButton = fullscreenOverlay.querySelector('.fullscreen-next');
+  nextButton?.addEventListener('click', () => {
+    goToNextLevel();
+    updateFullscreenLevelButtons();
+  });
+
+  // Focus trap - keep focus within the overlay
+  fullscreenOverlay.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Tab') {
+      const focusableElements = fullscreenOverlay.querySelectorAll(
+        'button:not(:disabled), [tabindex]:not([tabindex="-1"])'
+      ) as NodeListOf<HTMLElement>;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  });
+}
+
+// ========== COMPACT MODE ==========
+
+const gameContainer = document.querySelector('.game-container') as HTMLElement;
+
+/**
+ * Check if compact mode should be enabled based on available space.
+ * Compact mode overlays the level navigation buttons on the canvas
+ * instead of showing them above it, saving vertical space.
+ */
+function checkCompactMode() {
+  if (!gameContainer) return;
+
+  // Enable compact mode when window height is limited.
+  // 700px accommodates: header (~60px) + instruction bar (~40px) + canvas (~400px) +
+  // controls (~80px) + level selector (~50px) + padding (~70px) = ~700px minimum
+  const windowHeight = window.innerHeight;
+  const compactThreshold = 700;
+
+  if (windowHeight < compactThreshold) {
+    gameContainer.classList.add('compact');
+  } else {
+    gameContainer.classList.remove('compact');
+  }
+}
+
+// Check compact mode on load and resize
+checkCompactMode();
+window.addEventListener('resize', checkCompactMode);
+
+// ========== COLLAPSIBLE SIDEBAR ==========
+
+const mainContainer = document.querySelector('.container') as HTMLElement;
+const sidebarToggle = document.getElementById('sidebarToggle');
+let sidebarCollapsed = false;
+let userManuallyToggled = false; // Track if user manually toggled to prevent auto-collapse fighting
+let weTriggeredChange = false; // Track if we triggered the size change (vs external zoom/resize)
+
+/**
+ * Collapse the sidebar (game panel).
+ */
+function collapseSidebar() {
+  if (!mainContainer) return;
+  weTriggeredChange = true;
+  mainContainer.classList.add('sidebar-collapsed');
+  sidebarCollapsed = true;
+  // Trigger Blockly resize and width check after transition
+  setTimeout(() => {
+    Blockly.svgResize(workspace);
+    checkBlocklyWidth();
+    weTriggeredChange = false;
+  }, 400);
+}
+
+/**
+ * Expand the sidebar (game panel).
+ */
+function expandSidebar() {
+  if (!mainContainer) return;
+  weTriggeredChange = true;
+  mainContainer.classList.remove('sidebar-collapsed');
+  sidebarCollapsed = false;
+  // Trigger Blockly resize and width check after transition
+  setTimeout(() => {
+    Blockly.svgResize(workspace);
+    checkBlocklyWidth();
+    weTriggeredChange = false;
+  }, 400);
+}
+
+/**
+ * Toggle the sidebar collapsed state.
+ */
+function toggleSidebar() {
+  userManuallyToggled = true;
+  if (sidebarCollapsed) {
+    expandSidebar();
+  } else {
+    collapseSidebar();
+  }
+}
+
+// Wire up toggle button
+sidebarToggle?.addEventListener('click', toggleSidebar);
+
+// ========== NARROW BLOCKLY DETECTION ==========
+
+const blocklyContainer = document.querySelector('.blockly-container') as HTMLElement;
+
+/**
+ * Check if Blockly workspace is narrow and hide controls if so.
+ * When the workspace is too narrow, the trash can and zoom controls
+ * overlap with blocks, so we hide them.
+ */
+function checkBlocklyWidth() {
+  if (!blocklyContainer) return;
+
+  // 500px is roughly the minimum width where Blockly's built-in controls
+  // (trashcan, zoom buttons) don't overlap with the flyout and workspace blocks
+  const narrowThreshold = 500;
+  const width = blocklyContainer.offsetWidth;
+
+  if (width < narrowThreshold) {
+    blocklyContainer.classList.add('narrow');
+  } else {
+    blocklyContainer.classList.remove('narrow');
+  }
+}
+
+// ========== AUTO-COLLAPSE BASED ON RELATIVE SIZE ==========
+
+/**
+ * Check if sidebar should auto-collapse based on available space.
+ * Uses hysteresis (different thresholds for collapse/expand) to prevent oscillation.
+ * Only responds to external changes (zoom/resize), not our own collapse/expand.
+ */
+function checkSizeAndAutoCollapse() {
+  if (userManuallyToggled) return; // Respect user's manual choice
+  if (weTriggeredChange) return; // Ignore size changes we caused
+  if (!mainContainer || !gameContainer) return;
+
+  // Get the game container's min-width from CSS (the space it needs)
+  const gameMinWidth = parseFloat(getComputedStyle(gameContainer).minWidth) || 450;
+  const containerWidth = mainContainer.offsetWidth;
+
+  // Calculate how much space blockly would get
+  const blocklySpace = containerWidth - gameMinWidth;
+
+  // Collapse when blockly would get less space than the game panel
+  // Expand when blockly would get more space than the game panel
+  if (!sidebarCollapsed && blocklySpace <= gameMinWidth) {
+    collapseSidebar();
+  } else if (sidebarCollapsed && blocklySpace > gameMinWidth) {
+    expandSidebar();
+  }
+}
+
+/**
+ * Handle size changes detected by ResizeObserver.
+ * More efficient than polling - only runs when sizes actually change.
+ */
+function handleSizeChange() {
+  checkSizeAndAutoCollapse();
+  checkBlocklyWidth();
+}
+
+// Use ResizeObserver for efficient size change detection
+// This handles browser zoom, layout changes, and element resizes without continuous polling
+const resizeObserver = new ResizeObserver(handleSizeChange);
+
+// Observe the main container for size changes (catches zoom and resize)
+if (mainContainer) {
+  resizeObserver.observe(mainContainer);
+}
+
+// Check on load
+checkSizeAndAutoCollapse();
+checkBlocklyWidth();
