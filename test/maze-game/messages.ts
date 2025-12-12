@@ -69,6 +69,27 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_IF_ELSE: 'If-else blocks will do one thing or the other.',
     MAZE_HINT_WALL_FOLLOW: 'Can you solve this complicated maze? Try following the left-hand wall. Advanced programmers only!',
 
+    // Immediate mode (direct control before programming)
+    MAZE_IMMEDIATE_FORWARD: 'Move Forward',
+    MAZE_IMMEDIATE_TURN_LEFT: 'Turn Left',
+    MAZE_IMMEDIATE_TURN_RIGHT: 'Turn Right',
+    MAZE_IMMEDIATE_HINT: 'Use buttons or arrow keys. Commands happen right away!',
+    MAZE_MODE_IMMEDIATE: 'Play',
+    MAZE_MODE_CODING: 'Code',
+
+    // Immediate mode instructions for all levels
+    MAZE_INSTRUCTION_1_IMMEDIATE: 'Press forward to reach the goal.',
+    MAZE_INSTRUCTION_2_IMMEDIATE: 'Use turn and forward to navigate to the goal.',
+    MAZE_INSTRUCTION_3_IMMEDIATE: 'Navigate the longer path to the goal.',
+    MAZE_INSTRUCTION_4_IMMEDIATE: 'Find the path through the twists and turns.',
+    MAZE_INSTRUCTION_5_IMMEDIATE: 'Navigate through the maze to reach the goal.',
+    MAZE_INSTRUCTION_6_IMMEDIATE: 'Watch for branching paths on your way to the goal.',
+    MAZE_INSTRUCTION_7_IMMEDIATE: 'Choose the right direction at each junction.',
+    MAZE_INSTRUCTION_8_IMMEDIATE: 'Navigate the complex path to the goal.',
+    MAZE_INSTRUCTION_9_IMMEDIATE: 'Find your way through the branching maze.',
+    MAZE_INSTRUCTION_10_IMMEDIATE: 'Solve this challenging maze step by step.',
+    MAZE_MODE_TRANSITION: 'Great job! Now let\'s try programming. Plan your moves, then press Run.',
+
     // Level instructions (what the user should accomplish)
     MAZE_INSTRUCTION_1: 'Get to the goal using move and turn blocks.',
     MAZE_INSTRUCTION_2: 'Navigate the turns to reach the goal.',
@@ -132,6 +153,27 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_MENU: 'Cliquez sur %1 dans le bloc « si » pour changer sa condition.',
     MAZE_HINT_IF_ELSE: 'Les blocs si-sinon feront une chose ou l\'autre.',
     MAZE_HINT_WALL_FOLLOW: 'Pouvez-vous résoudre ce labyrinthe compliqué ? Essayez de suivre le mur de gauche. Réservé aux programmeurs avancés !',
+
+    // Immediate mode (direct control before programming)
+    MAZE_IMMEDIATE_FORWARD: 'Avancer',
+    MAZE_IMMEDIATE_TURN_LEFT: 'Tourner à gauche',
+    MAZE_IMMEDIATE_TURN_RIGHT: 'Tourner à droite',
+    MAZE_IMMEDIATE_HINT: 'Utilisez les boutons ou les touches fléchées. Les commandes s\'exécutent immédiatement !',
+    MAZE_MODE_IMMEDIATE: 'Jouer',
+    MAZE_MODE_CODING: 'Coder',
+
+    // Immediate mode instructions for all levels
+    MAZE_INSTRUCTION_1_IMMEDIATE: 'Appuyez sur avancer pour atteindre l\'objectif.',
+    MAZE_INSTRUCTION_2_IMMEDIATE: 'Utilisez tourner et avancer pour naviguer vers l\'objectif.',
+    MAZE_INSTRUCTION_3_IMMEDIATE: 'Naviguez sur le chemin plus long vers l\'objectif.',
+    MAZE_INSTRUCTION_4_IMMEDIATE: 'Trouvez le chemin à travers les virages.',
+    MAZE_INSTRUCTION_5_IMMEDIATE: 'Naviguez dans le labyrinthe pour atteindre l\'objectif.',
+    MAZE_INSTRUCTION_6_IMMEDIATE: 'Surveillez les chemins qui bifurquent vers l\'objectif.',
+    MAZE_INSTRUCTION_7_IMMEDIATE: 'Choisissez la bonne direction à chaque jonction.',
+    MAZE_INSTRUCTION_8_IMMEDIATE: 'Naviguez sur le chemin complexe vers l\'objectif.',
+    MAZE_INSTRUCTION_9_IMMEDIATE: 'Trouvez votre chemin dans le labyrinthe ramifié.',
+    MAZE_INSTRUCTION_10_IMMEDIATE: 'Résolvez ce labyrinthe difficile étape par étape.',
+    MAZE_MODE_TRANSITION: 'Bravo ! Maintenant, essayons la programmation. Planifiez vos mouvements, puis appuyez sur Exécuter.',
 
     // Level instructions (what the user should accomplish)
     MAZE_INSTRUCTION_1: 'Atteignez l\'objectif en utilisant les blocs avancer et tourner.',

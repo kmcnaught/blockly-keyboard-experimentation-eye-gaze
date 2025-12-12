@@ -12,6 +12,13 @@
         <div class="selector-group">
           <button id="pegmanButton"><img src="assets/pegman.png"><span>▼</span></button>
         </div>
+        <div class="selector-group mode-toggle-group">
+          <button id="modeToggle" class="mode-toggle coding" aria-label="Toggle execution mode">
+            <span class="mode-icon immediate-icon">🎮</span>
+            <span class="mode-icon coding-icon">🧩</span>
+          </button>
+          <span id="modeLabel" class="mode-label">Coding</span>
+        </div>
         <div class="selector-group">
           <select id="languageSelect">
             <option value="en">English</option>
@@ -28,7 +35,7 @@
       </div>
       <div class="shortcut-hints">
         <span><kbd>R</kbd> run</span>
-        <span><kbd>H</kbd> toggle</span>
+        <span><kbd>M</kbd> mode</span>
         <span><kbd>[</kbd><kbd>]</kbd> levels</span>
         <span><kbd>F</kbd> fullscreen</span>
         <span><kbd>G</kbd> panel</span>
@@ -39,6 +46,31 @@
     <div class="container">
       <div class="blockly-container">
         <div id="blocklyDiv"></div>
+
+        <!-- Immediate Mode Panel (for levels 1-2) -->
+        <div id="immediateModePanel" class="immediate-mode-panel hidden">
+          <div class="immediate-hint" id="immediateHint"></div>
+          <div class="command-buttons">
+            <button id="cmdForward" class="command-btn" aria-label="Move Forward">
+              <span class="cmd-label" data-msg="MAZE_IMMEDIATE_FORWARD">Move Forward</span>
+              <img class="cmd-icon" src="assets/steps.svg" alt="" width="24" height="24">
+            </button>
+            <button id="cmdTurnLeft" class="command-btn" aria-label="Turn Left">
+              <span class="cmd-label" data-msg="MAZE_IMMEDIATE_TURN_LEFT">Turn Left</span>
+              <img class="cmd-icon" src="assets/turn_left.svg" alt="" width="24" height="24">
+            </button>
+            <button id="cmdTurnRight" class="command-btn" aria-label="Turn Right">
+              <span class="cmd-label" data-msg="MAZE_IMMEDIATE_TURN_RIGHT">Turn Right</span>
+              <img class="cmd-icon" src="assets/turn_right.svg" alt="" width="24" height="24">
+            </button>
+          </div>
+          <div class="immediate-keyboard-hint">
+            <span><kbd>↑</kbd> forward</span>
+            <span><kbd>←</kbd> turn left</span>
+            <span><kbd>→</kbd> turn right</span>
+            <span><kbd>R</kbd> reset</span>
+          </div>
+        </div>
       </div>
 
       <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle maze panel">

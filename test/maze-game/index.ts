@@ -17,6 +17,35 @@ import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring
 import {registerMazeBlocks, setCurrentSkin} from './blocks';
 import {MazeGame, MAX_BLOCKS} from './maze';
 import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
+import {ImmediateModeController} from './immediate-mode';
+
+// Execution modes
+type ExecutionMode = 'immediate' | 'coding';
+
+/**
+ * Get the execution mode from URL parameter or localStorage.
+ * URL parameter takes precedence over localStorage.
+ */
+function getInitialExecutionMode(): ExecutionMode {
+  // Check URL parameter first
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlMode = urlParams.get('mode');
+  if (urlMode === 'immediate' || urlMode === 'coding') {
+    return urlMode;
+  }
+
+  // Fall back to localStorage
+  const savedMode = localStorage.getItem('mazeExecutionMode') as ExecutionMode;
+  if (savedMode === 'immediate' || savedMode === 'coding') {
+    return savedMode;
+  }
+
+  // Default to coding mode
+  return 'coding';
+}
+
+// Current execution mode (immediate = direct control, coding = Blockly programming)
+let currentExecutionMode: ExecutionMode = getInitialExecutionMode();
 
 // Initialize locale (browser detection or saved preference)
 let currentLocale: SupportedLocale =
@@ -196,6 +225,95 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 setCurrentSkin(savedSkin); // Set initial skin for block icons
 const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
+
+// Initialize immediate mode controller for direct control in early levels
+const immediateModeController = new ImmediateModeController(
+  'immediateModePanel',
+  mazeGame
+);
+
+// Register completion callback for immediate mode
+immediateModeController.onLevelComplete((success) => {
+  if (success) {
+    // Auto-advance to next level after a short delay
+    setTimeout(() => {
+      goToNextLevel();
+    }, 1500);
+  }
+});
+
+/**
+ * Get the current execution mode.
+ */
+function getExecutionMode(): ExecutionMode {
+  return currentExecutionMode;
+}
+
+/**
+ * Set the execution mode and update the UI.
+ */
+function setExecutionMode(mode: ExecutionMode): void {
+  currentExecutionMode = mode;
+  localStorage.setItem('mazeExecutionMode', mode);
+  updateModeUI();
+  updateModeToggleButton();
+  // Update instruction bar to show appropriate instructions for the mode
+  updateInstructionBar();
+}
+
+/**
+ * Toggle between immediate and coding modes.
+ */
+function toggleExecutionMode(): void {
+  const newMode = currentExecutionMode === 'immediate' ? 'coding' : 'immediate';
+  setExecutionMode(newMode);
+}
+
+/**
+ * Update the mode toggle button appearance.
+ */
+function updateModeToggleButton(): void {
+  const modeToggle = document.getElementById('modeToggle');
+  const modeLabel = document.getElementById('modeLabel');
+  if (modeToggle) {
+    modeToggle.classList.toggle('immediate', currentExecutionMode === 'immediate');
+    modeToggle.classList.toggle('coding', currentExecutionMode === 'coding');
+  }
+  if (modeLabel) {
+    modeLabel.textContent = currentExecutionMode === 'immediate'
+      ? msg('MAZE_MODE_IMMEDIATE')
+      : msg('MAZE_MODE_CODING');
+  }
+}
+
+/**
+ * Update the UI based on current execution mode.
+ * Immediate mode: Shows command buttons, hides Blockly workspace
+ * Coding mode: Shows Blockly workspace, hides command buttons
+ */
+function updateModeUI(): void {
+  const blocklyDiv = document.getElementById('blocklyDiv');
+  const runButton = document.getElementById('runButton');
+  const capacityBubble = document.getElementById('capacityBubble');
+
+  if (currentExecutionMode === 'immediate') {
+    // Immediate mode: Hide Blockly, show command buttons
+    blocklyDiv?.classList.add('hidden');
+    runButton?.classList.add('hidden');
+    capacityBubble?.classList.add('hidden');
+    immediateModeController.setMazeGame(mazeGame);
+    immediateModeController.enable();
+  } else {
+    // Coding mode: Show Blockly, hide command buttons
+    blocklyDiv?.classList.remove('hidden');
+    runButton?.classList.remove('hidden');
+    immediateModeController.disable();
+    // Resize Blockly to fill available space
+    Blockly.svgResize(workspace);
+    // Update capacity bubble
+    updateCapacityBubble();
+  }
+}
 
 // Register block highlighting callback for code execution visualization
 mazeGame.onHighlight((blockId) => {
@@ -418,6 +536,13 @@ document.getElementById('resetButton')?.addEventListener('click', resetProgram);
 // Initial level display update
 updateLevelDisplay();
 
+// Initialize execution mode UI based on URL param or saved preference
+updateModeUI();
+updateModeToggleButton();
+
+// Wire up mode toggle button
+document.getElementById('modeToggle')?.addEventListener('click', toggleExecutionMode);
+
 // Language selector handler
 const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
 if (languageSelect) {
@@ -482,7 +607,10 @@ function updateInstructionBar() {
 
   // Update level instruction
   const level = mazeGame.getLevel();
-  const instructionKey = `MAZE_INSTRUCTION_${level}`;
+  // Use immediate mode instructions when in immediate mode
+  const instructionKey = currentExecutionMode === 'immediate'
+    ? `MAZE_INSTRUCTION_${level}_IMMEDIATE`
+    : `MAZE_INSTRUCTION_${level}`;
   levelInstruction.textContent = msg(instructionKey);
 
   // Handle hints visibility
@@ -821,13 +949,17 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // R: Run the program (no modifiers)
+  // R: Run the program in coding mode (no modifiers)
+  // In immediate mode, R is handled by the immediate mode controller for reset
   if (e.key === 'r' || e.key === 'R') {
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      runProgram();
-      return;
+      if (currentExecutionMode === 'coding') {
+        e.preventDefault();
+        e.stopPropagation();
+        runProgram();
+        return;
+      }
+      // Let immediate mode controller handle R for reset
     }
   }
 
@@ -847,6 +979,16 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       toggleFullscreen();
+      return;
+    }
+  }
+
+  // M: Toggle execution mode (immediate/coding) (no modifiers)
+  if (e.key === 'm' || e.key === 'M') {
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleExecutionMode();
       return;
     }
   }

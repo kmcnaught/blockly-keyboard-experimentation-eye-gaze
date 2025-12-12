@@ -1146,6 +1146,109 @@ export class MazeGame {
     this.draw();
   }
 
+  // ============================================================
+  // Immediate Mode Methods
+  // These methods execute commands instantly with animation,
+  // used for early levels to teach commands before sequencing.
+  // ============================================================
+
+  /**
+   * Check if player has reached the goal.
+   * Uses animation state (playerPos) for immediate mode.
+   */
+  public hasReachedGoal(): boolean {
+    return (
+      this.playerPos.x === this.finishPos.x &&
+      this.playerPos.y === this.finishPos.y
+    );
+  }
+
+  /**
+   * Check if there's a valid path in the forward direction.
+   * Uses animation state (playerPos/playerDir) for immediate mode.
+   */
+  public canMoveForward(): boolean {
+    const dirDeltas = [
+      {x: 0, y: -1}, // NORTH
+      {x: 1, y: 0},  // EAST
+      {x: 0, y: 1},  // SOUTH
+      {x: -1, y: 0}, // WEST
+    ];
+    const delta = dirDeltas[this.playerDir];
+    const newX = this.playerPos.x + delta.x;
+    const newY = this.playerPos.y + delta.y;
+    return this.isValidPosition(newX, newY);
+  }
+
+  /**
+   * Execute a single move forward command immediately with animation.
+   * Returns a promise that resolves with result when animation completes.
+   * @returns 'success' if reached goal, 'continue' if moved, 'wall' if hit wall
+   */
+  public async executeImmediateMove(): Promise<'success' | 'continue' | 'wall'> {
+    if (this.executing) {
+      return 'continue';
+    }
+
+    const dirDeltas = [
+      {x: 0, y: -1}, // NORTH
+      {x: 1, y: 0},  // EAST
+      {x: 0, y: 1},  // SOUTH
+      {x: -1, y: 0}, // WEST
+    ];
+    const delta = dirDeltas[this.playerDir];
+    const newX = this.playerPos.x + delta.x;
+    const newY = this.playerPos.y + delta.y;
+
+    // Check for wall
+    if (!this.isValidPosition(newX, newY)) {
+      this.executing = true;
+      await this.animateCrash(delta.x, delta.y);
+      this.executing = false;
+      return 'wall';
+    }
+
+    // Valid move - animate it
+    this.executing = true;
+    const startX = this.playerPos.x;
+    const startY = this.playerPos.y;
+    this.playerPos = {x: newX, y: newY};
+
+    await this.animateMove(startX, startY, newX, newY);
+    this.executing = false;
+
+    // Check if reached goal
+    if (this.hasReachedGoal()) {
+      await this.animateVictory();
+      return 'success';
+    }
+
+    return 'continue';
+  }
+
+  /**
+   * Execute a single turn command immediately with animation.
+   * @param direction 'left' or 'right'
+   */
+  public async executeImmediateTurn(direction: 'left' | 'right'): Promise<void> {
+    if (this.executing) {
+      return;
+    }
+
+    this.executing = true;
+    const startFrame = this.playerDir * 4;
+
+    if (direction === 'right') {
+      this.playerDir = this.constrainDirection4(this.playerDir + 1);
+    } else {
+      this.playerDir = this.constrainDirection4(this.playerDir - 1);
+    }
+
+    const endFrame = this.playerDir * 4;
+    await this.animateTurn(startFrame, endFrame);
+    this.executing = false;
+  }
+
   /**
    * Initialize the JS-Interpreter with the maze API.
    * This creates a sandboxed environment where user code can only call
