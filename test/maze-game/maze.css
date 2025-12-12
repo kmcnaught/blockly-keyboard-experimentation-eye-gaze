@@ -1,0 +1,745 @@
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  background: #1976d2;
+  color: white;
+  padding: 16px 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.blockly-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-right: 1px solid #ddd;
+}
+
+#blocklyDiv {
+  flex: 1;
+  min-height: 0;
+}
+
+.game-controls {
+  padding: 16px 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#capacityBubble {
+  padding: 8px 16px;
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2e7d32;
+  transition: all 0.3s;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+
+#capacityBubble.warning {
+  background: #fff3e0;
+  border-color: #ff9800;
+  color: #e65100;
+}
+
+#capacityBubble.error {
+  background: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+#capacityBubble.hidden {
+  display: none;
+}
+
+/* Hint dialog styles */
+#hintDialog {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: white;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 16px 20px;
+  max-width: 300px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+#hintDialog::before {
+  content: '💡';
+  font-size: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+#hintDialog.visible {
+  display: block;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#hintDialog .close-btn {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #999;
+  padding: 0 4px;
+}
+
+#hintDialog .close-btn:hover {
+  color: #333;
+}
+
+button {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+#runButton {
+  background: #4caf50;
+  color: white;
+}
+
+#runButton:hover {
+  background: #45a049;
+}
+
+#resetButton {
+  background: #ff9800;
+  color: white;
+}
+
+#resetButton:hover {
+  background: #e68900;
+}
+
+.game-container {
+  flex: 0 0 auto;
+  min-width: 450px;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background: white;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.level-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.level-selector button {
+  padding: 6px 12px;
+  font-size: 14px;
+  background: #4caf50;
+  color: white;
+  min-width: 40px;
+  z-index: 10;
+}
+
+.level-selector button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.level-selector span {
+  font-weight: 500;
+  color: #2e7d32;
+  flex: 1;
+  text-align: center;
+  transition: opacity 0.3s ease;
+}
+
+/* Compact mode: hide label and overlay buttons on canvas */
+.game-container.compact .level-selector {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.game-container.compact .level-selector button {
+  pointer-events: auto;
+  position: absolute;
+  background: rgba(76, 175, 80, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.game-container.compact .level-selector #prevLevel {
+  left: 16px;
+  top: 50px;
+}
+
+.game-container.compact .level-selector #nextLevel {
+  right: 16px;
+  top: 50px;
+}
+
+.game-container.compact .level-selector span {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.canvas-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f9f9f9;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 400px;
+  min-height: 350px;
+  position: relative;
+}
+
+#mazeCanvas {
+  display: block;
+  border: 1px solid #ccc;
+}
+
+.header-selectors {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.selector-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-group select {
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1976d2;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231976d2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 32px;
+}
+
+.selector-group select:hover {
+  background: white;
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.selector-group select:focus {
+  outline: none;
+  background: white;
+  border-color: #ffeb3b;
+  box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.4);
+}
+
+.selector-group select option {
+  background: white;
+  color: #1976d2;
+  padding: 8px;
+  font-weight: 500;
+}
+
+.selector-group select option:checked {
+  background: #1976d2;
+  color: white;
+}
+
+/* Pegman button and menu styles */
+#pegmanButton {
+  padding: 0;
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  width: 49px;
+  height: 51px;
+}
+#pegmanButton:hover {
+  background: white;
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+#pegmanButton.buttonHover {
+  background: white;
+  border-color: #ffeb3b;
+}
+#pegmanButton>img {
+  height: 51px;
+  width: 1029px;
+  display: block;
+  position: absolute;
+  left: -980px;
+  top: 0;
+}
+#pegmanButton>span {
+  position: absolute;
+  top: 0.8ex;
+  right: 5px;
+  color: #1976d2;
+  font-weight: bold;
+  z-index: 1;
+}
+#pegmanMenu {
+  border: 2px solid #1976d2;
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: none;
+  position: absolute;
+  background: white;
+  z-index: 1000;
+}
+#pegmanMenu>div {
+  background-color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  transition: background-color 0.2s;
+  position: relative;
+  width: 49px;
+  height: 51px;
+  overflow: hidden;
+}
+#pegmanMenu>div:hover {
+  background-color: #e3f2fd;
+}
+#pegmanMenu>div>img {
+  height: 51px;
+  width: 1029px;
+  display: block;
+  position: absolute;
+  left: -980px;
+  top: 0;
+}
+
+/* Christmas Snow Effect - only shown with Rudolph skin */
+#snowContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+  display: none;
+}
+
+#snowContainer.active {
+  display: block;
+}
+
+.snowflake {
+  position: absolute;
+  top: -20px;
+  color: white;
+  font-size: 1em;
+  text-shadow: 0 0 3px rgba(200, 220, 255, 0.8);
+  animation: snowfall linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translateY(-20px) rotate(0deg) translateX(0);
+  }
+  25% {
+    transform: translateY(25vh) rotate(90deg) translateX(10px);
+  }
+  50% {
+    transform: translateY(50vh) rotate(180deg) translateX(-10px);
+  }
+  75% {
+    transform: translateY(75vh) rotate(270deg) translateX(10px);
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg) translateX(0);
+  }
+}
+
+/* Goal sparkle effect */
+.sparkle-container {
+  position: absolute;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #fff 0%, #ffd700 40%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Christmas header theme when Rudolph is active */
+header.christmas {
+  background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 50%, #1a472a 100%);
+}
+
+header.christmas h1::before {
+  content: '🎄 ';
+}
+
+header.christmas h1::after {
+  content: ' 🦌';
+}
+
+/* Instruction bar styles */
+#instructionBar {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-bottom: 2px solid #1976d2;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+#instructionBar.hidden {
+  display: none;
+}
+
+#instructionBar .instruction-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+#instructionBar #levelInstruction {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1565c0;
+}
+
+#instructionBar #contextualHint {
+  font-size: 13px;
+  color: #1976d2;
+  font-style: italic;
+}
+
+#instructionBar #contextualHint:empty {
+  display: none;
+}
+
+#instructionBar .shortcut-hints {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #5c6bc0;
+  white-space: nowrap;
+}
+
+#instructionBar .shortcut-hints kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 11px;
+  background: white;
+  border: 1px solid #90caf9;
+  border-radius: 3px;
+  box-shadow: 0 1px 0 #90caf9;
+}
+
+/* Fullscreen overlay */
+#fullscreenOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: min(3vh, 24px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+#fullscreenOverlay.active {
+  display: flex;
+}
+
+#fullscreenOverlay .fullscreen-close {
+  position: absolute;
+  top: min(2vh, 16px);
+  right: min(2vw, 16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: clamp(16px, 3vw, 24px);
+  width: clamp(36px, 6vw, 48px);
+  height: clamp(36px, 6vw, 48px);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+#fullscreenOverlay .fullscreen-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+#fullscreenOverlay .fullscreen-maze-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 90vw;
+  max-height: 60vh;
+}
+
+#fullscreenOverlay .fullscreen-canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#fullscreenOverlay .fullscreen-canvas-container canvas {
+  max-width: min(90vw, 500px);
+  max-height: min(60vh, 500px);
+  width: auto;
+  height: auto;
+}
+
+#fullscreenOverlay .fullscreen-level-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border: none;
+  padding: clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px);
+  font-size: clamp(14px, 2vw, 18px);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+#fullscreenOverlay .fullscreen-level-nav:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 1);
+  transform: translateY(-50%) scale(1.1);
+}
+
+#fullscreenOverlay .fullscreen-level-nav:disabled {
+  background: rgba(128, 128, 128, 0.5);
+  cursor: not-allowed;
+}
+
+#fullscreenOverlay .fullscreen-prev {
+  left: clamp(-80px, -10vw, -50px);
+}
+
+#fullscreenOverlay .fullscreen-next {
+  right: clamp(-80px, -10vw, -50px);
+}
+
+#fullscreenOverlay .fullscreen-controls {
+  display: flex;
+  gap: clamp(8px, 2vw, 16px);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#fullscreenOverlay .fullscreen-controls button {
+  padding: clamp(10px, 2vw, 14px) clamp(20px, 4vw, 32px);
+  font-size: clamp(12px, 2vw, 16px);
+  font-weight: 600;
+}
+
+#fullscreenOverlay .fullscreen-run {
+  background: #4caf50;
+  color: white;
+}
+
+#fullscreenOverlay .fullscreen-run:hover {
+  background: #45a049;
+}
+
+#fullscreenOverlay .fullscreen-reset {
+  background: #ff9800;
+  color: white;
+}
+
+#fullscreenOverlay .fullscreen-reset:hover {
+  background: #e68900;
+}
+
+#fullscreenOverlay .fullscreen-hint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(10px, 1.5vw, 12px);
+  position: absolute;
+  bottom: min(2vh, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+#fullscreenOverlay .fullscreen-hint kbd {
+  display: inline-block;
+  padding: 2px clamp(4px, 1vw, 8px);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  margin: 0 4px;
+}
+
+/* Hide main content when fullscreen is active */
+body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
+  visibility: hidden;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 24px;
+  background: #e0e0e0;
+  border: none;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, width 0.2s;
+  z-index: 10;
+}
+
+.sidebar-toggle:hover {
+  background: #d0d0d0;
+}
+
+.sidebar-toggle .toggle-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+/* Collapsed state */
+.container.sidebar-collapsed .sidebar-toggle .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.container.sidebar-collapsed .game-container {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.game-container {
+  transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+}
+
+/* Blockly expands when sidebar collapsed */
+.container.sidebar-collapsed .blockly-container {
+  flex: 1;
+}
+
+/* Hide Blockly controls when workspace is narrow */
+.blockly-container.narrow .blocklyTrash,
+.blockly-container.narrow .blocklyZoom {
+  display: none !important;
+}
