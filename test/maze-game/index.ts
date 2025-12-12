@@ -14,7 +14,7 @@ import {javascriptGenerator} from 'blockly/javascript';
 import {KeyboardNavigation} from '../../src/index';
 import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
-import {registerMazeBlocks} from './blocks';
+import {registerMazeBlocks, setCurrentSkin} from './blocks';
 import {MazeGame, MAX_BLOCKS} from './maze';
 import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
 
@@ -104,6 +104,7 @@ const initialMaxBlocks = MAX_BLOCKS[initialLevel - 1];
 
 // Initialize Blockly workspace with level-specific configuration
 const workspace = Blockly.inject('blocklyDiv', {
+  renderer: 'zelos',
   toolbox: getToolboxForLevel(initialLevel),
   trashcan: true,
   maxBlocks: initialMaxBlocks === Infinity ? undefined : initialMaxBlocks,
@@ -193,6 +194,7 @@ const keyboardNavigation = new KeyboardNavigation(workspace, {
 
 // Initialize maze game (load saved skin or default to 0)
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
+setCurrentSkin(savedSkin); // Set initial skin for block icons
 const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
 
 // Register block highlighting callback for code execution visualization
@@ -337,6 +339,9 @@ function changePegman(skinId: number) {
   if (pegmanImg) {
     pegmanImg.src = skins[skinId].sprite;
   }
+
+  // Update block icons based on character
+  setCurrentSkin(skinId, workspace);
 
   // Toggle Christmas theme based on skin
   setChristmasTheme(skinId === RUDOLPH_SKIN_ID);

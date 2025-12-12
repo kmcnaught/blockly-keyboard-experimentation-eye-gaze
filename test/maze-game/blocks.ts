@@ -43,12 +43,54 @@ const LOOPS_HUE = 120;
 const LOGIC_HUE = 210;
 
 /**
+ * Skin ID for wheelchair character.
+ */
+const WHEELCHAIR_SKIN_ID = 1;
+
+/**
+ * Current skin ID (updated via setCurrentSkin).
+ */
+let currentSkinId = 0;
+
+/**
+ * Set the current skin ID and update all moveForward block icons.
+ * Call this when the character/skin changes.
+ */
+export function setCurrentSkin(skinId: number, workspace?: Blockly.Workspace) {
+  currentSkinId = skinId;
+  if (workspace) {
+    // Update all moveForward blocks on the workspace
+    const blocks = workspace.getBlocksByType('maze_moveForward', false);
+    blocks.forEach((block) => {
+      const imageField = block.getField('ICON') as Blockly.FieldImage;
+      if (imageField) {
+        const newSrc =
+          skinId === WHEELCHAIR_SKIN_ID
+            ? 'assets/wheel_forward.svg'
+            : 'assets/steps.svg';
+        imageField.setValue(newSrc);
+      }
+    });
+  }
+}
+
+/**
+ * Get the appropriate forward icon based on current skin.
+ */
+function getForwardIconSrc(): string {
+  return currentSkinId === WHEELCHAIR_SKIN_ID
+    ? 'assets/wheel_forward.svg'
+    : 'assets/steps.svg';
+}
+
+/**
  * Register maze blocks with Blockly.
  */
 export function registerMazeBlocks() {
+  // Turn directions use images in the dropdown
   const TURN_DIRECTIONS: Blockly.MenuOption[] = [
-    ['%{BKY_MAZE_TURN_LEFT}', 'turnLeft'],
-    ['%{BKY_MAZE_TURN_RIGHT}', 'turnRight'],
+    [{src: 'assets/turn_left.svg', width: 24, height: 24, alt: 'left'}, 'turnLeft'],
+    [{src: 'assets/turn_right.svg', width: 24, height: 24, alt: 'right'}, 'turnRight'],
   ];
 
   const PATH_DIRECTIONS: Blockly.MenuOption[] = [
@@ -57,40 +99,43 @@ export function registerMazeBlocks() {
     ['%{BKY_MAZE_PATH_RIGHT}', 'isPathRight'],
   ];
 
-  // Add arrows to turn options after prefix/suffix have been separated.
-  Blockly.Extensions.register('maze_turn_arrows', function (this: Blockly.Block) {
-    const field = this.getField('DIR') as Blockly.FieldDropdown;
-    const options = field.getOptions();
-    if (options.length >= 2) {
-      // Modify the display text to add arrows
-      const newOptions: Blockly.MenuOption[] = options.map((option, index) => {
-        if (index === options.length - 2) {
-          return [option[0] + LEFT_TURN, option[1]];
-        } else if (index === options.length - 1) {
-          return [option[0] + RIGHT_TURN, option[1]];
-        }
-        return option;
-      });
-      // Update the options using public API
-      (field as any).menuGenerator_ = newOptions;
-    }
-  });
+  // Extension to initialize forward block icon based on current skin
+  Blockly.Extensions.register(
+    'maze_forward_icon_init',
+    function (this: Blockly.Block) {
+      const imageField = this.getField('ICON') as Blockly.FieldImage;
+      if (imageField) {
+        imageField.setValue(getForwardIconSrc());
+      }
+    },
+  );
 
   Blockly.defineBlocksWithJsonArray([
     // Block for moving forward.
     {
       type: 'maze_moveForward',
-      message0: '%{BKY_MAZE_MOVE_FORWARD}',
+      message0: '%{BKY_MAZE_MOVE_FORWARD} %1',
+      args0: [
+        {
+          type: 'field_image',
+          src: 'assets/steps.svg',
+          width: 24,
+          height: 28,
+          name: 'ICON',
+          alt: 'forward',
+        },
+      ],
       previousStatement: null,
       nextStatement: null,
       colour: MOVEMENT_HUE,
       tooltip: '%{BKY_MAZE_MOVE_FORWARD_TOOLTIP}',
+      extensions: ['maze_forward_icon_init'],
     },
 
     // Block for turning left or right.
     {
       type: 'maze_turn',
-      message0: '%1',
+      message0: '%{BKY_MAZE_TURN} %1',
       args0: [
         {
           type: 'field_dropdown',
@@ -102,7 +147,6 @@ export function registerMazeBlocks() {
       nextStatement: null,
       colour: MOVEMENT_HUE,
       tooltip: '%{BKY_MAZE_TURN_TOOLTIP}',
-      extensions: ['maze_turn_arrows'],
     },
 
     // Block for conditional "if there is a path".

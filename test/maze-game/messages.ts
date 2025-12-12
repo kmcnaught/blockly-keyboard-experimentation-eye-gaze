@@ -23,6 +23,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
   en: {
     // Block text (from Maze.*)
     MAZE_MOVE_FORWARD: 'move forward',
+    MAZE_TURN: 'turn',
     MAZE_TURN_LEFT: 'turn left',
     MAZE_TURN_RIGHT: 'turn right',
     MAZE_PATH_AHEAD: 'if path ahead',
@@ -84,6 +85,7 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
   fr: {
     // Block text (from Maze.*)
     MAZE_MOVE_FORWARD: 'avancer',
+    MAZE_TURN: 'tourner',
     MAZE_TURN_LEFT: 'tourner à gauche',
     MAZE_TURN_RIGHT: 'tourner à droite',
     MAZE_PATH_AHEAD: 'si chemin devant',

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Counterclockwise turn arrow (turn left ↺) -->
+  <!-- Arc curves from bottom-right, up and around to the left -->
+  <path d="M22 28
+           C28 22, 28 14, 22 8
+           C18 4, 12 4, 8 8
+           L11 11
+           C14 8, 18 8, 21 11
+           C25 15, 25 21, 21 25
+           Z"
+        fill="white"/>
+  <!-- Arrowhead pointing left - positioned at arc end -->
+  <polygon points="2,8 12,2 12,14" fill="white"/>
+</svg>
