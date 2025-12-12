@@ -292,6 +292,10 @@ export class MazeGame {
   private squareSize = 50;
   private executing = false;
 
+  // Fixed canvas size for consistent display
+  private static readonly CANVAS_SIZE = 400;
+  private scale = 1;
+
   // Execution state (updated during interpreter run, separate from animation state)
   private pegmanX = 0;
   private pegmanY = 0;
@@ -349,6 +353,7 @@ export class MazeGame {
     this.animationFrame = this.playerDir * 4; // Set initial frame based on direction
 
     this.computeTileShapes();
+    this.calculateScale();
     this.loadAssets();
   }
 
@@ -501,6 +506,7 @@ export class MazeGame {
     }
 
     this.computeTileShapes();
+    this.calculateScale();
     this.reset();
   }
 
@@ -544,26 +550,51 @@ export class MazeGame {
     this.completionCallbacks.forEach(cb => cb(success));
   }
 
+  /**
+   * Calculate the scale factor to fit the maze in the fixed canvas size.
+   */
+  private calculateScale(): void {
+    const mazeWidth = this.maze[0].length * this.squareSize;
+    const mazeHeight = this.maze.length * this.squareSize;
+    const maxDimension = Math.max(mazeWidth, mazeHeight);
+    this.scale = MazeGame.CANVAS_SIZE / maxDimension;
+  }
+
   private draw() {
-    const width = this.maze[0].length * this.squareSize;
-    const height = this.maze.length * this.squareSize;
-    this.canvas.width = width;
-    this.canvas.height = height;
+    const mazeWidth = this.maze[0].length * this.squareSize;
+    const mazeHeight = this.maze.length * this.squareSize;
+
+    // Use fixed canvas size
+    this.canvas.width = MazeGame.CANVAS_SIZE;
+    this.canvas.height = MazeGame.CANVAS_SIZE;
+
+    // Calculate offset to center the maze
+    const offsetX = (MazeGame.CANVAS_SIZE - mazeWidth * this.scale) / 2;
+    const offsetY = (MazeGame.CANVAS_SIZE - mazeHeight * this.scale) / 2;
+
+    // Clear canvas
+    this.ctx.fillStyle = '#F1EEE7';
+    this.ctx.fillRect(0, 0, MazeGame.CANVAS_SIZE, MazeGame.CANVAS_SIZE);
+
+    // Apply scaling and centering transform
+    this.ctx.save();
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(this.scale, this.scale);
 
     // Draw background image if available, otherwise use solid color
     if (this.backgroundImage && this.imagesLoaded && this.skin.background) {
-      // Scale background to fit canvas
-      this.ctx.drawImage(this.backgroundImage, 0, 0, width, height);
+      // Scale background to fit maze area
+      this.ctx.drawImage(this.backgroundImage, 0, 0, mazeWidth, mazeHeight);
     } else {
-      // Clear canvas with light background
+      // Clear maze area with light background
       this.ctx.fillStyle = '#F1EEE7';
-      this.ctx.fillRect(0, 0, width, height);
+      this.ctx.fillRect(0, 0, mazeWidth, mazeHeight);
     }
 
     // Draw outer border
     this.ctx.strokeStyle = '#CCB';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(0, 0, width, height);
+    this.ctx.lineWidth = 1 / this.scale; // Compensate for scale
+    this.ctx.strokeRect(0, 0, mazeWidth, mazeHeight);
 
     // Draw maze - use tiles image with proper shape detection
     for (let y = 0; y < this.maze.length; y++) {
@@ -635,6 +666,9 @@ export class MazeGame {
 
     // Draw player with pegman image using animation frame
     this.drawPegman(this.playerPos.x, this.playerPos.y, this.animationFrame);
+
+    // Restore transform
+    this.ctx.restore();
   }
 
   /**
