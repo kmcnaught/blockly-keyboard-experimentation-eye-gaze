@@ -14,6 +14,57 @@ import {MazeGame} from './maze';
 import {msg} from './messages';
 
 /**
+ * Maximum distance (pixels) a touch can move and still count as a tap.
+ * Set generously for young children who often drag slightly when tapping.
+ */
+const TOUCH_SLOP = 30;
+
+/**
+ * Add forgiving touch handling to a button element.
+ * Tolerates small finger movements during a tap, which is common with young
+ * children who haven't developed fine motor control.
+ *
+ * @param btn The button element to add touch handling to.
+ * @param action The action to perform when a valid tap is detected.
+ * @param touchStarts Map to track touch start positions (shared across buttons).
+ */
+function addForgivingTouchHandler(
+  btn: HTMLElement,
+  action: () => void,
+  touchStarts: Map<HTMLElement, {x: number; y: number}>,
+): void {
+  btn.addEventListener(
+    'touchstart',
+    (e) => {
+      const touch = e.touches[0];
+      touchStarts.set(btn, {x: touch.clientX, y: touch.clientY});
+    },
+    {passive: true},
+  );
+
+  btn.addEventListener('touchend', (e) => {
+    const touch = e.changedTouches[0];
+    const start = touchStarts.get(btn);
+    touchStarts.delete(btn);
+
+    if (!start) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= TOUCH_SLOP) {
+      e.preventDefault(); // Prevent click from also firing
+      action();
+    }
+  });
+
+  btn.addEventListener('touchcancel', () => {
+    touchStarts.delete(btn);
+  });
+}
+
+/**
  * Controller for immediate execution mode UI.
  * Renders command buttons and handles keyboard shortcuts for direct control.
  */
@@ -30,6 +81,9 @@ export class ImmediateModeController {
   private turnLeftBtn: HTMLButtonElement | null = null;
   private turnRightBtn: HTMLButtonElement | null = null;
 
+  // Per-button touch tracking to avoid confusion when touching multiple buttons
+  private touchStarts: Map<HTMLElement, {x: number; y: number}> = new Map();
+
   constructor(containerId: string, mazeGame: MazeGame) {
     const container = document.getElementById(containerId);
     if (!container) {
@@ -39,9 +93,15 @@ export class ImmediateModeController {
     this.mazeGame = mazeGame;
 
     // Cache button references
-    this.forwardBtn = document.getElementById('cmdForward') as HTMLButtonElement;
-    this.turnLeftBtn = document.getElementById('cmdTurnLeft') as HTMLButtonElement;
-    this.turnRightBtn = document.getElementById('cmdTurnRight') as HTMLButtonElement;
+    this.forwardBtn = document.getElementById(
+      'cmdForward',
+    ) as HTMLButtonElement;
+    this.turnLeftBtn = document.getElementById(
+      'cmdTurnLeft',
+    ) as HTMLButtonElement;
+    this.turnRightBtn = document.getElementById(
+      'cmdTurnRight',
+    ) as HTMLButtonElement;
 
     // Bind keyboard handler
     this.boundKeyHandler = this.handleKeyDown.bind(this);
@@ -51,12 +111,36 @@ export class ImmediateModeController {
   }
 
   /**
-   * Set up click handlers for command buttons.
+   * Set up click and touch handlers for command buttons.
    */
   private setupButtonHandlers(): void {
+    // Click handlers (mouse and keyboard)
     this.forwardBtn?.addEventListener('click', () => this.doMoveForward());
     this.turnLeftBtn?.addEventListener('click', () => this.doTurn('left'));
     this.turnRightBtn?.addEventListener('click', () => this.doTurn('right'));
+
+    // Forgiving touch handlers for young children
+    if (this.forwardBtn) {
+      addForgivingTouchHandler(
+        this.forwardBtn,
+        () => this.doMoveForward(),
+        this.touchStarts,
+      );
+    }
+    if (this.turnLeftBtn) {
+      addForgivingTouchHandler(
+        this.turnLeftBtn,
+        () => this.doTurn('left'),
+        this.touchStarts,
+      );
+    }
+    if (this.turnRightBtn) {
+      addForgivingTouchHandler(
+        this.turnRightBtn,
+        () => this.doTurn('right'),
+        this.touchStarts,
+      );
+    }
   }
 
   /**
