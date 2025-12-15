@@ -56,6 +56,14 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_FAILURE_MESSAGE: 'Program finished, but you did not reach the goal.',
     MAZE_TIMEOUT_MESSAGE: 'Program took too long to run. Check for infinite loops.',
 
+    // Result modal messages
+    MAZE_SOLVED_BLOCKS_ONE: 'You solved this level with 1 block!',
+    MAZE_SOLVED_BLOCKS: 'You solved this level with %1 blocks!',
+    MAZE_FAILURE_TITLE: 'Not quite!',
+    MAZE_TIMEOUT_TITLE: 'Too slow!',
+    MAZE_ERROR_TITLE: 'Oops!',
+    MAZE_ERROR_MESSAGE: 'That didn\'t work. Try a different path!',
+
     // Hints (from Maze.help*)
     MAZE_HINT_STACK: 'Stack a couple of \'move forward\' blocks together to help me reach the goal.',
     MAZE_HINT_ONE_TOP_BLOCK: 'On this level, you need to stack together all of the blocks in the white workspace.',
@@ -140,6 +148,14 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_CONGRATULATIONS: 'Félicitations !',
     MAZE_FAILURE_MESSAGE: 'Le programme est terminé, mais vous n\'avez pas atteint l\'objectif.',
     MAZE_TIMEOUT_MESSAGE: 'Le programme a pris trop de temps. Vérifiez les boucles infinies.',
+
+    // Result modal messages
+    MAZE_SOLVED_BLOCKS_ONE: 'Vous avez résolu ce niveau avec 1 bloc !',
+    MAZE_SOLVED_BLOCKS: 'Vous avez résolu ce niveau avec %1 blocs !',
+    MAZE_FAILURE_TITLE: 'Pas tout à fait !',
+    MAZE_TIMEOUT_TITLE: 'Trop lent !',
+    MAZE_ERROR_TITLE: 'Oups !',
+    MAZE_ERROR_MESSAGE: 'Ça n\'a pas marché. Essayez un autre chemin !',
 
     // Hints (from Maze.help*)
     MAZE_HINT_STACK: 'Empilez quelques blocs « avancer » ensemble pour m\'aider à atteindre l\'objectif.',

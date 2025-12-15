@@ -8,7 +8,6 @@
  * @fileoverview Simple maze game engine.
  */
 
-import {msg} from './messages';
 import Interpreter from 'js-interpreter';
 
 enum Direction {
@@ -24,6 +23,11 @@ enum SquareType {
   START = 2,
   FINISH = 3,
 }
+
+/**
+ * Result type for maze execution.
+ */
+export type ResultType = 'success' | 'failure' | 'timeout' | 'error';
 
 /**
  * Maximum number of blocks allowed per level.
@@ -524,6 +528,9 @@ export class MazeGame {
   // Callback for completion events
   private completionCallbacks: Array<(success: boolean) => void> = [];
 
+  // Callback for result events (to show modal)
+  private resultCallbacks: Array<(result: ResultType) => void> = [];
+
   // Callback for block highlighting during execution
   private highlightCallback: ((blockId: string | null) => void) | null = null;
 
@@ -544,10 +551,25 @@ export class MazeGame {
   }
 
   /**
+   * Register a callback to be called when execution produces a result.
+   * @param callback Function called with the result type.
+   */
+  public onResult(callback: (result: ResultType) => void): void {
+    this.resultCallbacks.push(callback);
+  }
+
+  /**
    * Notify all completion callbacks.
    */
   private notifyCompletion(success: boolean): void {
     this.completionCallbacks.forEach(cb => cb(success));
+  }
+
+  /**
+   * Notify all result callbacks.
+   */
+  private notifyResult(result: ResultType): void {
+    this.resultCallbacks.forEach(cb => cb(result));
   }
 
   /**
@@ -1561,23 +1583,24 @@ export class MazeGame {
     switch (this.result) {
       case 'success':
         await this.animateVictory();
-        // Notify completion first (triggers confetti), then show message after delay
+        // Notify completion first (triggers confetti), then show modal after delay
         this.notifyCompletion(true);
         setTimeout(() => {
-          alert(msg('MAZE_CONGRATULATIONS'));
+          this.notifyResult('success');
         }, 1500);
         break;
       case 'failure':
-        alert(msg('MAZE_FAILURE_MESSAGE'));
+        this.notifyResult('failure');
         this.notifyCompletion(false);
         break;
       case 'timeout':
-        alert(msg('MAZE_TIMEOUT_MESSAGE'));
+        this.notifyResult('timeout');
         this.notifyCompletion(false);
         break;
       case 'error':
-        // Wall collision - no additional message needed (crash animation shown)
+        // Wall collision - show modal after crash animation completes
         this.notifyCompletion(false);
+        setTimeout(() => this.notifyResult('error'), 500);
         break;
     }
   }

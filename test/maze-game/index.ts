@@ -15,7 +15,7 @@ import {KeyboardNavigation} from '../../src/index';
 import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 import {registerMazeBlocks, setCurrentSkin} from './blocks';
-import {MazeGame, MAX_BLOCKS} from './maze';
+import {MazeGame, MAX_BLOCKS, type ResultType} from './maze';
 import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
 import {ImmediateModeController} from './immediate-mode';
 
@@ -876,6 +876,117 @@ mazeGame.onComplete((success: boolean) => {
   if (success) {
     launchConfetti();
   }
+});
+
+// ========== RESULT MODAL ==========
+
+const resultModal = document.getElementById('resultModal')!;
+const resultModalCard = resultModal.querySelector('.result-modal')!;
+const resultModalTitle = document.getElementById('resultModalTitle')!;
+const resultModalMessage = document.getElementById('resultModalMessage')!;
+const resultModalOk = document.getElementById('resultModalOk')!;
+const resultModalProgress = resultModalOk.querySelector('.ok-progress') as HTMLElement;
+
+// Auto-close timer reference
+let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Auto-close durations in milliseconds
+const AUTO_CLOSE_SUCCESS = 3000; // 3 seconds for success (short message)
+const AUTO_CLOSE_FAILURE = 5000; // 5 seconds for failure/timeout (need to read)
+
+/**
+ * Show the result modal with appropriate styling and message.
+ * Modal will auto-close after a countdown.
+ */
+function showResultModal(type: ResultType): void {
+  // Clear any existing timer
+  if (autoCloseTimer) {
+    clearTimeout(autoCloseTimer);
+    autoCloseTimer = null;
+  }
+
+  // Set styling class (success = green accent, failure/timeout = gray)
+  resultModalCard.className = 'result-modal ' + (type === 'success' ? 'success' : 'failure');
+
+  // Set title (short phrase)
+  if (type === 'success') {
+    resultModalTitle.textContent = msg('MAZE_CONGRATULATIONS');
+  } else if (type === 'failure') {
+    resultModalTitle.textContent = msg('MAZE_FAILURE_TITLE');
+  } else if (type === 'timeout') {
+    resultModalTitle.textContent = msg('MAZE_TIMEOUT_TITLE');
+  } else {
+    resultModalTitle.textContent = msg('MAZE_ERROR_TITLE');
+  }
+
+  // Set message (detailed explanation)
+  if (type === 'success') {
+    const blockCount = workspace.getAllBlocks(false).length;
+    resultModalMessage.textContent = msg(
+      blockCount === 1 ? 'MAZE_SOLVED_BLOCKS_ONE' : 'MAZE_SOLVED_BLOCKS',
+      blockCount
+    );
+  } else if (type === 'failure') {
+    resultModalMessage.textContent = msg('MAZE_FAILURE_MESSAGE');
+  } else if (type === 'timeout') {
+    resultModalMessage.textContent = msg('MAZE_TIMEOUT_MESSAGE');
+  } else {
+    resultModalMessage.textContent = msg('MAZE_ERROR_MESSAGE');
+  }
+
+  // Set up auto-close countdown
+  const duration = type === 'success' ? AUTO_CLOSE_SUCCESS : AUTO_CLOSE_FAILURE;
+
+  // Reset and start progress bar animation
+  resultModalOk.classList.remove('countdown');
+  // Force reflow to restart animation
+  void resultModalOk.offsetWidth;
+  resultModalProgress.style.animationDuration = `${duration}ms`;
+  resultModalOk.classList.add('countdown');
+
+  // Set auto-close timer
+  autoCloseTimer = setTimeout(() => {
+    hideResultModal();
+  }, duration);
+
+  // Show modal and focus OK button
+  resultModal.hidden = false;
+  resultModalOk.focus();
+}
+
+/**
+ * Hide the result modal and return focus to the run button.
+ */
+function hideResultModal(): void {
+  // Clear auto-close timer
+  if (autoCloseTimer) {
+    clearTimeout(autoCloseTimer);
+    autoCloseTimer = null;
+  }
+
+  // Stop countdown animation
+  resultModalOk.classList.remove('countdown');
+
+  resultModal.hidden = true;
+  const runButton = document.getElementById('runButton');
+  if (runButton) {
+    runButton.focus();
+  }
+}
+
+// Result modal event handlers
+resultModalOk.addEventListener('click', hideResultModal);
+
+resultModal.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.key === 'Escape' || e.key === 'Enter') {
+    e.preventDefault();
+    hideResultModal();
+  }
+});
+
+// Listen for maze game result events to show the modal
+mazeGame.onResult((result: ResultType) => {
+  showResultModal(result);
 });
 
 // Trigger hints on workspace changes (with debouncing via the timeout in levelHelp)
