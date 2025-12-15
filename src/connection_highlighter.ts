@@ -1117,4 +1117,135 @@ export class ConnectionHighlighter {
       this.highlightLayer = null;
     }
   }
+
+  /**
+   * Highlights valid connection points for a flyout block that hasn't been
+   * placed on the workspace yet. This enables "preview then place" mode where
+   * the user sees where a block can go before actually creating it.
+   *
+   * @param flyoutBlock The block in the flyout to find placement options for.
+   * @param targetWorkspace The main workspace to show highlights on.
+   * @returns Array of valid connection pairs.
+   */
+  highlightConnectionsForFlyoutBlock(
+    flyoutBlock: BlockSvg,
+    targetWorkspace: WorkspaceSvg,
+  ): ValidConnection[] {
+    this.clearHighlights();
+
+    // Get connections from the flyout block
+    const flyoutConnections = flyoutBlock.getConnections_(false);
+    if (flyoutConnections.length === 0) {
+      return [];
+    }
+
+    // Get all connections on the target workspace by iterating all blocks
+    const allWorkspaceConnections = targetWorkspace
+      .getAllBlocks(false)
+      .flatMap((block) => (block as BlockSvg).getConnections_(false) as RenderedConnection[]);
+
+    // Find compatible connections
+    const validConnections = this.findCompatibleConnectionsForFlyoutBlock(
+      flyoutBlock,
+      flyoutConnections as RenderedConnection[],
+      allWorkspaceConnections,
+      targetWorkspace,
+    );
+
+    // Apply visual highlighting
+    const validConnectionsSorted = validConnections.sort((a, b) => {
+      const depthA = this.getBlockDepth(a.neighbour.getSourceBlock());
+      const depthB = this.getBlockDepth(b.neighbour.getSourceBlock());
+      return depthA - depthB;
+    });
+
+    for (const validConnection of validConnectionsSorted) {
+      const sourceBlock = validConnection.neighbour.getSourceBlock();
+      if (!(sourceBlock instanceof BlockSvg)) continue;
+
+      const hasAncestorHighlight = this.hasAncestorWithHighlight(sourceBlock);
+      this.highlightConnection(validConnection.neighbour, hasAncestorHighlight);
+      this.highlightedBlocks.add(sourceBlock);
+    }
+
+    // Update highlight positions when workspace scrolls
+    if (this.scrollListener) {
+      targetWorkspace.addChangeListener(this.scrollListener);
+    }
+
+    return validConnections;
+  }
+
+  /**
+   * Finds compatible connections on the target workspace for a flyout block.
+   *
+   * @param flyoutBlock The flyout block to find placements for.
+   * @param flyoutConnections Connections on the flyout block.
+   * @param workspaceConnections All connections on the target workspace.
+   * @param targetWorkspace The target workspace.
+   * @returns Array of valid connection pairs.
+   */
+  private findCompatibleConnectionsForFlyoutBlock(
+    flyoutBlock: BlockSvg,
+    flyoutConnections: RenderedConnection[],
+    workspaceConnections: RenderedConnection[],
+    targetWorkspace: WorkspaceSvg,
+  ): ValidConnection[] {
+    const validConnections: ValidConnection[] = [];
+    const connectionChecker = targetWorkspace.connectionChecker;
+
+    for (const flyoutConn of flyoutConnections) {
+      for (const workspaceConn of workspaceConnections) {
+        // Skip insertion markers and immovable blocks
+        const sourceBlock = workspaceConn.getSourceBlock();
+        if (!sourceBlock || sourceBlock.isInsertionMarker()) continue;
+
+        // Skip connections that would require moving an immovable block
+        if (
+          !sourceBlock.isMovable() &&
+          (workspaceConn.type === ConnectionType.PREVIOUS_STATEMENT ||
+            workspaceConn.type === ConnectionType.OUTPUT_VALUE)
+        ) {
+          continue;
+        }
+
+        // Check if occupied by immovable block
+        const targetConnection = workspaceConn.targetConnection;
+        if (targetConnection) {
+          const targetBlock = targetConnection.getSourceBlock();
+          if (targetBlock && !targetBlock.isMovable()) {
+            if (
+              workspaceConn.type === ConnectionType.NEXT_STATEMENT ||
+              workspaceConn.type === ConnectionType.INPUT_VALUE
+            ) {
+              continue;
+            }
+          }
+        }
+
+        // Only highlight where the flyout block can attach TO other blocks
+        const isValidDirection =
+          (flyoutConn.type === ConnectionType.OUTPUT_VALUE &&
+            workspaceConn.type === ConnectionType.INPUT_VALUE) ||
+          (flyoutConn.type === ConnectionType.PREVIOUS_STATEMENT &&
+            workspaceConn.type === ConnectionType.NEXT_STATEMENT) ||
+          (flyoutConn.type === ConnectionType.NEXT_STATEMENT &&
+            workspaceConn.type === ConnectionType.PREVIOUS_STATEMENT);
+
+        if (!isValidDirection) continue;
+
+        // Check type compatibility
+        if (connectionChecker.canConnect(flyoutConn, workspaceConn, true, Infinity)) {
+          validConnections.push({
+            local: flyoutConn,
+            neighbour: workspaceConn,
+            distance: 0, // Distance doesn't matter for flyout placement
+          });
+        }
+      }
+    }
+
+    // Limit for performance
+    return validConnections.slice(0, 50);
+  }
 }

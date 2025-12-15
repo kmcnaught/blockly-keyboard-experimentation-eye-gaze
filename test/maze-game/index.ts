@@ -11,7 +11,7 @@
 
 import * as Blockly from 'blockly/core';
 import {javascriptGenerator} from 'blockly/javascript';
-import {KeyboardNavigation} from '../../src/index';
+import {KeyboardNavigation, TriggerMode} from '../../src/index';
 import {registerFlyoutCursor} from '../../src/flyout_cursor';
 import {registerNavigationDeferringToolbox} from '../../src/navigation_deferring_toolbox';
 import {registerMazeBlocks, setCurrentSkin} from './blocks';
@@ -220,6 +220,14 @@ function updateWorkspaceForLevel(level: number) {
 const keyboardNavigation = new KeyboardNavigation(workspace, {
   highlightConnections: true,
 });
+
+// Configure for "click n stick" style:
+// - FOCUSED_CLICK: click a focused block to enter move mode
+// - Large connections: bigger click targets for accessibility
+// - Keep block in place: don't drag with mouse, click destination instead
+keyboardNavigation.setTriggerMode(TriggerMode.FOCUSED_CLICK);
+keyboardNavigation.setConnectionSize('large');
+keyboardNavigation.setKeepBlockOnMouse(false);
 
 // Initialize maze game (load saved skin or default to 0)
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);

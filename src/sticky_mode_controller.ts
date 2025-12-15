@@ -9,6 +9,7 @@ import {NavigationController} from './navigation_controller';
 import {Mover, MoveType} from './actions/mover';
 import {getNonShadowBlock} from './workspace_utilities';
 import {MoveGrip} from './move_grip';
+import {ConnectionHighlighter} from './connection_highlighter';
 
 /**
  * Trigger modes for entering sticky mode.
@@ -71,6 +72,15 @@ export class StickyModeController {
 
   /** Whether the block should follow the mouse cursor during sticky move (default: true). */
   private keepBlockOnMouse: boolean = true;
+
+  /** The flyout block that is pending placement (for "preview then place" mode). */
+  private pendingFlyoutBlock: Blockly.BlockSvg | null = null;
+
+  /** The connection highlighter for showing pending placement options. */
+  private pendingHighlighter: ConnectionHighlighter | null = null;
+
+  /** Connection highlight size for the pending highlighter. */
+  private connectionSize: 'minimal' | 'medium' | 'large' = 'medium';
 
   constructor(
     private workspace: Blockly.WorkspaceSvg,
@@ -505,12 +515,20 @@ export class StickyModeController {
    * @param event
    */
   private handleClick(event: MouseEvent) {
-    // If we just entered sticky mode via shift+click, ignore this click
+    // If we just entered sticky mode via shift+click or pending flyout, ignore this click
     if (this.ignoreNextClick) {
       this.ignoreNextClick = false;
       event.preventDefault();
       event.stopPropagation();
       return;
+    }
+
+    // If there's a pending flyout insertion, cancel it
+    // (Connection highlight clicks are handled by the highlight's own click handler,
+    // so if we get here, the user clicked elsewhere and wants to cancel)
+    if (this.isPendingFlyoutInsertion()) {
+      this.cancelPendingFlyoutInsertion();
+      // Don't return - allow the click to proceed normally
     }
 
     // If already in sticky mode, handle the drop/connect action
@@ -536,7 +554,7 @@ export class StickyModeController {
           return;
         }
 
-        // Create block from flyout and enter sticky mode
+        // Show placement highlights for the flyout block
         this.insertFlyoutBlockIntoStickyMode(clickedBlock, event);
         event.preventDefault();
         event.stopPropagation();
@@ -800,16 +818,64 @@ export class StickyModeController {
   }
 
   /**
-   * Creates a new block from a flyout template and immediately enters sticky mode.
-   * Used when clicking on flyout blocks with sticky mode triggers enabled.
+   * Set the connection highlight size for pending flyout insertion.
+   *
+   * @param size The size level: 'minimal', 'medium', or 'large'.
+   */
+  setConnectionSize(size: 'minimal' | 'medium' | 'large'): void {
+    this.connectionSize = size;
+  }
+
+  /**
+   * Check if there's a pending flyout insertion.
+   */
+  isPendingFlyoutInsertion(): boolean {
+    return this.pendingFlyoutBlock !== null;
+  }
+
+  /**
+   * Shows placement highlights for a flyout block without creating it.
+   * The block stays in the flyout while highlights show where it can go.
+   *
+   * @param flyoutBlock The flyout block template to show placement options for.
+   */
+  private showFlyoutBlockPlacementHighlights(flyoutBlock: Blockly.BlockSvg): void {
+    // Cancel any existing pending insertion
+    this.cancelPendingFlyoutInsertion();
+
+    // Create a temporary highlighter to check for valid connections
+    const tempHighlighter = new ConnectionHighlighter(
+      this.workspace,
+      (connection) => this.placePendingBlockAtConnection(connection),
+    );
+    tempHighlighter.setConnectionSize(this.connectionSize);
+
+    // Check for compatible connections
+    const validConnections = tempHighlighter.highlightConnectionsForFlyoutBlock(
+      flyoutBlock,
+      this.workspace,
+    );
+
+    // If there are valid connections, show highlights and wait for user to click one
+    if (validConnections.length > 0) {
+      this.pendingFlyoutBlock = flyoutBlock;
+      this.pendingHighlighter = tempHighlighter;
+      // Ignore the click that triggered this to prevent immediate cancellation
+      this.ignoreNextClick = true;
+    } else {
+      // No valid connections - create block as top-level block immediately
+      tempHighlighter.dispose();
+      this.createFlyoutBlockAsTopLevel(flyoutBlock);
+    }
+  }
+
+  /**
+   * Creates a block from the flyout as a top-level block (not connected to anything).
+   * Used when there are no valid connections to highlight.
    *
    * @param flyoutBlock The flyout block template to create from.
-   * @param event The click event.
    */
-  private insertFlyoutBlockIntoStickyMode(
-    flyoutBlock: Blockly.BlockSvg,
-    event: MouseEvent,
-  ): void {
+  private createFlyoutBlockAsTopLevel(flyoutBlock: Blockly.BlockSvg): void {
     const flyout = this.workspace.getFlyout();
     if (!flyout) return;
 
@@ -826,24 +892,136 @@ export class StickyModeController {
       // Render to get the sizing right
       newBlock.render();
 
-      // Enable connection tracking (normally happens during drag, but we need it immediately)
-      newBlock.setConnectionTracking(true);
+      // Position the block in a good spot on the workspace
+      const metrics = this.workspace.getMetrics();
+      const viewportCenterX = metrics.viewLeft + metrics.viewWidth / 2;
+      const viewportCenterY = metrics.viewTop + metrics.viewHeight / 2;
 
-      // Position the block at the click location
-      const workspaceCoords = Blockly.utils.svgMath.screenToWsCoordinates(
-        this.workspace,
-        new Blockly.utils.Coordinate(event.clientX, event.clientY),
-      );
-      newBlock.moveTo(workspaceCoords);
+      // Convert to workspace coordinates
+      const scale = this.workspace.scale;
+      const wsX = viewportCenterX / scale;
+      const wsY = viewportCenterY / scale;
 
-      // Enter sticky mode with the newly created block
-      this.enter(newBlock, event.clientX, event.clientY);
+      newBlock.moveTo(new Blockly.utils.Coordinate(wsX - 50, wsY - 20));
+
+      // Select the new block
+      Blockly.common.setSelected(newBlock);
+
     } finally {
       // Clean up event group if we created one
       if (!existingGroup) {
         Blockly.Events.setGroup(false);
       }
     }
+  }
+
+  /**
+   * Creates a block from the pending flyout block and connects it to the given connection.
+   *
+   * @param targetConnection The workspace connection to connect the new block to.
+   */
+  private placePendingBlockAtConnection(
+    targetConnection: Blockly.RenderedConnection,
+  ): void {
+    if (!this.pendingFlyoutBlock) return;
+
+    const flyout = this.workspace.getFlyout();
+    if (!flyout) {
+      this.cancelPendingFlyoutInsertion();
+      return;
+    }
+
+    // Create a new event group for this operation
+    const existingGroup = Blockly.Events.getGroup();
+    if (!existingGroup) {
+      Blockly.Events.setGroup(true);
+    }
+
+    try {
+      // Create the block on the main workspace from the flyout template
+      const newBlock = flyout.createBlock(this.pendingFlyoutBlock);
+
+      // Render to get the sizing right
+      newBlock.render();
+
+      // Find the matching connection on the new block
+      const newBlockConnections = newBlock.getConnections_(false);
+      let localConnection: Blockly.RenderedConnection | null = null;
+
+      // Match connection types to find the right local connection
+      for (const conn of newBlockConnections) {
+        const renderedConn = conn as Blockly.RenderedConnection;
+        // Match OUTPUT→INPUT, PREVIOUS→NEXT, NEXT→PREVIOUS
+        if (
+          (renderedConn.type === Blockly.ConnectionType.OUTPUT_VALUE &&
+            targetConnection.type === Blockly.ConnectionType.INPUT_VALUE) ||
+          (renderedConn.type === Blockly.ConnectionType.PREVIOUS_STATEMENT &&
+            targetConnection.type === Blockly.ConnectionType.NEXT_STATEMENT) ||
+          (renderedConn.type === Blockly.ConnectionType.NEXT_STATEMENT &&
+            targetConnection.type === Blockly.ConnectionType.PREVIOUS_STATEMENT)
+        ) {
+          // Verify compatibility
+          if (this.workspace.connectionChecker.canConnect(
+            renderedConn,
+            targetConnection,
+            false,
+            Infinity,
+          )) {
+            localConnection = renderedConn;
+            break;
+          }
+        }
+      }
+
+      if (localConnection) {
+        // Connect the blocks
+        localConnection.connect(targetConnection);
+      } else {
+        // If no connection found, just position near the target
+        const workspaceCoords = new Blockly.utils.Coordinate(
+          targetConnection.x,
+          targetConnection.y,
+        );
+        newBlock.moveTo(workspaceCoords);
+      }
+
+      // Select the new block
+      Blockly.common.setSelected(newBlock);
+
+    } finally {
+      // Clean up event group if we created one
+      if (!existingGroup) {
+        Blockly.Events.setGroup(false);
+      }
+    }
+
+    // Clear the pending state
+    this.cancelPendingFlyoutInsertion();
+  }
+
+  /**
+   * Cancels the pending flyout insertion and clears highlights.
+   */
+  cancelPendingFlyoutInsertion(): void {
+    if (this.pendingHighlighter) {
+      this.pendingHighlighter.dispose();
+      this.pendingHighlighter = null;
+    }
+    this.pendingFlyoutBlock = null;
+  }
+
+  /**
+   * Shows placement highlights for a flyout block (legacy name for compatibility).
+   * Used when clicking on flyout blocks with sticky mode triggers enabled.
+   *
+   * @param flyoutBlock The flyout block template to show placement options for.
+   * @param event The click event (unused, kept for signature compatibility).
+   */
+  private insertFlyoutBlockIntoStickyMode(
+    flyoutBlock: Blockly.BlockSvg,
+    event: MouseEvent,
+  ): void {
+    this.showFlyoutBlockPlacementHighlights(flyoutBlock);
   }
 
   /**
