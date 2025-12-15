@@ -44,6 +44,20 @@ h1 {
   display: none;
 }
 
+/* Make editable fields (dropdowns, inputs) visually distinct from block background */
+.blocklyFieldRect {
+  fill: rgba(0, 0, 0, 0.15) !important;
+  stroke: rgba(0, 0, 0, 0.35) !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Hover lightens slightly to indicate interactivity */
+.blocklyField:hover > .blocklyFieldRect {
+  fill: rgba(0, 0, 0, 0.08) !important;
+  stroke: rgba(0, 0, 0, 0.5) !important;
+  stroke-width: 2px !important;
+}
+
 .game-controls {
   padding: 16px 0;
   display: flex;
