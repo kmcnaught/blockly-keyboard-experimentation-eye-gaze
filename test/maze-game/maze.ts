@@ -1500,10 +1500,11 @@ export class MazeGame {
     switch (this.result) {
       case 'success':
         await this.animateVictory();
+        // Notify completion first (triggers confetti), then show message after delay
+        this.notifyCompletion(true);
         setTimeout(() => {
           alert(msg('MAZE_CONGRATULATIONS'));
-          this.notifyCompletion(true);
-        }, 500);
+        }, 1500);
         break;
       case 'failure':
         alert(msg('MAZE_FAILURE_MESSAGE'));

@@ -427,6 +427,82 @@ function createSnowflakes() {
   snowflakesCreated = true;
 }
 
+// ========== CONFETTI EFFECT ==========
+
+const confettiColors = [
+  '#ff6b6b', // red
+  '#ffd93d', // yellow
+  '#6bcb77', // green
+  '#4d96ff', // blue
+  '#ff8cc8', // pink
+  '#a855f7', // purple
+  '#f97316', // orange
+];
+
+const confettiShapes = ['circle', 'square', 'ribbon'];
+const confettiSwings = ['', 'swing-left', 'swing-right'];
+
+/**
+ * Launch confetti particles for level completion celebration.
+ */
+function launchConfetti() {
+  const container = document.getElementById('confettiContainer');
+  if (!container) return;
+
+  // Clear any existing confetti
+  container.innerHTML = '';
+
+  // Create 80 confetti particles
+  const particleCount = 80;
+
+  for (let i = 0; i < particleCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+
+    // Random shape
+    const shape = confettiShapes[Math.floor(Math.random() * confettiShapes.length)];
+    confetti.classList.add(shape);
+
+    // Random swing pattern
+    const swing = confettiSwings[Math.floor(Math.random() * confettiSwings.length)];
+    if (swing) confetti.classList.add(swing);
+
+    // Random color
+    const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    confetti.style.backgroundColor = color;
+
+    // Random horizontal position (spread across the screen)
+    confetti.style.left = `${Math.random() * 100}%`;
+
+    // Start from top with some variation
+    confetti.style.top = `${-10 + Math.random() * 20}px`;
+
+    // Random size variation
+    const size = 4 + Math.random() * 5;
+    if (shape !== 'ribbon') {
+      confetti.style.width = `${size}px`;
+      confetti.style.height = `${size}px`;
+    } else {
+      confetti.style.width = `${size * 0.5}px`;
+      confetti.style.height = `${size * 1.5}px`;
+    }
+
+    // Random animation duration (2-4 seconds)
+    const duration = 2 + Math.random() * 2;
+    confetti.style.animationDuration = `${duration}s`;
+
+    // Stagger the start of each confetti
+    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+
+    container.appendChild(confetti);
+  }
+
+  // Clean up confetti after animation completes
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 4500);
+}
+
 /**
  * Enable or disable Christmas theme effects.
  */
@@ -795,6 +871,11 @@ mazeGame.onComplete((success: boolean) => {
   lastResult = success ? 'success' : 'failure';
   // Trigger hint check after a short delay
   setTimeout(levelHelp, 500);
+
+  // Show confetti on success
+  if (success) {
+    launchConfetti();
+  }
 });
 
 // Trigger hints on workspace changes (with debouncing via the timeout in levelHelp)
@@ -824,19 +905,71 @@ function resetHintState() {
 updateInstructionBar();
 setTimeout(levelHelp, 3000);
 
+// ========== LEVEL TRANSITION ==========
+
+let isTransitioning = false;
+
+/**
+ * Perform a level transition with fade effect and level banner.
+ * @param newLevel The level to transition to
+ * @param showBanner Whether to show the level banner (true for next, false for previous)
+ */
+function performLevelTransition(newLevel: number, showBanner: boolean = true) {
+  if (isTransitioning) return;
+  isTransitioning = true;
+
+  const canvasWrapper = document.querySelector('.canvas-wrapper') as HTMLElement;
+  const levelBanner = document.getElementById('levelBanner');
+  const levelNumber = levelBanner?.querySelector('.level-number');
+
+  // Update the level banner text
+  if (levelNumber) {
+    levelNumber.textContent = `${msg('MAZE_LEVEL')} ${newLevel}`;
+  }
+
+  // Step 1: Fade out the canvas
+  canvasWrapper?.classList.add('fade-out');
+
+  setTimeout(() => {
+    // Step 2: Actually change the level while faded
+    mazeGame.setLevel(newLevel);
+    updateWorkspaceForLevel(newLevel);
+    updateLevelDisplay();
+    resetHintState();
+
+    // Step 3: Fade in the canvas
+    canvasWrapper?.classList.remove('fade-out');
+    canvasWrapper?.classList.add('fade-in');
+
+    // Step 4: Show level banner (overlaid on maze)
+    if (showBanner) {
+      levelBanner?.classList.add('active');
+
+      // Hide banner after delay
+      setTimeout(() => {
+        levelBanner?.classList.remove('active');
+      }, 1000);
+    }
+
+    // Clean up transition classes
+    setTimeout(() => {
+      canvasWrapper?.classList.remove('fade-in');
+      isTransitioning = false;
+    }, 300);
+  }, 300); // Fade out duration
+}
+
 // ========== GLOBAL KEYBOARD SHORTCUTS ==========
 
 /**
  * Go to previous level (shared by button and keyboard shortcut).
  */
 function goToPreviousLevel() {
+  if (isTransitioning) return;
   const currentLevel = mazeGame.getLevel();
   if (currentLevel > 1) {
     const newLevel = currentLevel - 1;
-    mazeGame.setLevel(newLevel);
-    updateWorkspaceForLevel(newLevel);
-    updateLevelDisplay();
-    resetHintState();
+    performLevelTransition(newLevel, true);
   }
 }
 
@@ -844,14 +977,12 @@ function goToPreviousLevel() {
  * Go to next level (shared by button and keyboard shortcut).
  */
 function goToNextLevel() {
+  if (isTransitioning) return;
   const currentLevel = mazeGame.getLevel();
   const maxLevel = MazeGame.getMaxLevel();
   if (currentLevel < maxLevel) {
     const newLevel = currentLevel + 1;
-    mazeGame.setLevel(newLevel);
-    updateWorkspaceForLevel(newLevel);
-    updateLevelDisplay();
-    resetHintState();
+    performLevelTransition(newLevel, true);
   }
 }
 
