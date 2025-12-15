@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   webdriverio_tests_tip_of_tree_v12:
-    name: WebdriverIO tests (against tip-of-tree core develop)
+    name: WebdriverIO tests (against core v12.3.0)
     timeout-minutes: 10
     runs-on: ${{ matrix.os }}
 
@@ -32,8 +32,8 @@ jobs:
       - name: Checkout core Blockly
         uses: actions/checkout@v4
         with:
-          repository: 'google/blockly'
-          ref: 'develop'
+          repository: 'RaspberryPiFoundation/blockly'
+          ref: 'blockly-v12.3.0'
           path: core-blockly
 
       - name: Use Node.js 20.x
@@ -50,7 +50,7 @@ jobs:
           npm install
           cd ..
 
-      - name: Link latest Blockly develop
+      - name: Link Blockly v12.3.0
         run: |
           cd core-blockly
           npm run package

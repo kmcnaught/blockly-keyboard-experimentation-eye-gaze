@@ -28,19 +28,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout tip-of-tree core Blockly
+      - name: Checkout core Blockly
         uses: actions/checkout@v4
         with:
           path: blockly
-          repository: google/blockly
-          ref: develop
+          repository: RaspberryPiFoundation/blockly
+          ref: blockly-v12.3.0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      - name: Build tip-of-tree core Blockly
+      - name: Build core Blockly v12.3.0
         run: |
           cd blockly
           npm ci
