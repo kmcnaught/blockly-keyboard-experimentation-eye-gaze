@@ -560,7 +560,7 @@ export class MazeGame {
     this.scale = MazeGame.CANVAS_SIZE / maxDimension;
   }
 
-  private draw() {
+  private draw(skipPegman: boolean = false) {
     const mazeWidth = this.maze[0].length * this.squareSize;
     const mazeHeight = this.maze.length * this.squareSize;
 
@@ -665,9 +665,19 @@ export class MazeGame {
     }
 
     // Draw player with pegman image using animation frame
-    this.drawPegman(this.playerPos.x, this.playerPos.y, this.animationFrame);
+    if (!skipPegman) {
+      this.drawPegman(this.playerPos.x, this.playerPos.y, this.animationFrame);
+      // Restore transform
+      this.ctx.restore();
+    }
+    // When skipPegman is true, caller must call endDraw() after drawing pegman
+  }
 
-    // Restore transform
+  /**
+   * Finish drawing after draw(true) was called.
+   * Must be called to restore the canvas transform context.
+   */
+  private endDraw(): void {
     this.ctx.restore();
   }
 
@@ -977,6 +987,11 @@ export class MazeGame {
 
   /**
    * Animate crash into wall.
+   * Uses different animations based on crashType:
+   * - STOP: Simple bounce (Pegman, Wheelchair)
+   * - SPIN: Spins while flying off screen (Astro)
+   * - FALL: Falls with gravity acceleration (Panda)
+   * - FLAIL: Flips upside down with legs flailing (Rudolph)
    */
   private async animateCrash(deltaX: number, deltaY: number): Promise<void> {
     if (this.crashAudio) {
@@ -985,51 +1000,97 @@ export class MazeGame {
     }
 
     const startPos = {x: this.playerPos.x, y: this.playerPos.y};
-    const bounceDistance = this.skin.crashType === CrashType.FLAIL ? 0.15 : 0.25;
+    const startFrame = this.playerDir * 4;
 
-    if (this.skin.crashType === CrashType.STOP || this.skin.crashType === CrashType.SPIN || this.skin.crashType === CrashType.FALL) {
-      // Bounce animation - temporarily move position forward then back
-      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
-      this.draw();
-      await this.delay(75);
+    if (this.skin.crashType === CrashType.STOP) {
+      // Bounce animation - 4 frames, stays in place (like original)
+      const bounceX = deltaX / 4;
+      const bounceY = deltaY / 4;
+      const direction16 = startFrame;
 
-      this.playerPos = startPos;
-      this.draw();
-      await this.delay(75);
+      this.draw(true);
+      this.drawPegman(startPos.x + bounceX, startPos.y + bounceY, direction16);
+      this.endDraw();
+      await this.delay(100);
 
-      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
-      this.draw();
-      await this.delay(75);
+      this.draw(true);
+      this.drawPegman(startPos.x, startPos.y, direction16);
+      this.endDraw();
+      await this.delay(100);
 
-      this.playerPos = startPos;
-      this.draw();
-      await this.delay(75);
+      this.draw(true);
+      this.drawPegman(startPos.x + bounceX, startPos.y + bounceY, direction16);
+      this.endDraw();
+      await this.delay(100);
+
+      this.draw(true);
+      this.drawPegman(startPos.x, startPos.y, direction16);
+      this.endDraw();
+      await this.delay(100);
+
+    } else if (this.skin.crashType === CrashType.SPIN ||
+               this.skin.crashType === CrashType.FALL) {
+      // Fly/fall off screen - 100 frames with rotation (matching original)
+      const deltaZ = (Math.random() - 0.5) * 10;  // Random rotation direction
+      const deltaD = (Math.random() - 0.5) / 2;   // Random sprite spin
+      let dx = deltaX + (Math.random() - 0.5) / 4;
+      let dy = deltaY + (Math.random() - 0.5) / 4;
+      dx /= 8;
+      dy /= 8;
+      let acceleration = this.skin.crashType === CrashType.FALL ? 0.01 : 0;
+
+      for (let i = 1; i < 100; i++) {
+        // Calculate frame with spin (constrain to 0-15)
+        let frame = startFrame + deltaD * i;
+        frame = ((frame % 16) + 16) % 16;
+
+        // Calculate position
+        const x = startPos.x + dx * i;
+        const y = startPos.y + dy * i;
+        const angle = deltaZ * i;
+
+        // Draw maze background, then rotated pegman
+        this.draw(true);
+        this.drawPegmanRotated(x, y, frame, angle);
+        this.endDraw();
+
+        // Apply gravity for FALL
+        dy += acceleration;
+
+        await this.delay(25);  // stepSpeed / 2 from original
+      }
+
     } else if (this.skin.crashType === CrashType.FLAIL) {
-      // Rudolph flips upside down with legs flailing in the air
+      // Rudolph flips upside down with legs flailing
+      const bounceX = deltaX * 0.15;
+      const bounceY = deltaY * 0.15;
+
       // Bump forward slightly
-      this.playerPos = {x: startPos.x + deltaX * bounceDistance, y: startPos.y + deltaY * bounceDistance};
-      this.draw();
+      this.draw(true);
+      this.drawPegman(startPos.x + bounceX, startPos.y + bounceY, startFrame);
+      this.endDraw();
       await this.delay(50);
 
-      // Return to start position for flailing
-      this.playerPos = startPos;
-
-      // Flip upside down and flail legs - cycle through crash frames 18-20
+      // Flip upside down and flail legs - cycle through frames 18-20
       for (let cycle = 0; cycle < 3; cycle++) {
         for (let frame = 18; frame <= 20; frame++) {
-          this.draw();
+          this.draw(true);
           this.drawPegmanRotated(startPos.x, startPos.y, frame, 180);
+          this.endDraw();
           await this.delay(100);
         }
       }
 
       // Final position - stay upside down briefly
-      this.draw();
+      this.draw(true);
       this.drawPegmanRotated(startPos.x, startPos.y, 18, 180);
+      this.endDraw();
       await this.delay(200);
 
       // Pop back right-side up
-      this.draw();
+      this.draw(true);
+      this.drawPegman(startPos.x, startPos.y, startFrame);
+      this.endDraw();
       await this.delay(100);
     }
 
