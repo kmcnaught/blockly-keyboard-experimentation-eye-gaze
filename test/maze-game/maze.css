@@ -58,6 +58,19 @@ h1 {
   stroke-width: 2px !important;
 }
 
+/* Keyboard focus styling for fields - active focus (solid border) */
+.blocklyActiveFocus.blocklyField > .blocklyFieldRect {
+  stroke: var(--blockly-active-node-color) !important;
+  stroke-width: var(--blockly-selection-width) !important;
+}
+
+/* Keyboard focus styling for fields - passive focus (dashed border) */
+.blocklyPassiveFocus.blocklyField > .blocklyFieldRect {
+  stroke: var(--blockly-active-node-color) !important;
+  stroke-width: var(--blockly-selection-width) !important;
+  stroke-dasharray: 5px 3px !important;
+}
+
 .game-controls {
   padding: 16px 0;
   display: flex;
