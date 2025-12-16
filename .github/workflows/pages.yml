@@ -71,17 +71,20 @@ jobs:
           mkdir -p ../ghpages/release/demo-15-oct-25
           cp -r build/* ../ghpages/release/demo-15-oct-25/
 
-          # Build all tags containing 'demo'
+          # Build maze game for all tags containing 'demo'
           for tag in $(git tag -l '*demo*'); do
-            echo "Building tag: $tag..."
+            echo "Building maze game for tag: $tag..."
             git checkout "$tag"
             npm ci
             npm link blockly
-            npm run ghpages
+            npm run build:maze
 
-            # Use tag name as subdirectory
-            mkdir -p ../ghpages/tags/"$tag"
-            cp -r build/* ../ghpages/tags/"$tag"/
+            # Deploy maze game to /maze/<tagname>/
+            mkdir -p ../ghpages/maze/"$tag"
+            cp test/maze-game/index.html ../ghpages/maze/"$tag"/
+            cp test/maze-game/bundle.js ../ghpages/maze/"$tag"/
+            cp test/maze-game/maze.css ../ghpages/maze/"$tag"/
+            cp -r test/maze-game/assets ../ghpages/maze/"$tag"/
           done
 
       - name: Upload artifact
