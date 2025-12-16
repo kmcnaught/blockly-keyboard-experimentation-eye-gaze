@@ -5,6 +5,7 @@
  */
 
 import {
+  BlockSvg,
   ContextMenuRegistry,
   Msg,
   ShortcutRegistry,
@@ -71,6 +72,29 @@ export class MoveActions {
       preconditionFn: (workspace) => this.mover.isMoving(workspace),
       callback: (workspace) => this.mover.abortMove(workspace),
       keyCodes: [KeyCodes.ESC],
+      allowCollision: true,
+    },
+    // Delete during move.
+    {
+      name: 'delete_while_moving',
+      preconditionFn: (workspace) => {
+        const draggable = this.mover.getDraggable(workspace);
+        return this.mover.isMoving(workspace) && draggable instanceof BlockSvg;
+      },
+      callback: (workspace) => {
+        const block = this.mover.getDraggable(workspace) as BlockSvg;
+        // Abort first to clean up move state
+        this.mover.abortMove(workspace);
+        // Delete after abort cleanup completes (matches postDragEndCleanup timing)
+        requestAnimationFrame(() => {
+          if (!block.disposed) {
+            block.unplug(true);
+            block.dispose();
+          }
+        });
+        return true;
+      },
+      keyCodes: [KeyCodes.BACKSPACE, KeyCodes.DELETE],
       allowCollision: true,
     },
 

@@ -132,6 +132,17 @@ export class Mover {
   }
 
   /**
+   * Returns the draggable element currently being moved on the given
+   * workspace, or undefined if no move is in progress.
+   *
+   * @param workspace The workspace to check.
+   * @returns The draggable being moved, or undefined.
+   */
+  getDraggable(workspace: WorkspaceSvg) {
+    return this.moves.get(workspace)?.draggable;
+  }
+
+  /**
    * Enable or disable connection highlighting during move operations.
    *
    * @param enabled Whether to show connection highlights.
@@ -294,6 +305,8 @@ export class Mover {
             utils.KeyCodes.ENTER,
             utils.KeyCodes.ESC,
             utils.KeyCodes.M,
+            utils.KeyCodes.BACKSPACE,
+            utils.KeyCodes.DELETE,
           ].includes(
             typeof keyCode === 'number'
               ? keyCode
