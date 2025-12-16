@@ -71,20 +71,40 @@ jobs:
           mkdir -p ../ghpages/release/demo-15-oct-25
           cp -r build/* ../ghpages/release/demo-15-oct-25/
 
-          # Build maze game for all tags containing 'demo'
+          # Build all tags containing 'demo'
           for tag in $(git tag -l '*demo*'); do
-            echo "Building maze game for tag: $tag..."
+            echo "Processing tag: $tag..."
             git checkout "$tag"
             npm ci
             npm link blockly
-            npm run build:maze
 
-            # Deploy maze game to /maze/<tagname>/
-            mkdir -p ../ghpages/maze/"$tag"
-            cp test/maze-game/index.html ../ghpages/maze/"$tag"/
-            cp test/maze-game/bundle.js ../ghpages/maze/"$tag"/
-            cp test/maze-game/maze.css ../ghpages/maze/"$tag"/
-            cp -r test/maze-game/assets ../ghpages/maze/"$tag"/
+            if [[ "$tag" == *maze* ]]; then
+              # Deploy maze game to /maze/<tagname>/
+              echo "Building maze game..."
+              npm run build:maze
+              mkdir -p ../ghpages/maze/"$tag"
+              cp test/maze-game/index.html ../ghpages/maze/"$tag"/
+              cp test/maze-game/bundle.js ../ghpages/maze/"$tag"/
+              cp test/maze-game/maze.css ../ghpages/maze/"$tag"/
+              cp -r test/maze-game/assets ../ghpages/maze/"$tag"/
+
+            elif [[ "$tag" == *turtle* ]]; then
+              # Deploy turtle game to /turtle/<tagname>/
+              echo "Building turtle game..."
+              npm run build:turtle
+              mkdir -p ../ghpages/turtle/"$tag"
+              cp test/turtle-game/index.html ../ghpages/turtle/"$tag"/
+              cp test/turtle-game/bundle.js ../ghpages/turtle/"$tag"/
+              cp test/turtle-game/turtle.css ../ghpages/turtle/"$tag"/
+              cp -r test/turtle-game/assets ../ghpages/turtle/"$tag"/ 2>/dev/null || true
+
+            else
+              # Deploy main test page to /tags/<tagname>/
+              echo "Building main test page..."
+              npm run ghpages
+              mkdir -p ../ghpages/tags/"$tag"
+              cp -r build/* ../ghpages/tags/"$tag"/
+            fi
           done
 
       - name: Upload artifact
