@@ -871,7 +871,8 @@ export class Navigation {
       workspace.targetWorkspace ??
       workspace
     ).keyboardAccessibilityMode;
-    return !!accessibilityMode && this.getState() !== Constants.STATE.NOWHERE;
+    const state = this.getState();
+    return !!accessibilityMode && state !== Constants.STATE.NOWHERE;
   }
 
   /**

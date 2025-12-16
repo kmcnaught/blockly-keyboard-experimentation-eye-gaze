@@ -425,6 +425,26 @@ export class StickyModeController {
       return;
     }
 
+    // Handle flyout block clicks in FOCUSED_CLICK mode at pointerdown level
+    // This prevents Blockly from taking focus before we can redirect it
+    if (this.triggerMode === TriggerMode.FOCUSED_CLICK) {
+      const clickedBlock = this.getBlockFromEvent(event);
+      if (clickedBlock && this.isBlockFromFlyout(clickedBlock)) {
+        const target = event.target as Element;
+        if (target && this.isDoubleClickOnField(target)) {
+          return;
+        }
+
+        // Prevent Blockly's gesture from starting - this prevents focus going to flyout
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Handle the insertion directly (similar to shift+click flow)
+        this.handleFlyoutBlockPointerDown(clickedBlock);
+        return;
+      }
+    }
+
     // Track focus state for FOCUSED_CLICK mode
     if (this.triggerMode !== TriggerMode.FOCUSED_CLICK) {
       return;
@@ -863,55 +883,9 @@ export class StickyModeController {
       // Ignore the click that triggered this to prevent immediate cancellation
       this.ignoreNextClick = true;
     } else {
-      // No valid connections - create block as top-level block immediately
+      // No valid connections - use smart auto-placement
       tempHighlighter.dispose();
-      this.createFlyoutBlockAsTopLevel(flyoutBlock);
-    }
-  }
-
-  /**
-   * Creates a block from the flyout as a top-level block (not connected to anything).
-   * Used when there are no valid connections to highlight.
-   *
-   * @param flyoutBlock The flyout block template to create from.
-   */
-  private createFlyoutBlockAsTopLevel(flyoutBlock: Blockly.BlockSvg): void {
-    const flyout = this.workspace.getFlyout();
-    if (!flyout) return;
-
-    // Create a new event group for this operation
-    const existingGroup = Blockly.Events.getGroup();
-    if (!existingGroup) {
-      Blockly.Events.setGroup(true);
-    }
-
-    try {
-      // Create the block on the main workspace from the flyout template
-      const newBlock = flyout.createBlock(flyoutBlock);
-
-      // Render to get the sizing right
-      newBlock.render();
-
-      // Position the block in a good spot on the workspace
-      const metrics = this.workspace.getMetrics();
-      const viewportCenterX = metrics.viewLeft + metrics.viewWidth / 2;
-      const viewportCenterY = metrics.viewTop + metrics.viewHeight / 2;
-
-      // Convert to workspace coordinates
-      const scale = this.workspace.scale;
-      const wsX = viewportCenterX / scale;
-      const wsY = viewportCenterY / scale;
-
-      newBlock.moveTo(new Blockly.utils.Coordinate(wsX - 50, wsY - 20));
-
-      // Select the new block
-      Blockly.common.setSelected(newBlock);
-
-    } finally {
-      // Clean up event group if we created one
-      if (!existingGroup) {
-        Blockly.Events.setGroup(false);
-      }
+      this.autoPlaceFlyoutBlock(flyoutBlock);
     }
   }
 
@@ -1011,10 +985,10 @@ export class StickyModeController {
   }
 
   /**
-   * Shows placement highlights for a flyout block (legacy name for compatibility).
+   * Shows placement highlights for a flyout block, or auto-places if no connections available.
    * Used when clicking on flyout blocks with sticky mode triggers enabled.
    *
-   * @param flyoutBlock The flyout block template to show placement options for.
+   * @param flyoutBlock The flyout block template to create and place.
    * @param event The click event (unused, kept for signature compatibility).
    */
   private insertFlyoutBlockIntoStickyMode(
@@ -1022,6 +996,135 @@ export class StickyModeController {
     event: MouseEvent,
   ): void {
     this.showFlyoutBlockPlacementHighlights(flyoutBlock);
+  }
+
+  /**
+   * Handles pointerdown on a flyout block.
+   * Called when we've intercepted the event before Blockly can process it.
+   *
+   * @param flyoutBlock The flyout block that was clicked.
+   */
+  private handleFlyoutBlockPointerDown(flyoutBlock: Blockly.BlockSvg): void {
+    this.workspace.getAudioManager().preload();
+
+    // Show placement highlights or auto-place
+    this.showFlyoutBlockPlacementHighlights(flyoutBlock);
+
+    // Set flag to ignore the subsequent click event
+    this.ignoreNextClick = true;
+  }
+
+  /**
+   * Auto-places a flyout block using smart placement heuristics.
+   * Follows the same pattern as keyboard Enter to insert from flyout.
+   *
+   * @param flyoutBlock The flyout block template to create and place.
+   */
+  private autoPlaceFlyoutBlock(flyoutBlock: Blockly.BlockSvg): void {
+    const flyout = this.workspace.getFlyout();
+    if (!flyout) {
+      return;
+    }
+
+    const navigation = this.navigationController.getNavigation();
+
+    // Create a new event group for this operation
+    const existingGroup = Blockly.Events.getGroup();
+    if (!existingGroup) {
+      Blockly.Events.setGroup(true);
+    }
+
+    // Save scroll position before any operations that might trigger auto-scroll
+    const metrics = this.workspace.getMetrics();
+    const scrollX = metrics.viewLeft;
+    const scrollY = metrics.viewTop;
+
+    try {
+      // Get the stationary node using the same approach as keyboard Enter
+      // FocusableTreeTraverser.findFocusedNode returns properly typed IFocusableNode
+      const stationaryNode =
+        Blockly.FocusableTreeTraverser.findFocusedNode(this.workspace) ??
+        this.workspace.getRestoredFocusableNode(null);
+
+      // Create the block on the main workspace (same as enter.ts createNewBlock)
+      const newBlock = flyout.createBlock(flyoutBlock);
+      newBlock.render();
+      // Connections are not tracked when block is first created
+      newBlock.setConnectionTracking(true);
+
+      // Find insert point AFTER creating block (block must exist for connection checks)
+      const insertPoint = stationaryNode
+        ? navigation.findInsertStartPoint(stationaryNode, newBlock)
+        : null;
+
+      // If insert point found, connect the block
+      if (insertPoint) {
+        navigation.insertBlock(newBlock, insertPoint);
+      }
+
+      // If block is still a top-level block (not connected), position it nicely
+      if (this.workspace.getTopBlocks().includes(newBlock)) {
+        this.positionNewTopLevelBlock(newBlock);
+      }
+
+      // Transfer focus to the new block on the workspace.
+      // Since we prevented default on pointerdown, Blockly won't set focus to flyout.
+      // We just need to set focus to the new block after rendering completes.
+      Blockly.renderManagement.finishQueuedRenders().then(() => {
+        const blockElement = newBlock.getFocusableElement();
+        if (blockElement) {
+          blockElement.focus();
+        }
+        Blockly.getFocusManager().focusNode(newBlock);
+        this.workspace.scroll(scrollX, scrollY);
+      }).catch((error) => {
+        // Non-critical: focus/scroll failed, but block was created successfully
+        console.debug('Failed to focus new block after render:', error);
+      });
+
+    } finally {
+      // Clean up event group if we created one
+      if (!existingGroup) {
+        Blockly.Events.setGroup(false);
+      }
+    }
+  }
+
+  /**
+   * Position a new top-level block to avoid overlap.
+   * Simplified version of enter.ts positionNewTopLevelBlock.
+   *
+   * @param newBlock The top-level block to position.
+   */
+  private positionNewTopLevelBlock(newBlock: Blockly.BlockSvg): void {
+    // Position for first block on empty workspace (workspace coordinates)
+    const initialX = 50;
+    const initialY = 50;
+    // Vertical gap between stacked block groups
+    const spacing = 20;
+
+    const filteredTopBlocks = this.workspace
+      .getTopBlocks(true)
+      .filter((block) => block.id !== newBlock.id);
+
+    if (filteredTopBlocks.length === 0) {
+      // Empty workspace - position at top-left
+      newBlock.moveTo(new Blockly.utils.Coordinate(initialX, initialY));
+      return;
+    }
+
+    // Find the bottom of the last block stack and position below it
+    const lastBlock = filteredTopBlocks[filteredTopBlocks.length - 1];
+    let bottomBlock: Blockly.BlockSvg = lastBlock;
+    while (bottomBlock.getNextBlock()) {
+      bottomBlock = bottomBlock.getNextBlock()!;
+    }
+
+    const lastPos = bottomBlock.getRelativeToSurfaceXY();
+    const lastHeight = bottomBlock.getHeightWidth().height;
+    newBlock.moveTo(
+      new Blockly.utils.Coordinate(lastPos.x, lastPos.y + lastHeight + spacing),
+    );
   }
 
   /**

@@ -1198,7 +1198,9 @@ export class ConnectionHighlighter {
       for (const workspaceConn of workspaceConnections) {
         // Skip insertion markers and immovable blocks
         const sourceBlock = workspaceConn.getSourceBlock();
-        if (!sourceBlock || sourceBlock.isInsertionMarker()) continue;
+        if (!sourceBlock || sourceBlock.isInsertionMarker()) {
+          continue;
+        }
 
         // Skip connections that would require moving an immovable block
         if (
@@ -1232,7 +1234,9 @@ export class ConnectionHighlighter {
           (flyoutConn.type === ConnectionType.NEXT_STATEMENT &&
             workspaceConn.type === ConnectionType.PREVIOUS_STATEMENT);
 
-        if (!isValidDirection) continue;
+        if (!isValidDirection) {
+          continue;
+        }
 
         // Check type compatibility
         if (connectionChecker.canConnect(flyoutConn, workspaceConn, true, Infinity)) {

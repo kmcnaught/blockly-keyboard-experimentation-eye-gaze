@@ -97,6 +97,15 @@ export class NavigationController {
   }
 
   /**
+   * Gets the Navigation instance used by this controller.
+   *
+   * @returns The Navigation instance.
+   */
+  getNavigation(): Navigation {
+    return this.navigation;
+  }
+
+  /**
    * Original Toolbox.prototype.onShortcut method, saved by
    * addShortcutHandlers.
    */
