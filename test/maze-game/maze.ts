@@ -660,12 +660,12 @@ export class MazeGame {
 
           // Draw finish marker with image if loaded
           if (square === SquareType.FINISH && this.markerImage && this.imagesLoaded) {
-            const markerWidth = 20;
-            const markerHeight = 34;
+            const markerWidth = 16;
+            const markerHeight = 27;
             this.ctx.drawImage(
               this.markerImage,
               px + (this.squareSize - markerWidth) / 2,
-              py + (this.squareSize - markerHeight) / 2 - 5,
+              py + (this.squareSize - markerHeight) / 2 - 8,
               markerWidth,
               markerHeight
             );
