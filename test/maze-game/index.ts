@@ -233,6 +233,9 @@ keyboardNavigation.setTriggerMode(TriggerMode.FOCUSED_CLICK);
 keyboardNavigation.setConnectionSize('large');
 keyboardNavigation.setKeepBlockOnMouse(false);
 
+// Enable keyboard navigation mode from the start so focus indicators show on tab
+Blockly.keyboardNavigationController.setIsActive(true);
+
 // Initialize maze game (load saved skin or default to 0)
 const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 setCurrentSkin(savedSkin); // Set initial skin for block icons

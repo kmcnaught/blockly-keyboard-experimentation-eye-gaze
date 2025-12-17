@@ -360,9 +360,38 @@ export class KeyboardNavigation {
       var(--blockly-active-tree-color);
   }
 
+  /* Show outline when toolbox/flyout is directly focused (e.g., tabbed to). */
+  .blocklyKeyboardNavigation .blocklyToolbox:focus-visible,
+  .blocklyKeyboardNavigation .blocklyFlyout:focus-within {
+    outline-offset: calc(var(--blockly-selection-width) * -1);
+    outline: var(--blockly-selection-width) solid
+      var(--blockly-active-tree-color);
+  }
+
   /* Suppress default outline. */
   .blocklyKeyboardNavigation
     .blocklyToolboxCategoryContainer:focus-visible {
+    outline: none;
+  }
+
+  /* Flyout label with passive focus (e.g. just tabbed to flyout). */
+  .blocklyKeyboardNavigation
+    .blocklyPassiveFocus.blocklyFlyoutLabel
+    > .blocklyFlyoutLabelBackground {
+    stroke: var(--blockly-active-tree-color);
+    stroke-width: var(--blockly-selection-width);
+  }
+
+  /* Flyout label focused via Tab key (before keyboard nav is active). */
+  .blocklyFlyoutLabel:focus > .blocklyFlyoutLabelBackground,
+  .blocklyFlyoutLabel:focus-visible > .blocklyFlyoutLabelBackground {
+    stroke: #60a5fa;
+    stroke-width: 3px;
+  }
+
+  /* Suppress default outline on flyout label - visual focus is the stroke on background. */
+  .blocklyFlyoutLabel:focus,
+  .blocklyFlyoutLabel:focus-visible {
     outline: none;
   }
 `);
@@ -390,6 +419,10 @@ export class KeyboardNavigation {
     .blocklyDropDownDiv:focus-within
   )
     .blocklyWorkspace
+    .blocklyWorkspaceFocusRing,
+  /* Show focus ring when workspace is directly focused (e.g., tabbed to). */
+  .blocklyKeyboardNavigation
+    .blocklyWorkspace:focus-visible
     .blocklyWorkspaceFocusRing {
     stroke: var(--blockly-active-tree-color);
     stroke-width: calc(var(--blockly-selection-width) * 2);
