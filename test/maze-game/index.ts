@@ -283,6 +283,7 @@ function toggleExecutionMode(): void {
 function updateModeToggleButton(): void {
   const modeToggle = document.getElementById('modeToggle');
   const modeLabel = document.getElementById('modeLabel');
+  const modeAction = document.getElementById('modeAction');
   if (modeToggle) {
     modeToggle.classList.toggle('immediate', currentExecutionMode === 'immediate');
     modeToggle.classList.toggle('coding', currentExecutionMode === 'coding');
@@ -291,6 +292,12 @@ function updateModeToggleButton(): void {
     modeLabel.textContent = currentExecutionMode === 'immediate'
       ? msg('MAZE_MODE_IMMEDIATE')
       : msg('MAZE_MODE_CODING');
+  }
+  if (modeAction) {
+    // Show what clicking will switch TO (opposite of current mode)
+    modeAction.textContent = currentExecutionMode === 'immediate'
+      ? msg('MAZE_SWITCH_TO_CODING')
+      : msg('MAZE_SWITCH_TO_PRACTICE');
   }
 }
 

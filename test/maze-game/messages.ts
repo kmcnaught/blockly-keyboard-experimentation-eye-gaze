@@ -82,8 +82,10 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_IMMEDIATE_TURN_LEFT: 'Turn Left',
     MAZE_IMMEDIATE_TURN_RIGHT: 'Turn Right',
     MAZE_IMMEDIATE_HINT: 'Use buttons or arrow keys. Commands happen right away!',
-    MAZE_MODE_IMMEDIATE: 'Play',
-    MAZE_MODE_CODING: 'Code',
+    MAZE_MODE_IMMEDIATE: 'Practice Mode',
+    MAZE_MODE_CODING: 'Coding',
+    MAZE_SWITCH_TO_PRACTICE: 'Switch to Practice',
+    MAZE_SWITCH_TO_CODING: 'Switch to Coding',
 
     // Immediate mode instructions for all levels
     MAZE_INSTRUCTION_1_IMMEDIATE: 'Press forward to reach the goal.',
@@ -175,8 +177,10 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_IMMEDIATE_TURN_LEFT: 'Tourner à gauche',
     MAZE_IMMEDIATE_TURN_RIGHT: 'Tourner à droite',
     MAZE_IMMEDIATE_HINT: 'Utilisez les boutons ou les touches fléchées. Les commandes s\'exécutent immédiatement !',
-    MAZE_MODE_IMMEDIATE: 'Jouer',
-    MAZE_MODE_CODING: 'Coder',
+    MAZE_MODE_IMMEDIATE: 'Mode Pratique',
+    MAZE_MODE_CODING: 'Programmation',
+    MAZE_SWITCH_TO_PRACTICE: 'Passer à Pratique',
+    MAZE_SWITCH_TO_CODING: 'Passer à Programmation',
 
     // Immediate mode instructions for all levels
     MAZE_INSTRUCTION_1_IMMEDIATE: 'Appuyez sur avancer pour atteindre l\'objectif.',

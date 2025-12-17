@@ -13,6 +13,7 @@ header {
   color: white;
   padding: 16px 24px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 h1 {
@@ -299,6 +300,17 @@ button:active {
   border: 1px solid #ccc;
 }
 
+/* Centered mode toggle in header */
+.header-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .header-selectors {
   position: absolute;
   top: 16px;
@@ -359,22 +371,21 @@ button:active {
 }
 
 /* Mode toggle button styles */
-.mode-toggle-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .mode-toggle {
-  padding: 8px 12px;
+  padding: 8px 14px;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.95);
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1976d2;
+  font-weight: 500;
 }
 
 .mode-toggle:hover {
@@ -386,6 +397,7 @@ button:active {
 
 .mode-toggle .mode-icon {
   display: none;
+  font-size: 16px;
 }
 
 .mode-toggle.immediate .immediate-icon {
@@ -396,10 +408,14 @@ button:active {
   display: inline;
 }
 
+.mode-action {
+  white-space: nowrap;
+}
+
 .mode-label {
   color: white;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
