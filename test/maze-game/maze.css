@@ -313,7 +313,8 @@ button:active {
 
 .header-selectors {
   position: absolute;
-  top: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   right: 24px;
   display: flex;
   align-items: center;
@@ -469,11 +470,13 @@ button:active {
   position: absolute;
   background: white;
   z-index: 1000;
+  transform: scale(0.73);
+  transform-origin: top left;
 }
 #pegmanMenu>div {
   background-color: #fff;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
   transition: background-color 0.2s;
   position: relative;
   width: 49px;
