@@ -432,11 +432,13 @@ button:active {
   overflow: hidden;
   width: 49px;
   height: 51px;
+  transform: scale(0.73); /* 37px target / 51px native */
+  transform-origin: right center;
 }
 #pegmanButton:hover {
   background: white;
   border-color: rgba(255, 255, 255, 0.8);
-  transform: translateY(-1px);
+  transform: scale(0.73) translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 #pegmanButton.buttonHover {
