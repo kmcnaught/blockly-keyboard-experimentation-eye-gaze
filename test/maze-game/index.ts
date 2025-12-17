@@ -381,9 +381,15 @@ if (savedSkin === 4) {
   setTimeout(() => setChristmasTheme(true), 100);
 }
 
-// Build the character menu
+// Skins that are enabled in the character selector
+// To re-enable hidden characters, add their indices back:
+// 4=Rudolph, 5=Football Chase, 6=Football Dribble
+const ENABLED_SKIN_IDS = [0, 1, 2, 3]; // Astro, Wheelchair, Panda, Pegman
+
+// Build the character menu (only show enabled skins)
 if (pegmanMenu) {
-  skins.forEach((skin, i) => {
+  ENABLED_SKIN_IDS.forEach((skinId) => {
+    const skin = skins[skinId];
     const div = document.createElement('div');
     const img = document.createElement('img');
     img.src = skin.sprite;
@@ -391,7 +397,7 @@ if (pegmanMenu) {
     pegmanMenu.appendChild(div);
 
     div.addEventListener('click', () => {
-      changePegman(i);
+      changePegman(skinId);
     });
   });
 }
