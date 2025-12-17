@@ -286,13 +286,8 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f9f9f9;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
   min-width: 400px;
   min-height: 350px;
-  position: relative;
 }
 
 #mazeCanvas {
