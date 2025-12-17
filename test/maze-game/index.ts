@@ -25,13 +25,17 @@ type ExecutionMode = 'immediate' | 'coding';
 /**
  * Get the execution mode from URL parameter or localStorage.
  * URL parameter takes precedence over localStorage.
+ * Accepts 'practice' or 'immediate' for practice mode, 'coding' for coding mode.
  */
 function getInitialExecutionMode(): ExecutionMode {
   // Check URL parameter first
   const urlParams = new URLSearchParams(window.location.search);
   const urlMode = urlParams.get('mode');
-  if (urlMode === 'immediate' || urlMode === 'coding') {
-    return urlMode;
+  if (urlMode === 'practice' || urlMode === 'immediate') {
+    return 'immediate';
+  }
+  if (urlMode === 'coding') {
+    return 'coding';
   }
 
   // Fall back to localStorage
