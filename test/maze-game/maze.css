@@ -179,8 +179,21 @@ button:active {
   transform: translateY(0);
 }
 
+/* Consistent focus indicator: gap + colored outer ring.
+   Uses --element-color if set (auto-matches button color), else --focus-accent, else white.
+   Set --element-color on colored elements, or --focus-accent to override just the focus ring. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-accent, var(--element-color, white));
+  outline-offset: 2px;
+}
+
 #runButton {
-  background: #4caf50;
+  --element-color: #4caf50;
+  background: var(--element-color);
   color: white;
 }
 
@@ -193,7 +206,8 @@ button:active {
 }
 
 #resetButton {
-  background: #ff9800;
+  --element-color: #ff9800;
+  background: var(--element-color);
   color: white;
 }
 
@@ -345,13 +359,6 @@ button:active {
   border-color: rgba(255, 255, 255, 0.8);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.selector-group select:focus {
-  outline: none;
-  background: white;
-  border-color: #ffeb3b;
-  box-shadow: 0 0 0 3px rgba(255, 235, 59, 0.4);
 }
 
 .selector-group select option {
@@ -893,7 +900,8 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
   border: none;
 
   /* MOVEMENT_HUE = 290 in Blockly (purple/magenta) */
-  background: hsl(290, 65%, 54%);
+  --element-color: hsl(290, 65%, 54%);
+  background: var(--element-color);
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
@@ -1189,7 +1197,8 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
   font-weight: 500;
   border: none;
   border-radius: 6px;
-  background: #2196f3;
+  --element-color: #2196f3;
+  background: var(--element-color);
   color: white;
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -1228,11 +1237,6 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
 
 .result-modal-ok:hover {
   background: #1976d2;
-}
-
-.result-modal-ok:focus {
-  outline: 2px solid #1565c0;
-  outline-offset: 2px;
 }
 
 .result-modal-ok:active {
