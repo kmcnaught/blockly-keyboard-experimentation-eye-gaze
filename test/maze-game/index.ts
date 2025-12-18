@@ -81,6 +81,11 @@ function updateUIText() {
   if (resetButton) {
     resetButton.textContent = msg('MAZE_RESET_PROGRAM');
   }
+
+  const clearWorkspaceBtn = document.getElementById('clearWorkspaceBtn');
+  if (clearWorkspaceBtn) {
+    clearWorkspaceBtn.textContent = msg('MAZE_CLEAR_WORKSPACE');
+  }
 }
 
 // Update UI text on load
@@ -636,6 +641,11 @@ document.getElementById('runButton')?.addEventListener('click', runProgram);
 
 // Reset button handler
 document.getElementById('resetButton')?.addEventListener('click', resetProgram);
+
+// Clear workspace button handler
+document.getElementById('clearWorkspaceBtn')?.addEventListener('click', () => {
+  workspace.clear();
+});
 
 // Initial level display update
 updateLevelDisplay();

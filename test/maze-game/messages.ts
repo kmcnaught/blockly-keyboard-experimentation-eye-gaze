@@ -100,6 +100,9 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_INSTRUCTION_10_IMMEDIATE: 'Solve this challenging maze step by step.',
     MAZE_MODE_TRANSITION: 'Great job! Now let\'s try programming. Plan your moves, then press Run.',
 
+    // Workspace controls
+    MAZE_CLEAR_WORKSPACE: 'Delete all blocks',
+
     // Level instructions (what the user should accomplish)
     MAZE_INSTRUCTION_1: 'Get to the goal using move and turn blocks.',
     MAZE_INSTRUCTION_2: 'Navigate the turns to reach the goal.',
@@ -194,6 +197,9 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_INSTRUCTION_9_IMMEDIATE: 'Trouvez votre chemin dans le labyrinthe ramifié.',
     MAZE_INSTRUCTION_10_IMMEDIATE: 'Résolvez ce labyrinthe difficile étape par étape.',
     MAZE_MODE_TRANSITION: 'Bravo ! Maintenant, essayons la programmation. Planifiez vos mouvements, puis appuyez sur Exécuter.',
+
+    // Workspace controls
+    MAZE_CLEAR_WORKSPACE: 'Supprimer tous les blocs',
 
     // Level instructions (what the user should accomplish)
     MAZE_INSTRUCTION_1: 'Atteignez l\'objectif en utilisant les blocs avancer et tourner.',
