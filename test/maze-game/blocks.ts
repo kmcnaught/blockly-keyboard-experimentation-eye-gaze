@@ -171,7 +171,6 @@ export function registerMazeBlocks() {
       nextStatement: null,
       colour: LOGIC_HUE,
       tooltip: '%{BKY_MAZE_IF_TOOLTIP}',
-      extensions: ['maze_turn_arrows'],
     },
 
     // Block for conditional "if there is a path, else".
@@ -200,7 +199,6 @@ export function registerMazeBlocks() {
       nextStatement: null,
       colour: LOGIC_HUE,
       tooltip: '%{BKY_MAZE_IFELSE_TOOLTIP}',
-      extensions: ['maze_turn_arrows'],
     },
 
     // Block for repeat loop.
