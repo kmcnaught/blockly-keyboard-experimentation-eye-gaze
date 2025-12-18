@@ -77,27 +77,27 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_IF_ELSE: 'If-else blocks will do one thing or the other.',
     MAZE_HINT_WALL_FOLLOW: 'Can you solve this complicated maze? Try following the left-hand wall. Advanced programmers only!',
 
-    // Immediate mode (direct control before programming)
-    MAZE_IMMEDIATE_FORWARD: 'Move Forward',
-    MAZE_IMMEDIATE_TURN_LEFT: 'Turn Left',
-    MAZE_IMMEDIATE_TURN_RIGHT: 'Turn Right',
-    MAZE_IMMEDIATE_HINT: 'Use buttons or arrow keys. Commands happen right away!',
-    MAZE_MODE_IMMEDIATE: 'Practice Mode',
+    // Practice mode (direct control before programming)
+    MAZE_PRACTICE_FORWARD: 'Move Forward',
+    MAZE_PRACTICE_TURN_LEFT: 'Turn Left',
+    MAZE_PRACTICE_TURN_RIGHT: 'Turn Right',
+    MAZE_PRACTICE_HINT: 'Use buttons or arrow keys. Commands happen right away!',
+    MAZE_MODE_PRACTICE: 'Practice',
     MAZE_MODE_CODING: 'Coding',
     MAZE_SWITCH_TO_PRACTICE: 'Switch to Practice',
     MAZE_SWITCH_TO_CODING: 'Switch to Coding',
 
-    // Immediate mode instructions for all levels
-    MAZE_INSTRUCTION_1_IMMEDIATE: 'Press forward to reach the goal.',
-    MAZE_INSTRUCTION_2_IMMEDIATE: 'Use turn and forward to navigate to the goal.',
-    MAZE_INSTRUCTION_3_IMMEDIATE: 'Navigate the longer path to the goal.',
-    MAZE_INSTRUCTION_4_IMMEDIATE: 'Find the path through the twists and turns.',
-    MAZE_INSTRUCTION_5_IMMEDIATE: 'Navigate through the maze to reach the goal.',
-    MAZE_INSTRUCTION_6_IMMEDIATE: 'Watch for branching paths on your way to the goal.',
-    MAZE_INSTRUCTION_7_IMMEDIATE: 'Choose the right direction at each junction.',
-    MAZE_INSTRUCTION_8_IMMEDIATE: 'Navigate the complex path to the goal.',
-    MAZE_INSTRUCTION_9_IMMEDIATE: 'Find your way through the branching maze.',
-    MAZE_INSTRUCTION_10_IMMEDIATE: 'Solve this challenging maze step by step.',
+    // Practice mode instructions for all levels
+    MAZE_INSTRUCTION_1_PRACTICE: 'Press forward to reach the goal.',
+    MAZE_INSTRUCTION_2_PRACTICE: 'Use turn and forward to navigate to the goal.',
+    MAZE_INSTRUCTION_3_PRACTICE: 'Navigate the longer path to the goal.',
+    MAZE_INSTRUCTION_4_PRACTICE: 'Find the path through the twists and turns.',
+    MAZE_INSTRUCTION_5_PRACTICE: 'Navigate through the maze to reach the goal.',
+    MAZE_INSTRUCTION_6_PRACTICE: 'Watch for branching paths on your way to the goal.',
+    MAZE_INSTRUCTION_7_PRACTICE: 'Choose the right direction at each junction.',
+    MAZE_INSTRUCTION_8_PRACTICE: 'Navigate the complex path to the goal.',
+    MAZE_INSTRUCTION_9_PRACTICE: 'Find your way through the branching maze.',
+    MAZE_INSTRUCTION_10_PRACTICE: 'Solve this challenging maze step by step.',
     MAZE_MODE_TRANSITION: 'Great job! Now let\'s try programming. Plan your moves, then press Run.',
 
     // Workspace controls
@@ -175,27 +175,27 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_HINT_IF_ELSE: 'Les blocs si-sinon feront une chose ou l\'autre.',
     MAZE_HINT_WALL_FOLLOW: 'Pouvez-vous résoudre ce labyrinthe compliqué ? Essayez de suivre le mur de gauche. Réservé aux programmeurs avancés !',
 
-    // Immediate mode (direct control before programming)
-    MAZE_IMMEDIATE_FORWARD: 'Avancer',
-    MAZE_IMMEDIATE_TURN_LEFT: 'Tourner à gauche',
-    MAZE_IMMEDIATE_TURN_RIGHT: 'Tourner à droite',
-    MAZE_IMMEDIATE_HINT: 'Utilisez les boutons ou les touches fléchées. Les commandes s\'exécutent immédiatement !',
-    MAZE_MODE_IMMEDIATE: 'Mode Pratique',
+    // Practice mode (direct control before programming)
+    MAZE_PRACTICE_FORWARD: 'Avancer',
+    MAZE_PRACTICE_TURN_LEFT: 'Tourner à gauche',
+    MAZE_PRACTICE_TURN_RIGHT: 'Tourner à droite',
+    MAZE_PRACTICE_HINT: 'Utilisez les boutons ou les touches fléchées. Les commandes s\'exécutent immédiatement !',
+    MAZE_MODE_PRACTICE: 'Pratique',
     MAZE_MODE_CODING: 'Programmation',
     MAZE_SWITCH_TO_PRACTICE: 'Passer à Pratique',
     MAZE_SWITCH_TO_CODING: 'Passer à Programmation',
 
-    // Immediate mode instructions for all levels
-    MAZE_INSTRUCTION_1_IMMEDIATE: 'Appuyez sur avancer pour atteindre l\'objectif.',
-    MAZE_INSTRUCTION_2_IMMEDIATE: 'Utilisez tourner et avancer pour naviguer vers l\'objectif.',
-    MAZE_INSTRUCTION_3_IMMEDIATE: 'Naviguez sur le chemin plus long vers l\'objectif.',
-    MAZE_INSTRUCTION_4_IMMEDIATE: 'Trouvez le chemin à travers les virages.',
-    MAZE_INSTRUCTION_5_IMMEDIATE: 'Naviguez dans le labyrinthe pour atteindre l\'objectif.',
-    MAZE_INSTRUCTION_6_IMMEDIATE: 'Surveillez les chemins qui bifurquent vers l\'objectif.',
-    MAZE_INSTRUCTION_7_IMMEDIATE: 'Choisissez la bonne direction à chaque jonction.',
-    MAZE_INSTRUCTION_8_IMMEDIATE: 'Naviguez sur le chemin complexe vers l\'objectif.',
-    MAZE_INSTRUCTION_9_IMMEDIATE: 'Trouvez votre chemin dans le labyrinthe ramifié.',
-    MAZE_INSTRUCTION_10_IMMEDIATE: 'Résolvez ce labyrinthe difficile étape par étape.',
+    // Practice mode instructions for all levels
+    MAZE_INSTRUCTION_1_PRACTICE: 'Appuyez sur avancer pour atteindre l\'objectif.',
+    MAZE_INSTRUCTION_2_PRACTICE: 'Utilisez tourner et avancer pour naviguer vers l\'objectif.',
+    MAZE_INSTRUCTION_3_PRACTICE: 'Naviguez sur le chemin plus long vers l\'objectif.',
+    MAZE_INSTRUCTION_4_PRACTICE: 'Trouvez le chemin à travers les virages.',
+    MAZE_INSTRUCTION_5_PRACTICE: 'Naviguez dans le labyrinthe pour atteindre l\'objectif.',
+    MAZE_INSTRUCTION_6_PRACTICE: 'Surveillez les chemins qui bifurquent vers l\'objectif.',
+    MAZE_INSTRUCTION_7_PRACTICE: 'Choisissez la bonne direction à chaque jonction.',
+    MAZE_INSTRUCTION_8_PRACTICE: 'Naviguez sur le chemin complexe vers l\'objectif.',
+    MAZE_INSTRUCTION_9_PRACTICE: 'Trouvez votre chemin dans le labyrinthe ramifié.',
+    MAZE_INSTRUCTION_10_PRACTICE: 'Résolvez ce labyrinthe difficile étape par étape.',
     MAZE_MODE_TRANSITION: 'Bravo ! Maintenant, essayons la programmation. Planifiez vos mouvements, puis appuyez sur Exécuter.',
 
     // Workspace controls

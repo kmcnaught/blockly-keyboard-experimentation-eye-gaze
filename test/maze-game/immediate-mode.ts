@@ -199,23 +199,23 @@ export class ImmediateModeController {
   public updateLabels(): void {
     const hintEl = document.getElementById('immediateHint');
     if (hintEl) {
-      hintEl.textContent = msg('MAZE_IMMEDIATE_HINT');
+      hintEl.textContent = msg('MAZE_PRACTICE_HINT');
     }
 
     // Update button labels
     const forwardLabel = this.forwardBtn?.querySelector('.cmd-label');
     if (forwardLabel) {
-      forwardLabel.textContent = msg('MAZE_IMMEDIATE_FORWARD');
+      forwardLabel.textContent = msg('MAZE_PRACTICE_FORWARD');
     }
 
     const leftLabel = this.turnLeftBtn?.querySelector('.cmd-label');
     if (leftLabel) {
-      leftLabel.textContent = msg('MAZE_IMMEDIATE_TURN_LEFT');
+      leftLabel.textContent = msg('MAZE_PRACTICE_TURN_LEFT');
     }
 
     const rightLabel = this.turnRightBtn?.querySelector('.cmd-label');
     if (rightLabel) {
-      rightLabel.textContent = msg('MAZE_IMMEDIATE_TURN_RIGHT');
+      rightLabel.textContent = msg('MAZE_PRACTICE_TURN_RIGHT');
     }
   }
 

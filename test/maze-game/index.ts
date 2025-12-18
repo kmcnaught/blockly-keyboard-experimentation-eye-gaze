@@ -19,20 +19,37 @@ import {MazeGame, MAX_BLOCKS, type ResultType} from './maze';
 import {loadMessages, getBrowserLocale, msg, type SupportedLocale} from './messages';
 import {ImmediateModeController} from './immediate-mode';
 
+// ========== URL PARAMETER UTILITIES ==========
+
+/**
+ * Get a string parameter from the URL, or return a default value.
+ */
+function getStringParamFromUrl(name: string, defaultValue: string): string {
+  const val = window.location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
+  return val ? decodeURIComponent(val[1].replace(/\+/g, '%20')) : defaultValue;
+}
+
+/**
+ * Get an integer parameter from the URL, clamped to min/max bounds.
+ */
+function getIntegerParamFromUrl(name: string, minValue: number, maxValue: number): number {
+  const val = Math.floor(Number(getStringParamFromUrl(name, 'NaN')));
+  return isNaN(val) ? minValue : Math.max(minValue, Math.min(val, maxValue));
+}
+
 // Execution modes
-type ExecutionMode = 'immediate' | 'coding';
+type ExecutionMode = 'practice' | 'coding';
 
 /**
  * Get the execution mode from URL parameter or localStorage.
  * URL parameter takes precedence over localStorage.
- * Accepts 'practice' or 'immediate' for practice mode, 'coding' for coding mode.
+ * Accepts 'practice' or 'practise' (British spelling) for practice mode, 'coding' for coding mode.
  */
 function getInitialExecutionMode(): ExecutionMode {
-  // Check URL parameter first
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlMode = urlParams.get('mode');
-  if (urlMode === 'practice' || urlMode === 'immediate') {
-    return 'immediate';
+  const urlMode = getStringParamFromUrl('mode', '');
+  // Accept both "practice" and "practise" (British spelling)
+  if (urlMode === 'practice' || urlMode === 'practise') {
+    return 'practice';
   }
   if (urlMode === 'coding') {
     return 'coding';
@@ -40,7 +57,7 @@ function getInitialExecutionMode(): ExecutionMode {
 
   // Fall back to localStorage
   const savedMode = localStorage.getItem('mazeExecutionMode') as ExecutionMode;
-  if (savedMode === 'immediate' || savedMode === 'coding') {
+  if (savedMode === 'practice' || savedMode === 'coding') {
     return savedMode;
   }
 
@@ -48,11 +65,13 @@ function getInitialExecutionMode(): ExecutionMode {
   return 'coding';
 }
 
-// Current execution mode (immediate = direct control, coding = Blockly programming)
+// Current execution mode (practice = direct control, coding = Blockly programming)
 let currentExecutionMode: ExecutionMode = getInitialExecutionMode();
 
-// Initialize locale (browser detection or saved preference)
+// Initialize locale (URL param > localStorage > browser detection)
+const urlLang = getStringParamFromUrl('lang', '');
 let currentLocale: SupportedLocale =
+  (urlLang === 'en' || urlLang === 'fr') ? urlLang :
   (localStorage.getItem('mazeGameLocale') as SupportedLocale) || getBrowserLocale();
 
 // Load internationalized messages
@@ -136,8 +155,8 @@ function getToolboxForLevel(level: number): Blockly.utils.toolbox.ToolboxDefinit
   return {kind: 'flyoutToolbox', contents};
 }
 
-// Start at level 1
-const initialLevel = 1;
+// Initialize level from URL param or default to 1
+const initialLevel = getIntegerParamFromUrl('level', 1, MazeGame.getMaxLevel());
 const initialMaxBlocks = MAX_BLOCKS[initialLevel - 1];
 
 // Initialize Blockly workspace with level-specific configuration
@@ -241,10 +260,35 @@ keyboardNavigation.setKeepBlockOnMouse(false);
 // Enable keyboard navigation mode from the start so focus indicators show on tab
 Blockly.keyboardNavigationController.setIsActive(true);
 
-// Initialize maze game (load saved skin or default to 0)
-const savedSkin = parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
+// Initialize maze game (URL param > localStorage > default)
+const urlSkin = getIntegerParamFromUrl('skin', -1, 3);
+const savedSkin = urlSkin >= 0 ? urlSkin : parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 setCurrentSkin(savedSkin); // Set initial skin for block icons
-const mazeGame = new MazeGame('mazeCanvas', 1, savedSkin);
+const mazeGame = new MazeGame('mazeCanvas', initialLevel, savedSkin);
+
+// ========== URL STATE MANAGEMENT ==========
+
+/**
+ * Build a URL with current game state parameters.
+ */
+function buildGameUrl(overrides: {level?: number, skin?: number, lang?: string, mode?: string} = {}): string {
+  const params = new URLSearchParams();
+  params.set('lang', overrides.lang ?? currentLocale);
+  params.set('level', String(overrides.level ?? mazeGame.getLevel()));
+  params.set('skin', String(overrides.skin ?? mazeGame.getSkin()));
+  const mode = overrides.mode ?? currentExecutionMode;
+  if (mode !== 'coding') {
+    params.set('mode', mode); // Always writes 'practice' (never 'practise')
+  }
+  return location.pathname + '?' + params.toString();
+}
+
+/**
+ * Update URL to reflect current game state without page reload.
+ */
+function updateUrlState() {
+  history.replaceState(null, '', buildGameUrl());
+}
 
 // Initialize immediate mode controller for direct control in early levels
 const immediateModeController = new ImmediateModeController(
@@ -279,13 +323,15 @@ function setExecutionMode(mode: ExecutionMode): void {
   updateModeToggleButton();
   // Update instruction bar to show appropriate instructions for the mode
   updateInstructionBar();
+  // Update URL to reflect mode change
+  updateUrlState();
 }
 
 /**
- * Toggle between immediate and coding modes.
+ * Toggle between practice and coding modes.
  */
 function toggleExecutionMode(): void {
-  const newMode = currentExecutionMode === 'immediate' ? 'coding' : 'immediate';
+  const newMode = currentExecutionMode === 'practice' ? 'coding' : 'practice';
   setExecutionMode(newMode);
 }
 
@@ -297,17 +343,17 @@ function updateModeToggleButton(): void {
   const modeLabel = document.getElementById('modeLabel');
   const modeAction = document.getElementById('modeAction');
   if (modeToggle) {
-    modeToggle.classList.toggle('immediate', currentExecutionMode === 'immediate');
+    modeToggle.classList.toggle('practice', currentExecutionMode === 'practice');
     modeToggle.classList.toggle('coding', currentExecutionMode === 'coding');
   }
   if (modeLabel) {
-    modeLabel.textContent = currentExecutionMode === 'immediate'
-      ? msg('MAZE_MODE_IMMEDIATE')
+    modeLabel.textContent = currentExecutionMode === 'practice'
+      ? msg('MAZE_MODE_PRACTICE')
       : msg('MAZE_MODE_CODING');
   }
   if (modeAction) {
     // Show what clicking will switch TO (opposite of current mode)
-    modeAction.textContent = currentExecutionMode === 'immediate'
+    modeAction.textContent = currentExecutionMode === 'practice'
       ? msg('MAZE_SWITCH_TO_CODING')
       : msg('MAZE_SWITCH_TO_PRACTICE');
   }
@@ -315,7 +361,7 @@ function updateModeToggleButton(): void {
 
 /**
  * Update the UI based on current execution mode.
- * Immediate mode: Shows command buttons, hides Blockly workspace
+ * Practice mode: Shows command buttons, hides Blockly workspace
  * Coding mode: Shows Blockly workspace, hides command buttons
  */
 function updateModeUI(): void {
@@ -323,8 +369,8 @@ function updateModeUI(): void {
   const runButton = document.getElementById('runButton');
   const capacityBubble = document.getElementById('capacityBubble');
 
-  if (currentExecutionMode === 'immediate') {
-    // Immediate mode: Hide Blockly, show command buttons
+  if (currentExecutionMode === 'practice') {
+    // Practice mode: Hide Blockly, show command buttons
     blocklyDiv?.classList.add('hidden');
     runButton?.classList.add('hidden');
     capacityBubble?.classList.add('hidden');
@@ -574,6 +620,9 @@ function changePegman(skinId: number) {
   setChristmasTheme(skinId === RUDOLPH_SKIN_ID);
 
   hidePegmanMenu();
+
+  // Update URL to reflect skin change
+  updateUrlState();
 }
 
 // Show pegman menu on button click
@@ -669,9 +718,8 @@ if (languageSelect) {
     // Save preference
     localStorage.setItem('mazeGameLocale', newLocale);
 
-    // Reload the page to apply new language
-    // (This is the simplest approach - Blockly blocks need to be re-registered with new messages)
-    window.location.reload();
+    // Navigate with all params preserved (page reload required for Blockly to re-register blocks)
+    location.href = buildGameUrl({lang: newLocale});
   });
 }
 
@@ -721,9 +769,9 @@ function updateInstructionBar() {
 
   // Update level instruction
   const level = mazeGame.getLevel();
-  // Use immediate mode instructions when in immediate mode
-  const instructionKey = currentExecutionMode === 'immediate'
-    ? `MAZE_INSTRUCTION_${level}_IMMEDIATE`
+  // Use practice mode instructions when in practice mode
+  const instructionKey = currentExecutionMode === 'practice'
+    ? `MAZE_INSTRUCTION_${level}_PRACTICE`
     : `MAZE_INSTRUCTION_${level}`;
   levelInstruction.textContent = msg(instructionKey);
 
@@ -1085,6 +1133,8 @@ function performLevelTransition(newLevel: number, showBanner: boolean = true) {
     updateWorkspaceForLevel(newLevel);
     updateLevelDisplay();
     resetHintState();
+    // Update URL to reflect level change
+    updateUrlState();
 
     // Step 3: Fade in the canvas
     canvasWrapper?.classList.remove('fade-out');
@@ -1230,7 +1280,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
   }
 
   // R: Run the program in coding mode (no modifiers)
-  // In immediate mode, R is handled by the immediate mode controller for reset
+  // In practice mode, R is handled by the practice mode controller for reset
   if (e.key === 'r' || e.key === 'R') {
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
       if (currentExecutionMode === 'coding') {
@@ -1239,7 +1289,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
         runProgram();
         return;
       }
-      // Let immediate mode controller handle R for reset
+      // Let practice mode controller handle R for reset
     }
   }
 
@@ -1263,7 +1313,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // M: Toggle execution mode (immediate/coding) (no modifiers)
+  // M: Toggle execution mode (practice/coding) (no modifiers)
   if (e.key === 'm' || e.key === 'M') {
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
