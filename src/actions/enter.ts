@@ -318,6 +318,9 @@ export class EnterAction {
     const button = this.navigation.getFlyoutCursor(workspace)?.getCurNode();
     if (!(button instanceof FlyoutButton)) return;
 
+    // Labels don't have callbacks - silently ignore
+    if (button.isLabel()) return;
+
     const flyoutButtonCallbacks: Map<string, (p1: FlyoutButton) => void> =
       // @ts-expect-error private field access
       workspace.flyoutButtonCallbacks;

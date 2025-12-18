@@ -316,11 +316,21 @@ export class Navigation {
     }
 
     const flyoutContents = flyout.getContents();
-    const defaultFlyoutItem =
-      prefer === 'first'
-        ? flyoutContents[0]
-        : flyoutContents[flyoutContents.length - 1];
-    if (!defaultFlyoutItem) return false;
+    if (flyoutContents.length === 0) return false;
+
+    // Find the first non-label item
+    let defaultIndex = prefer === 'first' ? 0 : flyoutContents.length - 1;
+    const step = prefer === 'first' ? 1 : -1;
+    while (defaultIndex >= 0 && defaultIndex < flyoutContents.length) {
+      const item = flyoutContents[defaultIndex].getElement();
+      if (!(item instanceof Blockly.FlyoutButton) || !item.isLabel()) {
+        break;
+      }
+      defaultIndex += step;
+    }
+
+    if (defaultIndex < 0 || defaultIndex >= flyoutContents.length) return false;
+    const defaultFlyoutItem = flyoutContents[defaultIndex];
     const defaultFlyoutItemElement = defaultFlyoutItem.getElement();
     flyoutCursor.setCurNode(defaultFlyoutItemElement);
     return true;

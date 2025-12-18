@@ -29,6 +29,7 @@ export class FlyoutCursor extends Blockly.LineCursor {
 
   /**
    * Moves the cursor to the next stack of blocks in the flyout.
+   * Skips over flyout labels.
    *
    * @returns The next element, or null if the current node is
    *     not set or there is no next value.
@@ -38,7 +39,12 @@ export class FlyoutCursor extends Blockly.LineCursor {
     if (!curNode) {
       return null;
     }
-    const newNode = this.workspace.getNavigator().getNextSibling(curNode);
+    let newNode = this.workspace.getNavigator().getNextSibling(curNode);
+
+    // Skip over labels
+    while (newNode instanceof Blockly.FlyoutButton && newNode.isLabel()) {
+      newNode = this.workspace.getNavigator().getNextSibling(newNode);
+    }
 
     if (newNode) {
       this.setCurNode(newNode);
@@ -48,6 +54,7 @@ export class FlyoutCursor extends Blockly.LineCursor {
 
   /**
    * Moves the cursor to the previous stack of blocks in the flyout.
+   * Skips over flyout labels.
    *
    * @returns The previous element, or null if the current
    *     node is not set or there is no previous value.
@@ -57,7 +64,12 @@ export class FlyoutCursor extends Blockly.LineCursor {
     if (!curNode) {
       return null;
     }
-    const newNode = this.workspace.getNavigator().getPreviousSibling(curNode);
+    let newNode = this.workspace.getNavigator().getPreviousSibling(curNode);
+
+    // Skip over labels
+    while (newNode instanceof Blockly.FlyoutButton && newNode.isLabel()) {
+      newNode = this.workspace.getNavigator().getPreviousSibling(newNode);
+    }
 
     if (newNode) {
       this.setCurNode(newNode);
