@@ -91,7 +91,7 @@ export class NavigationController {
       options.highlightConnections ?? true,
       options.shouldDisableAutoScroll
     );
-    this.enterAction = new EnterAction(this.mover, this.navigation);
+    this.enterAction = new EnterAction(this.navigation);
     this.moveActions = new MoveActions(this.mover);
     this.clipboard = new Clipboard(this.navigation, options);
   }

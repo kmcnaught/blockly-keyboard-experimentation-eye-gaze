@@ -25,12 +25,7 @@ import type {Block} from 'blockly/core';
 
 import * as Constants from '../constants';
 import type {Navigation} from '../navigation';
-import {Mover, MoveType} from './mover';
-import {
-  showConstrainedMovementHint,
-  showHelpHint,
-  showUnconstrainedMoveHint,
-} from '../hints';
+import {showHelpHint} from '../hints';
 
 const KeyCodes = BlocklyUtils.KeyCodes;
 
@@ -38,10 +33,7 @@ const KeyCodes = BlocklyUtils.KeyCodes;
  * Class for registering a shortcut for the enter action.
  */
 export class EnterAction {
-  constructor(
-    private mover: Mover,
-    private navigation: Navigation,
-  ) {}
+  constructor(private navigation: Navigation) {}
 
   /**
    * Adds the enter action shortcut to the registry.
@@ -188,7 +180,6 @@ export class EnterAction {
    * Tries to find a connection on the block to connect to the marked
    * location. If no connection has been marked, or there is not a compatible
    * connection then the block is placed on the workspace.
-   * Trigger a toast per session if possible.
    *
    * @param workspace The main workspace. The workspace
    *     the block will be placed on.
@@ -211,28 +202,27 @@ export class EnterAction {
       ? this.navigation.findInsertStartPoint(stationaryNode, newBlock)
       : null;
 
+    // Connect the block if we found a valid insert point
+    if (insertStartPoint) {
+      this.navigation.insertBlock(newBlock, insertStartPoint);
+    }
+
+    // Position the block if it's still a top-level block (not connected)
     if (workspace.getTopBlocks().includes(newBlock)) {
       this.positionNewTopLevelBlock(workspace, newBlock);
     }
 
     workspace.setResizesEnabled(true);
 
-    this.mover.startMove(
-      workspace,
-      newBlock,
-      MoveType.Insert,
-      insertStartPoint,
-    );
-
-    const isStartBlock =
-      !newBlock.outputConnection &&
-      !newBlock.nextConnection &&
-      !newBlock.previousConnection;
-    if (isStartBlock) {
-      showUnconstrainedMoveHint(workspace, false);
-    } else {
-      showConstrainedMovementHint(workspace);
+    // Close event group if we created one
+    if (!existingGroup) {
+      Events.setGroup(false);
     }
+
+    // Focus on the new block
+    renderManagement.finishQueuedRenders().then(() => {
+      getFocusManager().focusNode(newBlock);
+    });
   }
 
   /**
