@@ -73,6 +73,8 @@ h1 {
 }
 
 .game-controls {
+  position: relative;
+  z-index: 10;
   padding: 16px 0;
   display: flex;
   gap: 12px;
@@ -794,6 +796,7 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
 
 /* Sidebar toggle button */
 .sidebar-toggle {
+  --element-color: #666;
   position: relative;
   flex-shrink: 0;
   width: 24px;
