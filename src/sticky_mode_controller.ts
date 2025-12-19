@@ -1034,11 +1034,6 @@ export class StickyModeController {
       Blockly.Events.setGroup(true);
     }
 
-    // Save scroll position before any operations that might trigger auto-scroll
-    const metrics = this.workspace.getMetrics();
-    const scrollX = metrics.viewLeft;
-    const scrollY = metrics.viewTop;
-
     try {
       // Get the stationary node using the same approach as keyboard Enter
       // FocusableTreeTraverser.findFocusedNode returns properly typed IFocusableNode
@@ -1076,7 +1071,6 @@ export class StickyModeController {
           blockElement.focus();
         }
         Blockly.getFocusManager().focusNode(newBlock);
-        this.workspace.scroll(scrollX, scrollY);
       }).catch((error) => {
         // Non-critical: focus/scroll failed, but block was created successfully
         console.debug('Failed to focus new block after render:', error);
