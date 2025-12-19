@@ -947,18 +947,23 @@ function updateInstructionBar() {
  * Update just the contextual hint portion of the instruction bar.
  */
 function updateContextualHint(hintKey: string | null) {
+  const levelInstruction = document.getElementById('levelInstruction');
   const contextualHint = document.getElementById('contextualHint');
-  if (!contextualHint) return;
+  if (!contextualHint || !levelInstruction) return;
 
   // Don't show hints if display mode is not 'both'
   if (displayMode !== 'both') {
     contextualHint.textContent = '';
+    levelInstruction.style.display = '';
     return;
   }
 
+  // Hint replaces instruction when present
   if (hintKey) {
+    levelInstruction.style.display = 'none';
     contextualHint.textContent = msg(hintKey);
   } else {
+    levelInstruction.style.display = '';
     contextualHint.textContent = '';
   }
 }
