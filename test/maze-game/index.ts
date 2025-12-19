@@ -1393,32 +1393,12 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // ? or /: Show shortcuts dialog (no modifiers)
-  if (e.key === '?' || e.key === '/') {
-    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      keyboardNavigation.toggleShortcutDialog();
-      return;
-    }
-  }
-
   // F: Toggle fullscreen mode (no modifiers)
   if (e.key === 'f' || e.key === 'F') {
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
       e.stopPropagation();
       toggleFullscreen();
-      return;
-    }
-  }
-
-  // M: Toggle execution mode (practice/coding) (no modifiers)
-  if (e.key === 'm' || e.key === 'M') {
-    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleExecutionMode();
       return;
     }
   }
