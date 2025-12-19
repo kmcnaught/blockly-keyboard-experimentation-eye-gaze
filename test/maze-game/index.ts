@@ -344,6 +344,7 @@ function setExecutionMode(mode: ExecutionMode): void {
     MazeGame.setPracticeModeEnabled(isPractice);
     // Reset to level 1 when switching between practice and coding
     mazeGame.setLevel(1);
+    updateWorkspaceForLevel(1);
     updateLevelDisplay();
   }
 
@@ -439,7 +440,8 @@ function updateLevelDisplay() {
   }
 
   if (nextButton) {
-    nextButton.disabled = currentLevel >= maxLevel;
+    // In practice mode, keep enabled on last level to show graduation modal
+    nextButton.disabled = currentLevel >= maxLevel && !MazeGame.isPracticeModeEnabled();
   }
 }
 
@@ -1160,8 +1162,8 @@ graduationStay.addEventListener('click', () => {
 graduationModal.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.key === 'Escape') {
     e.preventDefault();
-    // Same as clicking "Stay in Practice"
-    graduationStay.click();
+    // Just dismiss the modal without resetting level
+    hideGraduationModal();
   } else if (e.key === 'Enter') {
     e.preventDefault();
     // Same as clicking "Try Coding Mode"
@@ -1542,7 +1544,8 @@ function updateFullscreenLevelButtons() {
     prevButton.disabled = currentLevel <= 1;
   }
   if (nextButton) {
-    nextButton.disabled = currentLevel >= maxLevel;
+    // In practice mode, keep enabled on last level to show graduation modal
+    nextButton.disabled = currentLevel >= maxLevel && !MazeGame.isPracticeModeEnabled();
   }
 }
 
