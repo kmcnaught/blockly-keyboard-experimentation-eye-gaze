@@ -187,6 +187,12 @@ function updateCapacityBubble() {
   const capacityBubble = document.getElementById('capacityBubble');
   if (!capacityBubble) return;
 
+  // Hide bubble entirely in practice mode (no block limits apply)
+  if (currentExecutionMode === 'practice') {
+    capacityBubble.classList.add('hidden');
+    return;
+  }
+
   const currentLevel = mazeGame.getLevel();
   const maxBlocks = MAX_BLOCKS[currentLevel - 1];
 
@@ -259,6 +265,58 @@ keyboardNavigation.setKeepBlockOnMouse(false);
 
 // Enable keyboard navigation mode from the start so focus indicators show on tab
 Blockly.keyboardNavigationController.setIsActive(true);
+
+// ========== MOVE MODE HINTS ==========
+
+// Track hint display counts (resets on page refresh)
+let clickMoveHintCount = 0;
+let keyboardMoveHintShown = false;
+
+/**
+ * Show a progressive hint when entering move mode via click.
+ * 1st time: "Click a connection to move block there"
+ * 2nd time: "Click on bin to delete block"
+ * 3rd+ time: no hint
+ */
+function showClickMoveModeHint() {
+  if (clickMoveHintCount >= 2) return;
+
+  const messages = [
+    'Click a connection to move block there',
+    'Click on bin to delete block',
+  ];
+
+  Blockly.Toast.show(workspace, {
+    message: messages[clickMoveHintCount],
+    id: 'maze_move_mode_hint',
+  });
+
+  clickMoveHintCount++;
+}
+
+/**
+ * Show a hint when entering move mode via keyboard.
+ * Only shown once per page load.
+ */
+function showKeyboardMoveModeHint() {
+  if (keyboardMoveHintShown) return;
+
+  Blockly.Toast.show(workspace, {
+    message: 'Use arrows to move block',
+    id: 'maze_move_mode_hint',
+  });
+
+  keyboardMoveHintShown = true;
+}
+
+// Wire up move mode hint callbacks
+keyboardNavigation.setOnStickyModeEnterCallback(() => {
+  showClickMoveModeHint();
+});
+
+keyboardNavigation.setOnKeyboardMoveCallback(() => {
+  showKeyboardMoveModeHint();
+});
 
 // Initialize maze game (URL param > localStorage > default)
 const urlSkin = getIntegerParamFromUrl('skin', -1, 3);

@@ -316,6 +316,17 @@ export class NavigationController {
   }
 
   /**
+   * Set a callback that fires when a keyboard move is initiated.
+   *
+   * @param callback The callback to invoke when starting a keyboard move.
+   */
+  setOnKeyboardMoveCallback(
+    callback: (draggable: Blockly.IDraggable & Blockly.IFocusableNode) => void,
+  ): void {
+    this.moveActions.setOnKeyboardMoveCallback(callback);
+  }
+
+  /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {

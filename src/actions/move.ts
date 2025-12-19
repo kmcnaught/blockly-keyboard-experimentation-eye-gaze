@@ -33,7 +33,23 @@ const createSerializedKey = ShortcutRegistry.registry.createSerializedKey.bind(
  * Actions for moving workspace elements with keyboard shortcuts.
  */
 export class MoveActions {
+  /** Optional callback when move starts via keyboard. */
+  private onKeyboardMoveCallback?: (
+    draggable: IDraggable & IFocusableNode,
+  ) => void;
+
   constructor(private mover: Mover) {}
+
+  /**
+   * Set a callback that fires when a keyboard move is initiated.
+   *
+   * @param callback The callback to invoke when starting a keyboard move.
+   */
+  setOnKeyboardMoveCallback(
+    callback: (draggable: IDraggable & IFocusableNode) => void,
+  ): void {
+    this.onKeyboardMoveCallback = callback;
+  }
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
     // Begin and end move.
@@ -53,10 +69,13 @@ export class MoveActions {
         if (startDraggable) {
           getFocusManager().focusNode(startDraggable);
         }
-        return (
+        const success =
           !!startDraggable &&
-          this.mover.startMove(workspace, startDraggable, MoveType.Move, null)
-        );
+          this.mover.startMove(workspace, startDraggable, MoveType.Move, null);
+        if (success && startDraggable) {
+          this.onKeyboardMoveCallback?.(startDraggable);
+        }
+        return success;
       },
       keyCodes: [KeyCodes.M],
     },

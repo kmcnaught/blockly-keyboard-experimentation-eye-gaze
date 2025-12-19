@@ -235,6 +235,28 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Set a callback that fires when sticky mode is entered via click.
+   *
+   * @param callback The callback to invoke when entering sticky mode.
+   */
+  setOnStickyModeEnterCallback(
+    callback: (block: Blockly.BlockSvg) => void,
+  ): void {
+    this.stickyModeController.setOnEnterCallback(callback);
+  }
+
+  /**
+   * Set a callback that fires when a keyboard move is initiated.
+   *
+   * @param callback The callback to invoke when starting a keyboard move.
+   */
+  setOnKeyboardMoveCallback(
+    callback: (draggable: Blockly.IDraggable & Blockly.IFocusableNode) => void,
+  ): void {
+    this.navigationController.setOnKeyboardMoveCallback(callback);
+  }
+
+  /**
    * Registers a default toolbox implementation that doesn't handle
    * keydown events, since we now handle them in this plugin. If you
    * use the default toolbox, call this function before calling

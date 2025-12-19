@@ -82,6 +82,9 @@ export class StickyModeController {
   /** Connection highlight size for the pending highlighter. */
   private connectionSize: 'minimal' | 'medium' | 'large' = 'medium';
 
+  /** Optional callback when entering sticky mode. */
+  private onEnterCallback?: (block: Blockly.BlockSvg) => void;
+
   constructor(
     private workspace: Blockly.WorkspaceSvg,
     private navigationController: NavigationController,
@@ -147,6 +150,15 @@ export class StickyModeController {
    */
   setTriggerMode(mode: TriggerMode): void {
     this.triggerMode = mode;
+  }
+
+  /**
+   * Set a callback that fires when sticky mode is entered.
+   *
+   * @param callback The callback to invoke when entering sticky mode.
+   */
+  setOnEnterCallback(callback: (block: Blockly.BlockSvg) => void): void {
+    this.onEnterCallback = callback;
   }
 
   /**
@@ -362,6 +374,7 @@ export class StickyModeController {
         );
         block.getSvgRoot().classList.add('blockly-sticky-mode');
         this.setClickAndStickMode(block, true);
+        this.onEnterCallback?.(block);
         return true;
       }
       return false;
