@@ -273,12 +273,73 @@ let clickMoveHintCount = 0;
 let keyboardMoveHintShown = false;
 
 /**
+ * Check if a block has any valid connection targets on the workspace.
+ * @param block The block to check for valid connections.
+ * @returns True if there are valid connections, false otherwise.
+ */
+function hasValidConnections(block: Blockly.BlockSvg): boolean {
+  // Get connections from the moving block
+  const localConnections = block.getConnections_(false);
+  if (localConnections.length === 0) {
+    return false;
+  }
+
+  // Get all connections on the workspace (excluding the moving block and its descendants)
+  const movingDescendants = block.getDescendants(true);
+  const allWorkspaceConnections = workspace
+    .getAllBlocks(false)
+    .filter((b) => !movingDescendants.includes(b as Blockly.BlockSvg))
+    .flatMap((b) => b.getConnections_(false));
+
+  // Check if any local connection can connect to any workspace connection
+  const connectionChecker = workspace.connectionChecker;
+
+  for (const localConn of localConnections) {
+    for (const workspaceConn of allWorkspaceConnections) {
+      // Skip insertion markers
+      const sourceBlock = workspaceConn.getSourceBlock();
+      if (!sourceBlock || sourceBlock.isInsertionMarker()) continue;
+
+      // Only check where the moving block can attach TO other blocks
+      const isValidDirection =
+        (localConn.type === Blockly.ConnectionType.OUTPUT_VALUE &&
+          workspaceConn.type === Blockly.ConnectionType.INPUT_VALUE) ||
+        (localConn.type === Blockly.ConnectionType.PREVIOUS_STATEMENT &&
+          workspaceConn.type === Blockly.ConnectionType.NEXT_STATEMENT) ||
+        (localConn.type === Blockly.ConnectionType.NEXT_STATEMENT &&
+          workspaceConn.type === Blockly.ConnectionType.PREVIOUS_STATEMENT);
+
+      if (!isValidDirection) continue;
+
+      // Check type compatibility
+      if (connectionChecker.canConnect(localConn, workspaceConn, true, Infinity)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Show a progressive hint when entering move mode via click.
+ * If no valid connections, shows workspace placement hint.
+ * Otherwise:
  * 1st time: "Click a connection to move block there"
  * 2nd time: "Click on bin to delete block"
  * 3rd+ time: no hint
  */
-function showClickMoveModeHint() {
+function showClickMoveModeHint(block: Blockly.BlockSvg) {
+  // If no valid connections, always show workspace placement hint
+  if (!hasValidConnections(block)) {
+    Blockly.Toast.show(workspace, {
+      message: 'Click on the workspace to move the block there',
+      id: 'maze_move_mode_hint',
+    });
+    return;
+  }
+
+  // Normal progressive hints when connections exist
   if (clickMoveHintCount >= 2) return;
 
   const messages = [
@@ -310,8 +371,8 @@ function showKeyboardMoveModeHint() {
 }
 
 // Wire up move mode hint callbacks
-keyboardNavigation.setOnStickyModeEnterCallback(() => {
-  showClickMoveModeHint();
+keyboardNavigation.setOnStickyModeEnterCallback((block) => {
+  showClickMoveModeHint(block);
 });
 
 keyboardNavigation.setOnKeyboardMoveCallback(() => {
