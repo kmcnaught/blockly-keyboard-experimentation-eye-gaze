@@ -64,6 +64,7 @@ jobs:
 
           # Build release/demo-15-oct-25 branch
           echo "Building release/demo-15-oct-25 branch..."
+          git checkout -- .  # Clean up generated files before switching
           git checkout release/demo-15-oct-25
           npm ci
           npm link blockly
@@ -74,6 +75,7 @@ jobs:
           # Build all tags containing 'demo'
           for tag in $(git tag -l '*demo*'); do
             echo "Processing tag: $tag..."
+            git checkout -- .  # Clean up generated files before switching
             git checkout "$tag"
             npm ci
             npm link blockly
