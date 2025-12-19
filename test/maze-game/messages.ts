@@ -81,13 +81,13 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_PRACTICE_FORWARD: 'Move Forward',
     MAZE_PRACTICE_TURN_LEFT: 'Turn Left',
     MAZE_PRACTICE_TURN_RIGHT: 'Turn Right',
-    MAZE_PRACTICE_HINT: 'Use buttons or arrow keys. Commands happen right away!',
+    MAZE_PRACTICE_HINT: 'Use the buttons to control the character. Can you move them to the goal?',
     MAZE_MODE_PRACTICE: 'Practice',
     MAZE_MODE_CODING: 'Coding',
     MAZE_SWITCH_TO_PRACTICE: 'Switch to Practice',
     MAZE_SWITCH_TO_CODING: 'Switch to Coding',
 
-    // Practice mode instructions for all levels
+    // Practice mode instructions for coding levels (when played in practice mode)
     MAZE_INSTRUCTION_1_PRACTICE: 'Press forward to reach the goal.',
     MAZE_INSTRUCTION_2_PRACTICE: 'Use turn and forward to navigate to the goal.',
     MAZE_INSTRUCTION_3_PRACTICE: 'Navigate the longer path to the goal.',
@@ -99,6 +99,20 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_INSTRUCTION_9_PRACTICE: 'Find your way through the branching maze.',
     MAZE_INSTRUCTION_10_PRACTICE: 'Solve this challenging maze step by step.',
     MAZE_MODE_TRANSITION: 'Great job! Now let\'s try programming. Plan your moves, then press Run.',
+
+    // Practice-only levels (P1-P8) - separate track for learning controls
+    MAZE_PRACTICE_LEVEL_1: 'Press forward to move. Explore the area!',
+    MAZE_PRACTICE_LEVEL_2: 'Use turn buttons to change direction, then move forward.',
+    MAZE_PRACTICE_LEVEL_3: 'The path gets narrower. Can you reach the goal?',
+    MAZE_PRACTICE_LEVEL_4: 'Follow the path to the goal.',
+    MAZE_PRACTICE_LEVEL_5: 'Navigate the turns to reach the goal.',
+    MAZE_PRACTICE_LEVEL_6: 'Climb the stairs to the goal!',
+    MAZE_PRACTICE_LEVEL_7: 'Find your way around to the goal.',
+    MAZE_PRACTICE_LEVEL_8: 'One more maze, then you\'re ready to code!',
+    MAZE_PRACTICE_GRADUATION_TITLE: 'You\'ve mastered the controls!',
+    MAZE_PRACTICE_GRADUATION_MESSAGE: 'Ready to write your own programs?',
+    MAZE_PRACTICE_TRY_CODING: 'Try Coding Mode [Enter]',
+    MAZE_PRACTICE_STAY: 'Stay in Practice [Esc]',
 
     // Workspace controls
     MAZE_CLEAR_WORKSPACE: 'Delete all blocks',
@@ -179,13 +193,13 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_PRACTICE_FORWARD: 'Avancer',
     MAZE_PRACTICE_TURN_LEFT: 'Tourner à gauche',
     MAZE_PRACTICE_TURN_RIGHT: 'Tourner à droite',
-    MAZE_PRACTICE_HINT: 'Utilisez les boutons ou les touches fléchées. Les commandes s\'exécutent immédiatement !',
+    MAZE_PRACTICE_HINT: 'Utilisez les boutons pour contrôler le personnage. Pouvez-vous l\'amener jusqu\'au but ?',
     MAZE_MODE_PRACTICE: 'Pratique',
     MAZE_MODE_CODING: 'Programmation',
     MAZE_SWITCH_TO_PRACTICE: 'Passer à Pratique',
     MAZE_SWITCH_TO_CODING: 'Passer à Programmation',
 
-    // Practice mode instructions for all levels
+    // Practice mode instructions for coding levels (when played in practice mode)
     MAZE_INSTRUCTION_1_PRACTICE: 'Appuyez sur avancer pour atteindre l\'objectif.',
     MAZE_INSTRUCTION_2_PRACTICE: 'Utilisez tourner et avancer pour naviguer vers l\'objectif.',
     MAZE_INSTRUCTION_3_PRACTICE: 'Naviguez sur le chemin plus long vers l\'objectif.',
@@ -197,6 +211,20 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_INSTRUCTION_9_PRACTICE: 'Trouvez votre chemin dans le labyrinthe ramifié.',
     MAZE_INSTRUCTION_10_PRACTICE: 'Résolvez ce labyrinthe difficile étape par étape.',
     MAZE_MODE_TRANSITION: 'Bravo ! Maintenant, essayons la programmation. Planifiez vos mouvements, puis appuyez sur Exécuter.',
+
+    // Practice-only levels (P1-P8) - separate track for learning controls
+    MAZE_PRACTICE_LEVEL_1: 'Appuyez sur avancer pour vous déplacer. Explorez la zone !',
+    MAZE_PRACTICE_LEVEL_2: 'Utilisez les boutons tourner pour changer de direction, puis avancez.',
+    MAZE_PRACTICE_LEVEL_3: 'Le chemin se rétrécit. Pouvez-vous atteindre l\'objectif ?',
+    MAZE_PRACTICE_LEVEL_4: 'Suivez le chemin jusqu\'à l\'objectif.',
+    MAZE_PRACTICE_LEVEL_5: 'Naviguez dans les virages pour atteindre l\'objectif.',
+    MAZE_PRACTICE_LEVEL_6: 'Montez les escaliers jusqu\'à l\'objectif !',
+    MAZE_PRACTICE_LEVEL_7: 'Trouvez votre chemin autour jusqu\'à l\'objectif.',
+    MAZE_PRACTICE_LEVEL_8: 'Encore un labyrinthe, puis vous serez prêt à coder !',
+    MAZE_PRACTICE_GRADUATION_TITLE: 'Vous maîtrisez les contrôles !',
+    MAZE_PRACTICE_GRADUATION_MESSAGE: 'Prêt à écrire vos propres programmes ?',
+    MAZE_PRACTICE_TRY_CODING: 'Essayer le mode Programmation [Entrée]',
+    MAZE_PRACTICE_STAY: 'Rester en Pratique [Échap]',
 
     // Workspace controls
     MAZE_CLEAR_WORKSPACE: 'Supprimer tous les blocs',

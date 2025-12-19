@@ -264,6 +264,11 @@ Blockly.keyboardNavigationController.setIsActive(true);
 const urlSkin = getIntegerParamFromUrl('skin', -1, 3);
 const savedSkin = urlSkin >= 0 ? urlSkin : parseInt(localStorage.getItem('mazeGameSkin') || '0', 10);
 setCurrentSkin(savedSkin); // Set initial skin for block icons
+
+// Set up practice mazes if starting in practice mode
+// This must be done BEFORE creating MazeGame so it uses the correct maze set
+MazeGame.setPracticeModeEnabled(currentExecutionMode === 'practice');
+
 const mazeGame = new MazeGame('mazeCanvas', initialLevel, savedSkin);
 
 // ========== URL STATE MANAGEMENT ==========
@@ -299,10 +304,21 @@ const immediateModeController = new ImmediateModeController(
 // Register completion callback for immediate mode
 immediateModeController.onLevelComplete((success) => {
   if (success) {
-    // Auto-advance to next level after a short delay
-    setTimeout(() => {
-      goToNextLevel();
-    }, 1500);
+    const currentLevel = mazeGame.getLevel();
+    const maxLevel = MazeGame.getMaxLevel();
+
+    // Check if this was the last practice level
+    if (MazeGame.isPracticeModeEnabled() && currentLevel >= maxLevel) {
+      // Show graduation modal after a short delay
+      setTimeout(() => {
+        showGraduationModal();
+      }, 1500);
+    } else {
+      // Auto-advance to next level after a short delay
+      setTimeout(() => {
+        goToNextLevel();
+      }, 1500);
+    }
   }
 });
 
@@ -315,10 +331,22 @@ function getExecutionMode(): ExecutionMode {
 
 /**
  * Set the execution mode and update the UI.
+ * When switching modes, resets to level 1 since practice and coding have different level sets.
  */
 function setExecutionMode(mode: ExecutionMode): void {
+  const previousMode = currentExecutionMode;
   currentExecutionMode = mode;
   localStorage.setItem('mazeExecutionMode', mode);
+
+  // Switch maze sets and reset to level 1 when changing modes
+  const isPractice = mode === 'practice';
+  if (MazeGame.isPracticeModeEnabled() !== isPractice) {
+    MazeGame.setPracticeModeEnabled(isPractice);
+    // Reset to level 1 when switching between practice and coding
+    mazeGame.setLevel(1);
+    updateLevelDisplay();
+  }
+
   updateModeUI();
   updateModeToggleButton();
   // Update instruction bar to show appropriate instructions for the mode
@@ -769,10 +797,19 @@ function updateInstructionBar() {
 
   // Update level instruction
   const level = mazeGame.getLevel();
-  // Use practice mode instructions when in practice mode
-  const instructionKey = currentExecutionMode === 'practice'
-    ? `MAZE_INSTRUCTION_${level}_PRACTICE`
-    : `MAZE_INSTRUCTION_${level}`;
+  // Use practice-specific level instructions when using practice mazes,
+  // otherwise use regular instructions (with _PRACTICE suffix in practice mode)
+  let instructionKey: string;
+  if (MazeGame.isPracticeModeEnabled()) {
+    // Using practice maze set - use MAZE_PRACTICE_LEVEL_N messages
+    instructionKey = `MAZE_PRACTICE_LEVEL_${level}`;
+  } else if (currentExecutionMode === 'practice') {
+    // Coding mazes in practice mode - use MAZE_INSTRUCTION_N_PRACTICE messages
+    instructionKey = `MAZE_INSTRUCTION_${level}_PRACTICE`;
+  } else {
+    // Coding mode - use regular MAZE_INSTRUCTION_N messages
+    instructionKey = `MAZE_INSTRUCTION_${level}`;
+  }
   levelInstruction.textContent = msg(instructionKey);
 
   // Handle hints visibility
@@ -1075,6 +1112,63 @@ mazeGame.onResult((result: ResultType) => {
   showResultModal(result);
 });
 
+// ========== GRADUATION MODAL ==========
+// Shown when user completes all practice levels
+
+const graduationModal = document.getElementById('graduationModal')!;
+const graduationModalTitle = document.getElementById('graduationModalTitle')!;
+const graduationModalMessage = document.getElementById('graduationModalMessage')!;
+const graduationTryCoding = document.getElementById('graduationTryCoding')!;
+const graduationStay = document.getElementById('graduationStay')!;
+
+/**
+ * Show the graduation modal after completing all practice levels.
+ */
+function showGraduationModal(): void {
+  // Set localized text
+  graduationModalTitle.textContent = msg('MAZE_PRACTICE_GRADUATION_TITLE');
+  graduationModalMessage.textContent = msg('MAZE_PRACTICE_GRADUATION_MESSAGE');
+  graduationTryCoding.textContent = msg('MAZE_PRACTICE_TRY_CODING');
+  graduationStay.textContent = msg('MAZE_PRACTICE_STAY');
+
+  // Show modal and focus primary button
+  graduationModal.hidden = false;
+  graduationTryCoding.focus();
+}
+
+/**
+ * Hide the graduation modal.
+ */
+function hideGraduationModal(): void {
+  graduationModal.hidden = true;
+}
+
+// Graduation modal event handlers
+graduationTryCoding.addEventListener('click', () => {
+  hideGraduationModal();
+  // Switch to coding mode (this will reset to level 1 and use coding mazes)
+  setExecutionMode('coding');
+});
+
+graduationStay.addEventListener('click', () => {
+  hideGraduationModal();
+  // Reset to level 1 of practice mode to replay
+  mazeGame.setLevel(1);
+  updateLevelDisplay();
+});
+
+graduationModal.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    // Same as clicking "Stay in Practice"
+    graduationStay.click();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    // Same as clicking "Try Coding Mode"
+    graduationTryCoding.click();
+  }
+});
+
 // Trigger hints on workspace changes (with debouncing via the timeout in levelHelp)
 workspace.addChangeListener((event) => {
   if (event.type === Blockly.Events.BLOCK_CREATE ||
@@ -1174,6 +1268,7 @@ function goToPreviousLevel() {
 
 /**
  * Go to next level (shared by button and keyboard shortcut).
+ * Shows graduation modal if at last practice level.
  */
 function goToNextLevel() {
   if (isTransitioning) return;
@@ -1182,6 +1277,9 @@ function goToNextLevel() {
   if (currentLevel < maxLevel) {
     const newLevel = currentLevel + 1;
     performLevelTransition(newLevel, true);
+  } else if (MazeGame.isPracticeModeEnabled()) {
+    // At last practice level - offer to switch to coding mode
+    showGraduationModal();
   }
 }
 
