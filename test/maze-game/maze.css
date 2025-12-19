@@ -642,6 +642,12 @@ header.christmas h1::after {
   color: #1565c0;
 }
 
+.immediate-marker {
+  height: 1.2em;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
 #instructionBar #contextualHint {
   font-size: 13px;
   color: #1976d2;
@@ -1279,4 +1285,34 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
 
 .result-modal-ok:active {
   background: #1565c0;
+}
+
+/* Graduation modal buttons */
+.graduation-buttons {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.graduation-primary {
+  background: #4caf50;
+}
+
+.graduation-primary:hover {
+  background: #43a047;
+}
+
+.graduation-primary:active {
+  background: #388e3c;
+}
+
+.graduation-secondary {
+  background: #757575;
+}
+
+.graduation-secondary:hover {
+  background: #616161;
+}
+
+.graduation-secondary:active {
+  background: #424242;
 }

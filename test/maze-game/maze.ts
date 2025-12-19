@@ -284,6 +284,102 @@ const MAZES = [
   ],
 ];
 
+/**
+ * Practice mode mazes - designed for learning controls before coding.
+ * P1-P3: Wide paths (2-3 cells) for exploration
+ * P4-P8: Standard 1-wide corridors matching coding mode
+ */
+export const PRACTICE_MAZES = [
+  // P1: First Forward (WIDE) - press forward once, lots of room
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 2, 1, 3, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P2: First Turn (WIDE) - introduce turning with room to explore
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 0, 1, 3, 1, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 2, 1, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P3: Narrowing Path - triangular shape, wide at start, narrow at goal
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0],
+    [0, 0, 2, 1, 1, 1, 0, 0],
+    [0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P4: Simple L-Shape (1-WIDE) - first 1-wide corridor
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 3, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 2, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P5: Both Turn Directions (1-WIDE) - practice left AND right turns
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 3, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 2, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P6: Staircase (1-WIDE) - alternating turns
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 3, 0, 0],
+    [0, 0, 0, 0, 1, 1, 0, 0],
+    [0, 0, 0, 1, 1, 0, 0, 0],
+    [0, 0, 1, 1, 0, 0, 0, 0],
+    [0, 2, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P7: Around the Block (1-WIDE) - go around an obstacle
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 3, 0, 0, 0],
+    [0, 0, 2, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  // P8: Mini Maze (1-WIDE) - confidence builder before coding
+  [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 3, 0, 0, 0],
+    [0, 0, 1, 0, 1, 0, 0, 0],
+    [0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 2, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+];
+
 export class MazeGame {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -299,6 +395,9 @@ export class MazeGame {
   // Fixed canvas size for consistent display
   private static readonly CANVAS_SIZE = 400;
   private scale = 1;
+
+  // Practice mode flag - when true, uses PRACTICE_MAZES instead of MAZES
+  private static usePracticeMazes = false;
 
   // Execution state (updated during interpreter run, separate from animation state)
   private pegmanX = 0;
@@ -323,6 +422,13 @@ export class MazeGame {
   private readonly PEGMAN_HEIGHT = 51;
   private tileShapeCache: string[][] = []; // Cache tile shapes so they don't change on each draw
 
+  /**
+   * Get the current maze array based on practice mode setting.
+   */
+  private static getMazes(): number[][][] {
+    return MazeGame.usePracticeMazes ? PRACTICE_MAZES : MAZES;
+  }
+
   constructor(canvasId: string, level: number, skinId: number = 0) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) {
@@ -334,8 +440,9 @@ export class MazeGame {
       throw new Error('Could not get canvas context');
     }
     this.ctx = ctx;
-    this.level = Math.min(Math.max(level, 1), MAZES.length) - 1;
-    this.maze = MAZES[this.level];
+    const mazes = MazeGame.getMazes();
+    this.level = Math.min(Math.max(level, 1), mazes.length) - 1;
+    this.maze = mazes[this.level];
     this.skinId = Math.min(Math.max(skinId, 0), SKINS.length - 1);
     this.skin = SKINS[this.skinId];
 
@@ -473,7 +580,22 @@ export class MazeGame {
   }
 
   public static getMaxLevel(): number {
-    return MAZES.length;
+    return MazeGame.getMazes().length;
+  }
+
+  /**
+   * Enable or disable practice mode mazes.
+   * When enabled, uses PRACTICE_MAZES instead of MAZES.
+   */
+  public static setPracticeModeEnabled(enabled: boolean): void {
+    MazeGame.usePracticeMazes = enabled;
+  }
+
+  /**
+   * Check if practice mode mazes are currently enabled.
+   */
+  public static isPracticeModeEnabled(): boolean {
+    return MazeGame.usePracticeMazes;
   }
 
   public static getSkins(): Skin[] {
@@ -492,9 +614,14 @@ export class MazeGame {
     return this.skinId;
   }
 
+  public getMarkerPath(): string {
+    return this.skin.marker || 'assets/marker.png';
+  }
+
   public setLevel(level: number): void {
-    this.level = Math.min(Math.max(level, 1), MAZES.length) - 1;
-    this.maze = MAZES[this.level];
+    const mazes = MazeGame.getMazes();
+    this.level = Math.min(Math.max(level, 1), mazes.length) - 1;
+    this.maze = mazes[this.level];
 
     // Find start and finish positions
     this.startPos = {x: 0, y: 0};

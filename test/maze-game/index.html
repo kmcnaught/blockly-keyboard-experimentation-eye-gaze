@@ -49,7 +49,7 @@
 
         <!-- Immediate Mode Panel (for levels 1-2) -->
         <div id="immediateModePanel" class="immediate-mode-panel hidden">
-          <div class="immediate-hint" id="immediateHint"></div>
+          <div class="immediate-hint"><span id="immediateHint"></span><img id="immediateMarker" class="immediate-marker" alt="goal" /></div>
           <div class="command-buttons">
             <button id="cmdForward" class="command-btn" aria-label="Move Forward">
               <span class="cmd-label" data-msg="MAZE_PRACTICE_FORWARD">Move Forward</span>
@@ -115,6 +115,18 @@
             <span class="ok-text">OK</span>
             <span class="ok-progress"></span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Practice Mode Graduation Modal -->
+    <div id="graduationModal" class="result-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="graduationModalTitle" hidden>
+      <div class="result-modal success">
+        <h2 id="graduationModalTitle" class="result-modal-title"></h2>
+        <p id="graduationModalMessage" class="result-modal-message"></p>
+        <div class="result-modal-buttons graduation-buttons">
+          <button id="graduationTryCoding" class="result-modal-ok graduation-primary"></button>
+          <button id="graduationStay" class="result-modal-ok graduation-secondary"></button>
         </div>
       </div>
     </div>

@@ -202,6 +202,12 @@ export class ImmediateModeController {
       hintEl.textContent = msg('MAZE_PRACTICE_HINT');
     }
 
+    // Update goal marker image to match current skin
+    const markerEl = document.getElementById('immediateMarker') as HTMLImageElement;
+    if (markerEl) {
+      markerEl.src = this.mazeGame.getMarkerPath();
+    }
+
     // Update button labels
     const forwardLabel = this.forwardBtn?.querySelector('.cmd-label');
     if (forwardLabel) {
