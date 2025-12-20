@@ -1287,6 +1287,35 @@ body.fullscreen-active > *:not(#fullscreenOverlay):not(#snowContainer) {
   background: #1565c0;
 }
 
+/* Keyboard hint displayed next to button text */
+.result-modal-ok .ok-hint,
+.result-modal-cancel .cancel-hint {
+  font-size: 0.85em;
+  opacity: 0.8;
+  margin-left: 6px;
+}
+
+/* Cancel button (secondary style) */
+.result-modal-cancel {
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: #757575;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.result-modal-cancel:hover {
+  background: #616161;
+}
+
+.result-modal-cancel:active {
+  background: #424242;
+}
+
 /* Graduation modal buttons */
 .graduation-buttons {
   flex-direction: column;
