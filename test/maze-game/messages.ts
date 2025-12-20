@@ -63,6 +63,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_TIMEOUT_TITLE: 'Too slow!',
     MAZE_ERROR_TITLE: 'Oops!',
     MAZE_ERROR_MESSAGE: 'That didn\'t work. Try a different path!',
+    MAZE_NEXT_LEVEL_PROMPT: 'Are you ready for the next level?',
+    MAZE_ALL_LEVELS_COMPLETE: 'You completed all levels!',
 
     // Hints (from Maze.help*)
     MAZE_HINT_STACK: 'Stack a couple of \'move forward\' blocks together to help me reach the goal.',
@@ -175,6 +177,8 @@ const MESSAGES: Record<SupportedLocale, Record<string, string>> = {
     MAZE_TIMEOUT_TITLE: 'Trop lent !',
     MAZE_ERROR_TITLE: 'Oups !',
     MAZE_ERROR_MESSAGE: 'Ça n\'a pas marché. Essayez un autre chemin !',
+    MAZE_NEXT_LEVEL_PROMPT: 'Êtes-vous prêt pour le niveau suivant ?',
+    MAZE_ALL_LEVELS_COMPLETE: 'Vous avez terminé tous les niveaux !',
 
     // Hints (from Maze.help*)
     MAZE_HINT_STACK: 'Empilez quelques blocs « avancer » ensemble pour m\'aider à atteindre l\'objectif.',

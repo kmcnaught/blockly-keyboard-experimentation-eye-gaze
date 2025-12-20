@@ -1134,19 +1134,24 @@ const resultModal = document.getElementById('resultModal')!;
 const resultModalCard = resultModal.querySelector('.result-modal')!;
 const resultModalTitle = document.getElementById('resultModalTitle')!;
 const resultModalMessage = document.getElementById('resultModalMessage')!;
+const resultModalCancel = document.getElementById('resultModalCancel')!;
 const resultModalOk = document.getElementById('resultModalOk')!;
 const resultModalProgress = resultModalOk.querySelector('.ok-progress') as HTMLElement;
 
 // Auto-close timer reference
 let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Track if this is a "next level" prompt (OK advances, Cancel stays)
+let isNextLevelPrompt = false;
+
 // Auto-close durations in milliseconds
-const AUTO_CLOSE_SUCCESS = 3000; // 3 seconds for success (short message)
+const AUTO_CLOSE_SUCCESS = 7000; // 7 seconds for success - time to decide on next level
 const AUTO_CLOSE_FAILURE = 5000; // 5 seconds for failure/timeout (need to read)
 
 /**
  * Show the result modal with appropriate styling and message.
  * Modal will auto-close after a countdown.
+ * For success on non-final levels, shows a "next level" prompt with Cancel/OK.
  */
 function showResultModal(type: ResultType): void {
   // Clear any existing timer
@@ -1157,6 +1162,11 @@ function showResultModal(type: ResultType): void {
 
   // Set styling class (success = green accent, failure/timeout = gray)
   resultModalCard.className = 'result-modal ' + (type === 'success' ? 'success' : 'failure');
+
+  // Check if this is a success on a non-final level (show next level prompt)
+  const currentLevel = mazeGame.getLevel();
+  const maxLevel = MazeGame.getMaxLevel();
+  isNextLevelPrompt = type === 'success' && currentLevel < maxLevel;
 
   // Set title (short phrase)
   if (type === 'success') {
@@ -1171,11 +1181,13 @@ function showResultModal(type: ResultType): void {
 
   // Set message (detailed explanation)
   if (type === 'success') {
-    const blockCount = workspace.getAllBlocks(false).length;
-    resultModalMessage.textContent = msg(
-      blockCount === 1 ? 'MAZE_SOLVED_BLOCKS_ONE' : 'MAZE_SOLVED_BLOCKS',
-      blockCount
-    );
+    if (isNextLevelPrompt) {
+      // Not the last level - ask about next level
+      resultModalMessage.textContent = msg('MAZE_NEXT_LEVEL_PROMPT');
+    } else {
+      // Final level completed
+      resultModalMessage.textContent = msg('MAZE_ALL_LEVELS_COMPLETE');
+    }
   } else if (type === 'failure') {
     resultModalMessage.textContent = msg('MAZE_FAILURE_MESSAGE');
   } else if (type === 'timeout') {
@@ -1183,6 +1195,9 @@ function showResultModal(type: ResultType): void {
   } else {
     resultModalMessage.textContent = msg('MAZE_ERROR_MESSAGE');
   }
+
+  // Show/hide Cancel button based on whether this is a next level prompt
+  resultModalCancel.hidden = !isNextLevelPrompt;
 
   // Set up auto-close countdown
   const duration = type === 'success' ? AUTO_CLOSE_SUCCESS : AUTO_CLOSE_FAILURE;
@@ -1194,8 +1209,11 @@ function showResultModal(type: ResultType): void {
   resultModalProgress.style.animationDuration = `${duration}ms`;
   resultModalOk.classList.add('countdown');
 
-  // Set auto-close timer
+  // Set auto-close timer - advances to next level if this is a next level prompt
   autoCloseTimer = setTimeout(() => {
+    if (isNextLevelPrompt) {
+      goToNextLevel();
+    }
     hideResultModal();
   }, duration);
 
@@ -1225,11 +1243,30 @@ function hideResultModal(): void {
 }
 
 // Result modal event handlers
-resultModalOk.addEventListener('click', hideResultModal);
 
+// Cancel button - just close the modal (stay on current level)
+resultModalCancel.addEventListener('click', hideResultModal);
+
+// OK button - advance to next level if this is a next level prompt, then close
+resultModalOk.addEventListener('click', () => {
+  if (isNextLevelPrompt) {
+    goToNextLevel();
+  }
+  hideResultModal();
+});
+
+// Keyboard shortcuts
 resultModal.addEventListener('keydown', (e: KeyboardEvent) => {
-  if (e.key === 'Escape' || e.key === 'Enter') {
+  if (e.key === 'Escape') {
+    // Cancel - just close the modal
     e.preventDefault();
+    hideResultModal();
+  } else if (e.key === 'Enter') {
+    // OK - advance if next level prompt, then close
+    e.preventDefault();
+    if (isNextLevelPrompt) {
+      goToNextLevel();
+    }
     hideResultModal();
   }
 });
