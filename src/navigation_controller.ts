@@ -327,6 +327,15 @@ export class NavigationController {
   }
 
   /**
+   * Set a callback that fires when a keyboard move finishes.
+   *
+   * @param callback The callback to invoke when a keyboard move finishes.
+   */
+  setOnMoveFinishedCallback(callback: () => void): void {
+    this.moveActions.setOnMoveFinishedCallback(callback);
+  }
+
+  /**
    * Removes all the keyboard navigation shortcuts.
    */
   dispose() {

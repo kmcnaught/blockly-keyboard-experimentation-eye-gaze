@@ -38,6 +38,9 @@ export class MoveActions {
     draggable: IDraggable & IFocusableNode,
   ) => void;
 
+  /** Optional callback when move finishes. */
+  private onMoveFinishedCallback?: () => void;
+
   constructor(private mover: Mover) {}
 
   /**
@@ -49,6 +52,15 @@ export class MoveActions {
     callback: (draggable: IDraggable & IFocusableNode) => void,
   ): void {
     this.onKeyboardMoveCallback = callback;
+  }
+
+  /**
+   * Set a callback that fires when a keyboard move finishes.
+   *
+   * @param callback The callback to invoke when a keyboard move finishes.
+   */
+  setOnMoveFinishedCallback(callback: () => void): void {
+    this.onMoveFinishedCallback = callback;
   }
 
   private shortcuts: ShortcutRegistry.KeyboardShortcut[] = [
@@ -71,7 +83,13 @@ export class MoveActions {
         }
         const success =
           !!startDraggable &&
-          this.mover.startMove(workspace, startDraggable, MoveType.Move, null);
+          this.mover.startMove(
+            workspace,
+            startDraggable,
+            MoveType.Move,
+            null,
+            this.onMoveFinishedCallback,
+          );
         if (success && startDraggable) {
           this.onKeyboardMoveCallback?.(startDraggable);
         }

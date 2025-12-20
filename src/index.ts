@@ -257,6 +257,24 @@ export class KeyboardNavigation {
   }
 
   /**
+   * Set a callback that fires when sticky mode is exited via click.
+   *
+   * @param callback The callback to invoke when exiting sticky mode.
+   */
+  setOnStickyModeExitCallback(callback: () => void): void {
+    this.stickyModeController.setOnExitCallback(callback);
+  }
+
+  /**
+   * Set a callback that fires when a keyboard move finishes.
+   *
+   * @param callback The callback to invoke when a keyboard move finishes.
+   */
+  setOnMoveFinishedCallback(callback: () => void): void {
+    this.navigationController.setOnMoveFinishedCallback(callback);
+  }
+
+  /**
    * Registers a default toolbox implementation that doesn't handle
    * keydown events, since we now handle them in this plugin. If you
    * use the default toolbox, call this function before calling
