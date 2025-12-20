@@ -1258,51 +1258,22 @@ export class StickyModeController {
   private isClickOnField(target: Element): boolean {
     if (!target) return false;
 
-    // Walk up the DOM tree looking for interactive field elements
-    let currentElement: Element | null = target;
-    let depth = 0;
-    const maxDepth = 10; // Prevent infinite loops
+    // First check if we're even within a block
+    const blockAncestor = target.closest('.blocklyBlock');
+    if (!blockAncestor) return false;
 
-    while (currentElement && depth < maxDepth) {
-      const classList = currentElement.classList;
+    // Check if target or any ancestor (within the block) is an editable field.
+    // Using closest() is more reliable than manual parentElement traversal for SVG elements.
+    const fieldSelector =
+      '.blocklyEditableField, .blocklyDropdownField, .blocklyEditableText, ' +
+      '.blocklyDropdownText, .blocklyFieldDropdown, .blocklyFieldTextInput, ' +
+      '.blocklyFieldNumber, .blocklyFieldColour, .blocklyFieldCheckbox, ' +
+      '.blocklyFieldAngle, .blocklyDropDownDiv';
 
-      if (classList) {
-        // Stop early if we hit the workspace - no fields beyond here
-        if (classList.contains('blocklyWorkspace') ||
-            classList.contains('blocklyMainBackground') ||
-            classList.contains('blocklySvg')) {
-          return false;
-        }
+    const fieldAncestor = target.closest(fieldSelector);
 
-        // Stop at block boundary - don't search beyond the block
-        if (classList.contains('blocklyBlock')) {
-          return false;
-        }
-
-        // Only check for EDITABLE/INTERACTIVE field CSS classes
-        // Do NOT include blocklyText or blocklyNonEditableText - those are static labels
-        if (classList.contains('blocklyEditableText') ||
-            classList.contains('blocklyDropdownText') ||
-            classList.contains('blocklyDropDownDiv')) {
-          return true;
-        }
-
-        // Check for specific interactive field types
-        if (classList.contains('blocklyFieldTextInput') ||
-            classList.contains('blocklyFieldNumber') ||
-            classList.contains('blocklyFieldColour') ||
-            classList.contains('blocklyFieldDropdown') ||
-            classList.contains('blocklyFieldCheckbox') ||
-            classList.contains('blocklyFieldAngle')) {
-          return true;
-        }
-      }
-
-      currentElement = currentElement.parentElement;
-      depth++;
-    }
-
-    return false;
+    // Return true if we found a field ancestor that's inside the block
+    return fieldAncestor !== null && blockAncestor.contains(fieldAncestor);
   }
 
   /**
