@@ -268,8 +268,9 @@ Blockly.keyboardNavigationController.setIsActive(true);
 
 // ========== MOVE MODE HINTS ==========
 
-// Track hint display counts (resets on page refresh)
-let clickMoveHintCount = 0;
+// Track hint display (resets on page refresh)
+let clickConnectionHintShown = false;
+let clickWorkspaceHintShown = false;
 let keyboardMoveHintShown = false;
 
 /**
@@ -322,16 +323,14 @@ function hasValidConnections(block: Blockly.BlockSvg): boolean {
 }
 
 /**
- * Show a progressive hint when entering move mode via click.
- * If no valid connections, shows workspace placement hint.
- * Otherwise:
- * 1st time: "Click a connection to move block there"
- * 2nd time: "Click on bin to delete block"
- * 3rd+ time: no hint
+ * Show a hint when entering move mode via click.
+ * Each hint type shown once per page load independently.
  */
 function showClickMoveModeHint(block: Blockly.BlockSvg) {
-  // If no valid connections, always show workspace placement hint
+  // If no valid connections, show workspace placement hint (once)
   if (!hasValidConnections(block)) {
+    if (clickWorkspaceHintShown) return;
+    clickWorkspaceHintShown = true;
     Blockly.Toast.show(workspace, {
       message: 'Click on the workspace to move the block there',
       id: 'maze_move_mode_hint',
@@ -339,20 +338,13 @@ function showClickMoveModeHint(block: Blockly.BlockSvg) {
     return;
   }
 
-  // Normal progressive hints when connections exist
-  if (clickMoveHintCount >= 2) return;
-
-  const messages = [
-    'Click a connection to move block there',
-    'Click on bin to delete block',
-  ];
-
+  // Show connection hint (once)
+  if (clickConnectionHintShown) return;
+  clickConnectionHintShown = true;
   Blockly.Toast.show(workspace, {
-    message: messages[clickMoveHintCount],
+    message: 'Click a connection to move block there',
     id: 'maze_move_mode_hint',
   });
-
-  clickMoveHintCount++;
 }
 
 /**
@@ -363,7 +355,7 @@ function showKeyboardMoveModeHint() {
   if (keyboardMoveHintShown) return;
 
   Blockly.Toast.show(workspace, {
-    message: 'Use arrows to move block',
+    message: 'Use arrows to move block, or Esc to exit move mode',
     id: 'maze_move_mode_hint',
   });
 
@@ -377,6 +369,15 @@ keyboardNavigation.setOnStickyModeEnterCallback((block) => {
 
 keyboardNavigation.setOnKeyboardMoveCallback(() => {
   showKeyboardMoveModeHint();
+});
+
+// Dismiss toast when move mode exits
+keyboardNavigation.setOnStickyModeExitCallback(() => {
+  Blockly.Toast.hide(workspace, 'maze_move_mode_hint');
+});
+
+keyboardNavigation.setOnMoveFinishedCallback(() => {
+  Blockly.Toast.hide(workspace, 'maze_move_mode_hint');
 });
 
 // Initialize maze game (URL param > localStorage > default)
