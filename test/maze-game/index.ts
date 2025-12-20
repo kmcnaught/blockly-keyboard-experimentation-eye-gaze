@@ -542,6 +542,19 @@ mazeGame.onHighlight((blockId) => {
   workspace.highlightBlock(blockId);
 });
 
+// Register execution state callback to disable/enable Run button during execution
+mazeGame.onExecutionStateChange((isExecuting) => {
+  const runButton = document.getElementById('runButton') as HTMLButtonElement;
+  if (runButton) {
+    runButton.disabled = isExecuting;
+  }
+  // Also update fullscreen Run button if present
+  const fsRunButton = document.querySelector('.fullscreen-run') as HTMLButtonElement;
+  if (fsRunButton) {
+    fsRunButton.disabled = isExecuting;
+  }
+});
+
 // Update level display
 function updateLevelDisplay() {
   const currentLevel = mazeGame.getLevel();

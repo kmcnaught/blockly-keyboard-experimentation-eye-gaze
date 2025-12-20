@@ -408,6 +408,9 @@ export class MazeGame {
   // Format: [action, blockId] where action is 'north'|'south'|'east'|'west'|'left'|'right'|'fail_forward'|'fail_backward'|'finish'
   private log: Array<[string, string?]> = [];
 
+  // Flag to signal animation cancellation
+  private animationCancelled = false;
+
   private pegmanImage: HTMLImageElement | null = null;
   private tilesImage: HTMLImageElement | null = null;
   private backgroundImage: HTMLImageElement | null = null;
@@ -661,6 +664,9 @@ export class MazeGame {
   // Callback for block highlighting during execution
   private highlightCallback: ((blockId: string | null) => void) | null = null;
 
+  // Callback for execution state changes (for UI updates like disabling Run button)
+  private executionStateCallback: ((isExecuting: boolean) => void) | null = null;
+
   /**
    * Register a callback to be called when execution completes.
    * @param callback Function called with true if goal reached, false otherwise.
@@ -675,6 +681,15 @@ export class MazeGame {
    */
   public onHighlight(callback: (blockId: string | null) => void): void {
     this.highlightCallback = callback;
+  }
+
+  /**
+   * Register a callback to be called when execution state changes.
+   * Used for UI updates like disabling the Run button during execution.
+   * @param callback Function called with true when execution starts, false when it ends.
+   */
+  public onExecutionStateChange(callback: (isExecuting: boolean) => void): void {
+    this.executionStateCallback = callback;
   }
 
   /**
@@ -1327,10 +1342,25 @@ export class MazeGame {
   }
 
   public reset() {
+    // Cancel any running animation and mark as not executing
+    const wasExecuting = this.executing;
+    this.animationCancelled = true;
+    this.executing = false;
+
     this.playerPos = {...this.startPos};
     this.playerDir = Direction.EAST;
     this.animationFrame = this.playerDir * 4;
-    this.executing = false;
+
+    // Clear block highlighting
+    if (this.highlightCallback) {
+      this.highlightCallback(null);
+    }
+
+    // Notify UI that execution stopped (e.g., to re-enable Run button)
+    if (wasExecuting && this.executionStateCallback) {
+      this.executionStateCallback(false);
+    }
+
     this.draw();
   }
 
@@ -1540,8 +1570,17 @@ export class MazeGame {
       return;
     }
 
-    this.executing = true;
+    // Reset visual state first (this also cancels any prior animation)
     this.reset();
+
+    // Now mark as executing - must be after reset() since reset() clears this flag
+    this.executing = true;
+    this.animationCancelled = false;
+
+    // Notify UI that execution started (e.g., to disable Run button)
+    if (this.executionStateCallback) {
+      this.executionStateCallback(true);
+    }
 
     // Clear log and reset execution state
     this.log = [];
@@ -1597,6 +1636,15 @@ export class MazeGame {
    * Recursively processes each action with appropriate delays.
    */
   private animate(): void {
+    // Check if animation was cancelled (e.g., by Reset button)
+    if (this.animationCancelled) {
+      this.executing = false;
+      if (this.executionStateCallback) {
+        this.executionStateCallback(false);
+      }
+      return;
+    }
+
     const action = this.log.shift();
 
     if (!action) {
@@ -1701,6 +1749,11 @@ export class MazeGame {
    */
   private async showResult(): Promise<void> {
     this.executing = false;
+
+    // Notify UI that execution stopped (e.g., to re-enable Run button)
+    if (this.executionStateCallback) {
+      this.executionStateCallback(false);
+    }
 
     // Clear block highlighting
     if (this.highlightCallback) {
