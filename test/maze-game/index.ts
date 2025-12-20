@@ -80,6 +80,65 @@ loadMessages(currentLocale);
 // Register maze-specific blocks
 registerMazeBlocks();
 
+// ========== PROGRAM STORAGE ==========
+// Storage key format: "mazeProgram" + level number
+
+const PROGRAM_STORAGE_PREFIX = 'mazeProgram';
+
+/**
+ * Save the current workspace program to localStorage for a specific level.
+ * Only used in coding mode.
+ * @param level The level number to save the program for.
+ * @param workspaceRef The Blockly workspace to save from.
+ */
+function saveProgram(level: number, workspaceRef: Blockly.WorkspaceSvg): void {
+  if (!window.localStorage) return;
+  const xml = Blockly.Xml.workspaceToDom(workspaceRef, true);
+  // Remove x/y coordinates from single block stacks for cleaner storage
+  if (workspaceRef.getTopBlocks(false).length === 1) {
+    const block = xml.querySelector('block');
+    if (block) {
+      block.removeAttribute('x');
+      block.removeAttribute('y');
+    }
+  }
+  const text = Blockly.Xml.domToText(xml);
+  try {
+    window.localStorage.setItem(PROGRAM_STORAGE_PREFIX + level, text);
+  } catch (e) {
+    // Ignore storage errors (SecurityError, QuotaExceededError)
+  }
+}
+
+/**
+ * Load a saved program from localStorage for a specific level.
+ * @param level The level number to load the program for.
+ * @returns The saved XML string, or null if no saved program exists.
+ */
+function loadProgram(level: number): string | null {
+  if (!window.localStorage) return null;
+  try {
+    return window.localStorage.getItem(PROGRAM_STORAGE_PREFIX + level);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Restore a saved program to the workspace.
+ * @param savedXml The XML string to restore.
+ * @param workspaceRef The Blockly workspace to restore to.
+ */
+function restoreProgram(savedXml: string, workspaceRef: Blockly.WorkspaceSvg): void {
+  try {
+    const dom = Blockly.utils.xml.textToDom(savedXml);
+    Blockly.Xml.domToWorkspace(dom, workspaceRef);
+    workspaceRef.clearUndo();
+  } catch (e) {
+    // If XML is corrupt, just start fresh (workspace already cleared)
+  }
+}
+
 /**
  * Update all UI text elements with internationalized messages
  */
@@ -180,6 +239,14 @@ const workspace = Blockly.inject('blocklyDiv', {
   },
 });
 
+// Load saved program for initial level (coding mode only)
+if (currentExecutionMode !== 'practice') {
+  const savedXml = loadProgram(initialLevel);
+  if (savedXml) {
+    restoreProgram(savedXml, workspace);
+  }
+}
+
 /**
  * Update the capacity bubble display based on remaining block capacity.
  */
@@ -245,6 +312,14 @@ function updateWorkspaceForLevel(level: number) {
 
   // Clear workspace when changing levels
   workspace.clear();
+
+  // Load saved program for this level (coding mode only)
+  if (!MazeGame.isPracticeModeEnabled()) {
+    const savedXml = loadProgram(level);
+    if (savedXml) {
+      restoreProgram(savedXml, workspace);
+    }
+  }
 
   // Update capacity display
   updateCapacityBubble();
@@ -1286,6 +1361,10 @@ resultModal.addEventListener('keydown', (e: KeyboardEvent) => {
 
 // Listen for maze game result events to show the modal
 mazeGame.onResult((result: ResultType) => {
+  // Save program on successful completion in coding mode
+  if (result === 'success' && !MazeGame.isPracticeModeEnabled()) {
+    saveProgram(mazeGame.getLevel(), workspace);
+  }
   showResultModal(result);
 });
 
