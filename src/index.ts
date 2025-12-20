@@ -6,7 +6,7 @@
 
 import * as Blockly from 'blockly/core';
 import {NavigationController} from './navigation_controller';
-import {enableBlocksOnDrag} from './disabled_blocks';
+import {enableBlocksOnDrag, reenableBlocksOnDelete} from './disabled_blocks';
 import {registerHtmlToast} from './html_toast';
 import {StickyModeController, TriggerMode} from './sticky_mode_controller';
 
@@ -110,6 +110,9 @@ export class KeyboardNavigation {
     // Add the event listener to enable disabled blocks on drag.
     workspace.addChangeListener(enableBlocksOnDrag);
 
+    // Add the event listener to re-enable capacity-disabled blocks on delete.
+    workspace.addChangeListener(reenableBlocksOnDelete);
+
     this.stickyModeController.install();
 
     (window as any).keyboardNavigation = this;
@@ -178,6 +181,8 @@ export class KeyboardNavigation {
 
     // Remove the event listener that enables blocks on drag
     this.workspace.removeChangeListener(enableBlocksOnDrag);
+    // Remove the event listener that re-enables blocks on delete
+    this.workspace.removeChangeListener(reenableBlocksOnDelete);
     this.stickyModeController.uninstall();
     this.navigationController.dispose();
   }

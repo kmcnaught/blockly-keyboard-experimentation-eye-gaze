@@ -6,6 +6,14 @@
 
 import * as Blockly from 'blockly/core';
 
+/**
+ * The disabled reason used by Blockly's BlockFlyoutInflater when a block
+ * exceeds workspace capacity. This constant is not exported by Blockly,
+ * so we define it here with the same value used internally.
+ */
+const WORKSPACE_AT_BLOCK_CAPACITY_DISABLED_REASON =
+  'WORKSPACE_AT_BLOCK_CAPACITY';
+
 const lastBlockDisabledReasons: Map<string, Set<string>> = new Map();
 
 /**
@@ -81,4 +89,36 @@ function isBlockDrag(
   event: Blockly.Events.Abstract,
 ): event is Blockly.Events.BlockDrag {
   return event.type === Blockly.Events.BLOCK_DRAG;
+}
+
+/**
+ * A change listener that re-enables capacity-disabled blocks when
+ * blocks are deleted and capacity becomes available.
+ *
+ * @param event Blockly event
+ */
+export function reenableBlocksOnDelete(event: Blockly.Events.Abstract) {
+  if (event.type !== Blockly.Events.BLOCK_DELETE) return;
+  if (!event.workspaceId) return;
+
+  const workspace = Blockly.common.getWorkspaceById(
+    event.workspaceId,
+  ) as Blockly.WorkspaceSvg;
+  if (!workspace || workspace.remainingCapacity() <= 0) return;
+
+  const oldUndo = Blockly.Events.getRecordUndo();
+  Blockly.Events.setRecordUndo(false);
+
+  try {
+    for (const block of workspace.getAllBlocks(false)) {
+      if (block.hasDisabledReason(WORKSPACE_AT_BLOCK_CAPACITY_DISABLED_REASON)) {
+        block.setDisabledReason(
+          false,
+          WORKSPACE_AT_BLOCK_CAPACITY_DISABLED_REASON,
+        );
+      }
+    }
+  } finally {
+    Blockly.Events.setRecordUndo(oldUndo);
+  }
 }
