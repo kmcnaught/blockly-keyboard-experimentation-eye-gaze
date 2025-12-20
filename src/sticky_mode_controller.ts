@@ -61,6 +61,15 @@ export class StickyModeController {
   /** The block that was focused before pointerdown (for focused-click trigger mode). */
   private focusedBlockBeforePointerdown: Blockly.BlockSvg | null = null;
 
+  /** Whether the focused block had intentional highlight before pointerdown. */
+  private hadIntentionalHighlightBeforePointerdown: boolean = false;
+
+  /** Whether the trash lid is open for the highlight-hover feature. */
+  private isTrashLidOpenForHighlight: boolean = false;
+
+  /** Block to delete on next bin click (captured at pointerdown). */
+  private blockToDeleteOnBinClick: Blockly.BlockSvg | null = null;
+
   /** Flag to ignore the next click event after entering sticky mode via shift+click. */
   private ignoreNextClick: boolean = false;
 
@@ -84,6 +93,9 @@ export class StickyModeController {
 
   /** Optional callback when entering sticky mode. */
   private onEnterCallback?: (block: Blockly.BlockSvg) => void;
+
+  /** Optional callback when exiting sticky mode. */
+  private onExitCallback?: () => void;
 
   constructor(
     private workspace: Blockly.WorkspaceSvg,
@@ -162,6 +174,15 @@ export class StickyModeController {
   }
 
   /**
+   * Set a callback that fires when sticky mode is exited.
+   *
+   * @param callback The callback to invoke when exiting sticky mode.
+   */
+  setOnExitCallback(callback: () => void): void {
+    this.onExitCallback = callback;
+  }
+
+  /**
    * Check if the given block can enter sticky mode.
    *
    * @param block
@@ -199,6 +220,13 @@ export class StickyModeController {
 
     this.addListener(document, 'click', (event) => {
       this.handleClick(event as MouseEvent);
+    }, true);
+
+    // Also intercept pointerup to prevent trashcan flyout from opening
+    this.addListener(document, 'pointerup', (event) => {
+      if (this.blockToDeleteOnBinClick) {
+        event.stopImmediatePropagation();
+      }
     }, true);
 
     // Listen for focus changes to manage grip display
@@ -404,6 +432,8 @@ export class StickyModeController {
     }
 
     this.resetStickyState();
+
+    this.onExitCallback?.();
   }
 
   /**
@@ -413,6 +443,23 @@ export class StickyModeController {
    * @param event
    */
   private handlePointerDown(event: PointerEvent) {
+    // Check if clicking on bin with a highlighted block - capture the block to delete.
+    // We capture it here because by click time, the selection/focus may have changed.
+    this.blockToDeleteOnBinClick = null;
+    if (!this.isActive() && this.isClickOnBin(event.clientX, event.clientY)) {
+      const highlightedBlock = this.getIntentionallyHighlightedBlock();
+      if (
+        highlightedBlock &&
+        !highlightedBlock.isDisposed() &&
+        highlightedBlock.isDeletable() &&
+        !highlightedBlock.workspace?.isFlyout
+      ) {
+        this.blockToDeleteOnBinClick = highlightedBlock;
+        // Stop immediate propagation to prevent ALL other handlers including trashcan's
+        event.stopImmediatePropagation();
+      }
+    }
+
     // Handle shift+click mode - enter sticky mode immediately on pointerdown
     if (this.triggerMode === TriggerMode.SHIFT_CLICK && event.shiftKey) {
       const clickedBlock = this.getBlockFromEvent(event);
@@ -469,6 +516,7 @@ export class StickyModeController {
 
     if (target && isField) {
       this.focusedBlockBeforePointerdown = null;
+      this.hadIntentionalHighlightBeforePointerdown = false;
       return;
     }
 
@@ -501,6 +549,21 @@ export class StickyModeController {
     }
 
     this.focusedBlockBeforePointerdown = focusedBlock;
+
+    // Check if the focused block has intentional highlight (solid outline)
+    // This needs to be captured NOW before the pointerdown changes focus/selection
+    if (focusedBlock && !focusedBlock.isDisposed()) {
+      const pathElement = focusedBlock.pathObject?.svgPath;
+      const blockSvgGroup = focusedBlock.getSvgRoot();
+      const hasActiveFocus =
+        pathElement?.classList.contains('blocklyActiveFocus') ?? false;
+      const hasSelected =
+        blockSvgGroup?.classList.contains('blocklySelected') ?? false;
+      this.hadIntentionalHighlightBeforePointerdown =
+        hasActiveFocus || hasSelected;
+    } else {
+      this.hadIntentionalHighlightBeforePointerdown = false;
+    }
   }
 
   /**
@@ -562,6 +625,28 @@ export class StickyModeController {
     if (this.isPendingFlyoutInsertion()) {
       this.cancelPendingFlyoutInsertion();
       // Don't return - allow the click to proceed normally
+    }
+
+    // Check for bin click when a block was captured for deletion at pointerdown
+    if (this.blockToDeleteOnBinClick) {
+      const block = this.blockToDeleteOnBinClick;
+      this.blockToDeleteOnBinClick = null;
+
+      if (!block.isDisposed()) {
+        // Close the trash lid
+        if (this.isTrashLidOpenForHighlight) {
+          this.workspace.trashcan?.setLidOpen(false);
+          this.isTrashLidOpenForHighlight = false;
+        }
+
+        // Unplug with healStack to preserve children, then dispose
+        block.unplug(true);
+        block.dispose();
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
     }
 
     // If already in sticky mode, handle the drop/connect action
@@ -699,7 +784,11 @@ export class StickyModeController {
    * @param event
    */
   private handlePointerMove(event: PointerEvent) {
-    if (!this.isActive()) return;
+    // Handle trash lid opening for highlighted blocks (outside sticky mode)
+    if (!this.isActive()) {
+      this.updateTrashLidForHighlightedBlock(event.clientX, event.clientY);
+      return;
+    }
 
     // Only update block position if keepBlockOnMouse is enabled
     if (!this.keepBlockOnMouse) return;
@@ -725,6 +814,31 @@ export class StickyModeController {
         event as any,
         moveInfo.totalDelta,
       );
+    }
+  }
+
+  /**
+   * Updates the trash can lid state based on mouse position and highlighted block.
+   * Opens the lid when hovering over the bin with an intentionally highlighted block.
+   */
+  private updateTrashLidForHighlightedBlock(
+    clientX: number,
+    clientY: number,
+  ): void {
+    const trashcan = this.workspace.trashcan;
+    if (!trashcan) return;
+
+    const isOverBin = this.isClickOnBin(clientX, clientY);
+    const highlightedBlock = this.getIntentionallyHighlightedBlock();
+
+    const shouldBeOpen = isOverBin && highlightedBlock !== null;
+
+    if (shouldBeOpen && !this.isTrashLidOpenForHighlight) {
+      trashcan.setLidOpen(true);
+      this.isTrashLidOpenForHighlight = true;
+    } else if (!shouldBeOpen && this.isTrashLidOpenForHighlight) {
+      trashcan.setLidOpen(false);
+      this.isTrashLidOpenForHighlight = false;
     }
   }
 
@@ -1253,6 +1367,70 @@ export class StickyModeController {
     // Unplug with healStack to preserve children
     blockToDelete.unplug(true);
     blockToDelete.dispose();
+  }
+
+  /**
+   * Gets a block that has an intentional highlight (solid outline).
+   * This includes blocks with active keyboard focus or mouse selection,
+   * but NOT passive focus (dimmer outline when flyout/toolbox has focus).
+   *
+   * @returns The intentionally highlighted block, or null if none.
+   */
+  private getIntentionallyHighlightedBlock(): Blockly.BlockSvg | null {
+    let block: Blockly.BlockSvg | null = null;
+
+    // Check keyboard nav cursor first
+    const cursor = this.workspace.getCursor();
+    if (cursor) {
+      const curNode = cursor.getCurNode();
+      if (curNode) {
+        if (curNode instanceof Blockly.BlockSvg) {
+          block = curNode;
+        } else if (
+          'getSourceBlock' in curNode &&
+          typeof (curNode as any).getSourceBlock === 'function'
+        ) {
+          block = (curNode as any).getSourceBlock();
+        }
+      }
+    }
+
+    // If cursor block is disposed, treat as no block (fall through to getSelected)
+    if (block?.isDisposed()) {
+      block = null;
+    }
+
+    // If no valid cursor block, check for mouse-selected block
+    if (!block) {
+      const selected = Blockly.common.getSelected();
+      if (
+        selected &&
+        selected instanceof Blockly.BlockSvg &&
+        selected.workspace === this.workspace
+      ) {
+        block = selected;
+      }
+    }
+
+    if (!block || block.isDisposed()) {
+      return null;
+    }
+
+    // Check for intentional highlight (solid outline) - NOT passive
+    const pathElement = block.pathObject?.svgPath;
+    const blockSvgGroup = block.getSvgRoot();
+
+    // Active focus (keyboard nav on this block)
+    const hasActiveFocus =
+      pathElement?.classList.contains('blocklyActiveFocus') ?? false;
+    // Mouse selection (solid yellow)
+    const hasSelected =
+      blockSvgGroup?.classList.contains('blocklySelected') ?? false;
+    // Passive focus should NOT count (dimmer outline when flyout has focus)
+
+    const hasIntentionalHighlight = hasActiveFocus || hasSelected;
+
+    return hasIntentionalHighlight ? block : null;
   }
 
   /**
